@@ -1,4 +1,4 @@
-from opportunity_radar.observability.logging import redact
+from open_hypergamy.observability.logging import redact
 
 
 def test_telegram_token_redacted():
@@ -7,5 +7,5 @@ def test_telegram_token_redacted():
 
 
 def test_env_secret_redacted(monkeypatch):
-    monkeypatch.setenv("RADAR_FREELLMAPI_API_KEY", "sk-local-supersecret")
+    monkeypatch.setenv("OHG_FREELLMAPI_API_KEY", "sk-local-supersecret")
     assert "supersecret" not in redact("auth failed for key sk-local-supersecret")

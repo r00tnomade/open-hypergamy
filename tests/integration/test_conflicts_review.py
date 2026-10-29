@@ -4,16 +4,16 @@ from datetime import UTC, datetime
 import pytest
 from tests.helpers import FakeWeb, fixture, html, make_fetcher
 
-from opportunity_radar.clock import FixedClock
-from opportunity_radar.config import load_config
-from opportunity_radar.discovery import orchestrator as orch
-from opportunity_radar.discovery import review as review_svc
-from opportunity_radar.discovery.pipeline import promote_from_db
-from opportunity_radar.errors import RadarError
-from opportunity_radar.persistence import db as dbm
-from opportunity_radar.persistence import migrations as mig
-from opportunity_radar.persistence.repositories.sources import SourceRepository
-from opportunity_radar.sources.registry import load_source_files
+from open_hypergamy.clock import FixedClock
+from open_hypergamy.config import load_config
+from open_hypergamy.discovery import orchestrator as orch
+from open_hypergamy.discovery import review as review_svc
+from open_hypergamy.discovery.pipeline import promote_from_db
+from open_hypergamy.errors import OhgError
+from open_hypergamy.persistence import db as dbm
+from open_hypergamy.persistence import migrations as mig
+from open_hypergamy.persistence.repositories.sources import SourceRepository
+from open_hypergamy.sources.registry import load_source_files
 
 CLOCK = FixedClock(datetime(2026, 10, 29, 12, 0, tzinfo=UTC))
 PAGE_A, PAGE_B = "https://example.edu/summer-school-2027", "https://summerschool-example.org/2027"
@@ -105,9 +105,9 @@ def test_accept_cannot_settle_a_conflict_and_resolve_requires_an_official_claim(
     two_publishers(env)
     cfg, conn = env
     [rev] = rows(conn, "SELECT * FROM review_queue WHERE reason_code='deadline_conflict'")
-    with pytest.raises(RadarError, match="resolve"):
+    with pytest.raises(OhgError, match="resolve"):
         review_svc.decide(conn, CLOCK, rev["id"], accept=True, note="looks fine")
-    with pytest.raises(RadarError, match="official"):
+    with pytest.raises(OhgError, match="official"):
         review_svc.resolve_conflict(conn, CLOCK, rev["id"], claim_id="nope", note="x")
     chosen = rows(
         conn,
@@ -130,7 +130,7 @@ def test_accepting_a_review_never_changes_fact_status(env):
     review_svc.decide(conn, CLOCK, rev["id"], accept=True, note="I checked the site by hand")
     after = rows(conn, "SELECT fact_status, reviewed_at FROM claims WHERE id=?", rev["claim_id"])[0]
     assert before == after[0] == "unverified" and after[1] is not None
-    with pytest.raises(RadarError, match="already"):
+    with pytest.raises(OhgError, match="already"):
         review_svc.decide(conn, CLOCK, rev["id"], accept=True, note="again")
 
 

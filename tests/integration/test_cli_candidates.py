@@ -5,8 +5,8 @@ import pytest
 from tests.helpers import FakeWeb, fixture, html, make_fetcher
 from typer.testing import CliRunner
 
-from opportunity_radar import cli
-from opportunity_radar.cli import app
+from open_hypergamy import cli
+from open_hypergamy.cli import app
 
 runner = CliRunner(env={"COLUMNS": "220"})
 GOOD = str(Path(__file__).parent.parent / "fixtures" / "sources_good.yaml")
@@ -56,8 +56,8 @@ def test_candidates_list_show_and_traceability(web):
     runner.invoke(app, ["run", "discovery"])
     listing = runner.invoke(app, ["candidates", "list", "--status", "promoted"])
     assert "1 candidate(s)" in listing.output
-    from opportunity_radar.config import load_config
-    from opportunity_radar.persistence import db as dbm
+    from open_hypergamy.config import load_config
+    from open_hypergamy.persistence import db as dbm
 
     cfg = load_config()
     conn = dbm.connect(cfg.paths.db)
@@ -75,8 +75,8 @@ def test_review_flow_via_cli(web, monkeypatch):
     runner.invoke(app, ["run", "discovery"])
     listing = runner.invoke(app, ["review", "list"])
     assert "missing_year" in listing.output
-    from opportunity_radar.config import load_config
-    from opportunity_radar.persistence import db as dbm
+    from open_hypergamy.config import load_config
+    from open_hypergamy.persistence import db as dbm
 
     conn = dbm.connect(load_config().paths.db)
     rid = conn.execute("SELECT id FROM review_queue WHERE reason_code='missing_year'").fetchone()[0]
@@ -97,8 +97,8 @@ def test_manual_candidate_add_is_unverified_lead(web):
     assert "stay unverified" in r.output
     p = runner.invoke(app, ["candidates", "list", "--status", "new"])
     assert "1 candidate(s)" in p.output
-    from opportunity_radar.config import load_config
-    from opportunity_radar.persistence import db as dbm
+    from open_hypergamy.config import load_config
+    from open_hypergamy.persistence import db as dbm
 
     conn = dbm.connect(load_config().paths.db)
     cid = conn.execute("SELECT id FROM candidates").fetchone()[0]
@@ -118,8 +118,8 @@ def test_manual_candidate_add_is_unverified_lead(web):
 def test_reject_candidate(web):
     web.routes["https://news.example.org/ss"] = html(fixture("programme.html"))
     runner.invoke(app, ["candidates", "add", "https://news.example.org/ss"])
-    from opportunity_radar.config import load_config
-    from opportunity_radar.persistence import db as dbm
+    from open_hypergamy.config import load_config
+    from open_hypergamy.persistence import db as dbm
 
     conn = dbm.connect(load_config().paths.db)
     cid = conn.execute("SELECT id FROM candidates").fetchone()[0]

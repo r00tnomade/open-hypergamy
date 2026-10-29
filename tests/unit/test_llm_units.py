@@ -2,12 +2,12 @@ import pytest
 from pydantic import ValidationError
 from tests.helpers_llm import empty_output
 
-from opportunity_radar.errors import LLMInvalidResponse
-from opportunity_radar.extraction.llm_extractor import build_segments, ground_output
-from opportunity_radar.llm.client import extract_json
-from opportunity_radar.llm.prompts import SYSTEM_PROMPT, cache_key, normalized_input_sha256
-from opportunity_radar.llm.redact import redact
-from opportunity_radar.llm.schemas import OpportunityExtract
+from open_hypergamy.errors import LLMInvalidResponse
+from open_hypergamy.extraction.llm_extractor import build_segments, ground_output
+from open_hypergamy.llm.client import extract_json
+from open_hypergamy.llm.prompts import SYSTEM_PROMPT, cache_key, normalized_input_sha256
+from open_hypergamy.llm.redact import redact
+from open_hypergamy.llm.schemas import OpportunityExtract
 
 URL = "https://example.edu/p"
 TEXT = (

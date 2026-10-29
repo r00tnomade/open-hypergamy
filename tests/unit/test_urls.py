@@ -1,7 +1,7 @@
 import pytest
 
-from opportunity_radar.errors import SourcePolicyDenied
-from opportunity_radar.sources.urls import canonicalize_url, validate_public_url
+from open_hypergamy.errors import SourcePolicyDenied
+from open_hypergamy.sources.urls import canonicalize_url, validate_public_url
 
 
 @pytest.mark.parametrize(

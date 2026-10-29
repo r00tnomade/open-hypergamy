@@ -4,8 +4,8 @@ import pytest
 from tests.helpers_llm import FakeGateway
 from typer.testing import CliRunner
 
-from opportunity_radar import cli
-from opportunity_radar.cli import app
+from open_hypergamy import cli
+from open_hypergamy.cli import app
 
 runner = CliRunner(env={"COLUMNS": "200"})
 
@@ -28,9 +28,9 @@ def test_ack_requires_confirmation_and_writes_a_private_file():
 
 
 def test_status_json_reports_state_without_inference(monkeypatch):
-    gw = FakeGateway(models=["auto:radar-free"])
-    monkeypatch.setattr(cli, "build_client", lambda cfg: __import__("opportunity_radar.llm.client", fromlist=["x"]).OpenAICompatClient(
-        "http://127.0.0.1:3001/v1", "auto:radar-free", "k", transport=gw.transport))  # fmt: skip
+    gw = FakeGateway(models=["auto:ohg-free"])
+    monkeypatch.setattr(cli, "build_client", lambda cfg: __import__("open_hypergamy.llm.client", fromlist=["x"]).OpenAICompatClient(
+        "http://127.0.0.1:3001/v1", "auto:ohg-free", "k", transport=gw.transport))  # fmt: skip
     st = json.loads(runner.invoke(app, ["llm", "status", "--json"]).stdout)
     assert st["enabled"] and st["reachable"] is True and st["alias_listed"] is True
     assert st["external_processing"] is True and st["queued_candidates"] == 0
@@ -39,7 +39,7 @@ def test_status_json_reports_state_without_inference(monkeypatch):
 
 
 def test_run_llm_when_disabled(monkeypatch):
-    monkeypatch.setenv("RADAR_LLM_ENABLED", "false")
+    monkeypatch.setenv("OHG_LLM_ENABLED", "false")
     r = runner.invoke(app, ["run", "llm"])
     assert r.exit_code == 0 and "disabled" in r.output
     st = json.loads(runner.invoke(app, ["llm", "status", "--json"]).stdout)
@@ -47,7 +47,7 @@ def test_run_llm_when_disabled(monkeypatch):
 
 
 def test_local_provider_needs_no_ack(monkeypatch):
-    monkeypatch.setenv("RADAR_LLM_PROVIDER", "local")
+    monkeypatch.setenv("OHG_LLM_PROVIDER", "local")
     r = runner.invoke(app, ["llm", "ack"])
     assert r.exit_code == 0 and "no acknowledgement needed" in r.output
     assert (

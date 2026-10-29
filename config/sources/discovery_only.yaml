@@ -5,7 +5,7 @@
 #   1. Add entries below (set `portfolio: discovery_only`; copy the schema from LLD §6.1).
 #   2. Review robots.txt and the site terms; record both in `robots_policy_checked_at` and
 #      `terms_review_note`. Without them the source is imported disabled (review_required).
-#   3. `radar sources probe config/sources/discovery_only.yaml`   (live check, writes nothing)
-#   4. `radar sources import config/sources/discovery_only.yaml`  then `radar sources audit`
+#   3. `ohg sources probe config/sources/discovery_only.yaml`   (live check, writes nothing)
+#   4. `ohg sources import config/sources/discovery_only.yaml`  then `ohg sources audit`
 version: 1
 sources: []

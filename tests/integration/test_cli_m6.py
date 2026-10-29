@@ -9,17 +9,17 @@ import httpx
 from tests.integration.test_cli_m5 import CHILD, FIX, SEED, add_profile, setup  # noqa: F401, F811
 from typer.testing import CliRunner
 
-from opportunity_radar.cli import app
+from open_hypergamy.cli import app
 
 runner = CliRunner(env={"COLUMNS": "240"})
 
 
 def home() -> Path:
-    return Path(os.environ["RADAR_HOME"])
+    return Path(os.environ["OHG_HOME"])
 
 
 def db() -> sqlite3.Connection:
-    c = sqlite3.connect(home() / "opportunity_radar.sqlite3")
+    c = sqlite3.connect(home() / "open_hypergamy.sqlite3")
     c.row_factory = sqlite3.Row
     return c
 
@@ -74,7 +74,7 @@ def test_changes_and_sources_reports(setup):
 def test_export_ics_command(setup, tmp_path):
     add_profile()
     runner.invoke(app, ["run", "discovery"])
-    out = tmp_path / "cal" / "radar.ics"
+    out = tmp_path / "cal" / "ohg.ics"
     r = runner.invoke(app, ["export-ics", "--output", str(out)])
     assert r.exit_code == 0 and "calendar item(s) written" in r.output
     text = out.read_bytes().decode()
@@ -92,10 +92,10 @@ def test_backup_job_retention_restore_to_and_status(setup, tmp_path):
     r = runner.invoke(app, ["db", "backup"])
     assert r.exit_code == 0 and "Retention: kept" in r.output
     [b] = jobs("backup")
-    assert b["status"] == "success" and json.loads(b["summary_json"])["file"].startswith("radar-")
+    assert b["status"] == "success" and json.loads(b["summary_json"])["file"].startswith("ohg-")
     st = j(["status", "--json"])
     assert st["backups_kept"] >= 1 and st["latest_restore_check"] is None
-    backup = sorted((home() / "backups").glob("radar-*.sqlite3"))[-1]
+    backup = sorted((home() / "backups").glob("ohg-*.sqlite3"))[-1]
     assert runner.invoke(app, ["db", "restore", "--check", str(backup)]).exit_code == 0
     assert j(["status", "--json"])["latest_restore_check"]["backup"] == backup.name
     target = tmp_path / "scratch" / "restored.sqlite3"
@@ -104,7 +104,7 @@ def test_backup_job_retention_restore_to_and_status(setup, tmp_path):
     assert (
         runner.invoke(app, ["db", "restore", str(backup), "--to", str(target)]).exit_code == 3
     )  # no overwrite
-    live = home() / "opportunity_radar.sqlite3"
+    live = home() / "open_hypergamy.sqlite3"
     assert runner.invoke(app, ["db", "restore", str(backup), "--to", str(live)]).exit_code == 3
     assert runner.invoke(app, ["db", "restore", str(backup)]).exit_code == 2
 
@@ -112,9 +112,9 @@ def test_backup_job_retention_restore_to_and_status(setup, tmp_path):
 def test_prune_dry_run_lists_without_deleting(setup):
     recent = (datetime.now(UTC) - timedelta(days=1)).strftime("%Y%m%dT%H%M%SZ")
     (home() / "backups").mkdir(exist_ok=True)
-    (home() / "backups" / f"radar-{recent}.sqlite3").write_text("x")  # a recent backup must exist
+    (home() / "backups" / f"ohg-{recent}.sqlite3").write_text("x")  # a recent backup must exist
     backups = home() / "backups"
-    old = backups / "radar-20200101T000000Z.sqlite3"
+    old = backups / "ohg-20200101T000000Z.sqlite3"
     old.write_text("x")
     dry = runner.invoke(app, ["db", "prune-backups", "--dry-run"])
     assert "would remove 1" in dry.output and old.name in dry.output and old.exists()
@@ -129,25 +129,25 @@ def test_launchd_dry_run_install_status_uninstall(setup, tmp_path):
     dry = runner.invoke(app, ["launchd", "install", "--dry-run"])
     assert (
         dry.exit_code == 0
-        and "com.opportunityradar.sentinel" in dry.output
+        and "com.openhypergamy.sentinel" in dry.output
         and "<key>Label</key>" in dry.output
     )
     agents = tmp_path / "agents"
     r = runner.invoke(app, ["launchd", "install", "--no-load", "--dir", str(agents)])
     assert r.exit_code == 0 and "Secrets are not stored in the plists" in r.output
-    plists = sorted(agents.glob("com.opportunityradar.*.plist"))
+    plists = sorted(agents.glob("com.openhypergamy.*.plist"))
     assert len(plists) == 4
     for p in plists:
         d = plistlib.loads(p.read_bytes())
-        assert d["EnvironmentVariables"]["RADAR_HOME"] == str(home())
-    os.environ["RADAR_LAUNCHD_DIR"] = str(agents)
+        assert d["EnvironmentVariables"]["OHG_HOME"] == str(home())
+    os.environ["OHG_LAUNCHD_DIR"] = str(agents)
     try:
         st = runner.invoke(app, ["launchd", "status", "--dir", str(agents)])
         assert st.output.count("yes") == 4
         gaps = j(["status", "--json"])["overdue_jobs"]
         assert len(gaps) == 4 and all("never completed" in g for g in gaps)
     finally:
-        del os.environ["RADAR_LAUNCHD_DIR"]
+        del os.environ["OHG_LAUNCHD_DIR"]
     gone = runner.invoke(app, ["launchd", "uninstall", "--dir", str(agents), "--no-unload"])
     assert "Removed: backup, digest, discovery, sentinel" in gone.output and not list(
         agents.glob("*.plist")
@@ -157,7 +157,7 @@ def test_launchd_dry_run_install_status_uninstall(setup, tmp_path):
 # --- job tracking / catch-up -------------------------------------------------------------------------------
 def test_scheduled_jobs_are_recorded_with_their_trigger(setup, monkeypatch):
     add_profile()
-    monkeypatch.setenv("RADAR_TRIGGER", "launchd")
+    monkeypatch.setenv("OHG_TRIGGER", "launchd")
     runner.invoke(app, ["run", "discovery", "--no-alerts"])
     assert runner.invoke(app, ["run", "sentinel"]).exit_code == 0
     assert runner.invoke(app, ["run", "digest"]).exit_code == 0
@@ -168,7 +168,7 @@ def test_scheduled_jobs_are_recorded_with_their_trigger(setup, monkeypatch):
         r["status"] for r in by.values()
     } == {"success"}
     assert all(r["finished_at"] for r in by.values())
-    monkeypatch.setenv("RADAR_TRIGGER", "evil")
+    monkeypatch.setenv("OHG_TRIGGER", "evil")
     runner.invoke(app, ["run", "sentinel"])
     assert jobs("sentinel")[-1]["trigger_type"] == "manual"  # unknown triggers are not trusted
 

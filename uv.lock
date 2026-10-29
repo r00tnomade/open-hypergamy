@@ -727,7 +727,7 @@ wheels = [
 ]
 
 [[package]]
-name = "opportunity-radar"
+name = "open-hypergamy"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

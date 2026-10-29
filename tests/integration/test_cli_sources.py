@@ -6,8 +6,8 @@ import pytest
 from tests.helpers import FakeWeb, fixture, html, make_fetcher
 from typer.testing import CliRunner
 
-from opportunity_radar import cli
-from opportunity_radar.cli import app
+from open_hypergamy import cli
+from open_hypergamy.cli import app
 
 runner = CliRunner(env={"COLUMNS": "200"})  # keep Rich tables from truncating cells
 GOOD = str(Path(__file__).parent.parent / "fixtures" / "sources_good.yaml")

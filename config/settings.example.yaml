@@ -4,7 +4,7 @@ app:
   horizon_months: 24
   actionable_horizon_months: 12
   log_level: INFO
-  user_agent: "OpportunityRadar/0.1 (+local research opportunity monitor)"
+  user_agent: "OpenHypergamy/0.1 (+local research opportunity monitor)"
   max_response_bytes: 8000000
   request_timeout_seconds: 25
   max_redirects: 5
@@ -16,7 +16,7 @@ app:
   default_source_poll_interval_hours: 168
 
 database:
-  # path: defaults to <RADAR_HOME>/opportunity_radar.sqlite3
+  # path: defaults to <OHG_HOME>/open_hypergamy.sqlite3
   journal_mode: WAL
   busy_timeout_ms: 5000
   backup_keep_daily: 7
@@ -38,11 +38,11 @@ llm:
   extraction_cache: true
   freellmapi:
     base_url: "http://127.0.0.1:3001/v1"
-    model: "auto:radar-free"
-    api_key_env: RADAR_FREELLMAPI_API_KEY
-    required_profile_name: radar-free
+    model: "auto:ohg-free"
+    api_key_env: OHG_FREELLMAPI_API_KEY
+    required_profile_name: ohg-free
     require_loopback: true
-    free_tier_only: true # operator attestation; see `radar init` checklist
+    free_tier_only: true # operator attestation; see `ohg init` checklist
     max_input_chars: 12000
   local:
     base_url: "http://127.0.0.1:3000/v1"

@@ -7,8 +7,8 @@ from pathlib import Path
 
 import httpx
 
-from opportunity_radar.config import AppSettings, CrawlingSettings
-from opportunity_radar.sources.fetch import Fetcher
+from open_hypergamy.config import AppSettings, CrawlingSettings
+from open_hypergamy.sources.fetch import Fetcher
 
 FIXTURES = Path(__file__).parent / "fixtures"
 PUBLIC_IP = "93.184.216.34"

@@ -2,17 +2,17 @@ from datetime import UTC, date, datetime
 
 import pytest
 
-from opportunity_radar.config import ScoringWeights
-from opportunity_radar.domain.enums import EligibilityStatus as E
-from opportunity_radar.profile import Profile
-from opportunity_radar.scoring.actions import (
+from open_hypergamy.config import ScoringWeights
+from open_hypergamy.domain.enums import EligibilityStatus as E
+from open_hypergamy.profile import Profile
+from open_hypergamy.scoring.actions import (
     plan_actions,
     priority_band,
     recommended_action,
 )
-from opportunity_radar.scoring.fit import compute_fit, detect_region, region_ok
-from opportunity_radar.scoring.urgency import UrgencyResult, compute_urgency
-from opportunity_radar.verification.eligibility import assess, interpret
+from open_hypergamy.scoring.fit import compute_fit, detect_region, region_ok
+from open_hypergamy.scoring.urgency import UrgencyResult, compute_urgency
+from open_hypergamy.verification.eligibility import assess, interpret
 
 
 def profile(**academic):

@@ -7,17 +7,17 @@ import pytest
 from tests.helpers import FakeWeb, fixture, html, make_fetcher
 from tests.helpers_llm import FakeGateway, empty_output, ev
 
-from opportunity_radar.clock import FixedClock
-from opportunity_radar.config import load_config
-from opportunity_radar.discovery import orchestrator as orch
-from opportunity_radar.discovery.pipeline import promote_from_db, run_llm_queue
-from opportunity_radar.extraction.llm_extractor import build_llm_service
-from opportunity_radar.llm.ack import write_ack
-from opportunity_radar.llm.client import OpenAICompatClient
-from opportunity_radar.persistence import db as dbm
-from opportunity_radar.persistence import migrations as mig
-from opportunity_radar.persistence.repositories.sources import SourceRepository
-from opportunity_radar.sources.registry import load_source_files
+from open_hypergamy.clock import FixedClock
+from open_hypergamy.config import load_config
+from open_hypergamy.discovery import orchestrator as orch
+from open_hypergamy.discovery.pipeline import promote_from_db, run_llm_queue
+from open_hypergamy.extraction.llm_extractor import build_llm_service
+from open_hypergamy.llm.ack import write_ack
+from open_hypergamy.llm.client import OpenAICompatClient
+from open_hypergamy.persistence import db as dbm
+from open_hypergamy.persistence import migrations as mig
+from open_hypergamy.persistence.repositories.sources import SourceRepository
+from open_hypergamy.sources.registry import load_source_files
 
 CLOCK = FixedClock(datetime(2026, 10, 29, 12, 0, tzinfo=UTC))
 SEED = "https://example.edu/students/opportunities"
@@ -27,7 +27,7 @@ GOOD = Path(__file__).parent.parent / "fixtures" / "sources_good.yaml"
 
 @pytest.fixture
 def env(tmp_path):
-    cfg = load_config(home=tmp_path / "home", env={"RADAR_FREELLMAPI_API_KEY": "k"})
+    cfg = load_config(home=tmp_path / "home", env={"OHG_FREELLMAPI_API_KEY": "k"})
     cfg.paths.ensure()
     conn = dbm.connect(cfg.paths.db, create=True)
     mig.migrate(conn, mig.discover(), CLOCK)
@@ -45,13 +45,13 @@ def web(programme=None):
 def run(env, gw, w=None, ack=True):
     cfg, conn = env
     if ack:
-        write_ack(cfg.paths.llm_ack, CLOCK, "freellmapi", "auto:radar-free")
+        write_ack(cfg.paths.llm_ack, CLOCK, "freellmapi", "auto:ohg-free")
     svc = build_llm_service(
         conn,
         cfg,
         CLOCK,
         client=OpenAICompatClient(
-            "http://127.0.0.1:3001/v1", "auto:radar-free", "k", transport=gw.transport
+            "http://127.0.0.1:3001/v1", "auto:ohg-free", "k", transport=gw.transport
         ),
     )
     fetcher, _ = make_fetcher(w or web())
@@ -191,7 +191,7 @@ def test_gateway_down_queues_work_and_deterministic_pipeline_continues(env):
         cfg,
         CLOCK,
         client=OpenAICompatClient(
-            "http://127.0.0.1:3001/v1", "auto:radar-free", "k", transport=gw2.transport
+            "http://127.0.0.1:3001/v1", "auto:ohg-free", "k", transport=gw2.transport
         ),
     )
     stats = run_llm_queue(conn, cfg, CLOCK, svc2, limit=10)
@@ -228,7 +228,7 @@ def test_missing_acknowledgement_queues_without_sending_anything(env):
 
 
 def test_disabled_llm_makes_no_requests_and_queues_nothing(tmp_path):
-    cfg = load_config(home=tmp_path / "home", env={"RADAR_LLM_ENABLED": "false"})
+    cfg = load_config(home=tmp_path / "home", env={"OHG_LLM_ENABLED": "false"})
     cfg.paths.ensure()
     conn = dbm.connect(cfg.paths.db, create=True)
     mig.migrate(conn, mig.discover(), CLOCK)

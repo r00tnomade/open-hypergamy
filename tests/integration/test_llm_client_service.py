@@ -6,18 +6,18 @@ import httpx
 import pytest
 from tests.helpers_llm import FakeGateway, empty_output, ev
 
-from opportunity_radar.clock import FixedClock
-from opportunity_radar.config import load_config
-from opportunity_radar.errors import ConfigurationError, LLMInvalidResponse, LLMUnavailable
-from opportunity_radar.extraction.llm_extractor import (
+from open_hypergamy.clock import FixedClock
+from open_hypergamy.config import load_config
+from open_hypergamy.errors import ConfigurationError, LLMInvalidResponse, LLMUnavailable
+from open_hypergamy.extraction.llm_extractor import (
     LLMExtractionService,
     build_llm_service,
     llm_enabled,
 )
-from opportunity_radar.llm.ack import POLICY_VERSION, ack_is_current, write_ack
-from opportunity_radar.llm.client import OpenAICompatClient
-from opportunity_radar.persistence import db as dbm
-from opportunity_radar.persistence import migrations as mig
+from open_hypergamy.llm.ack import POLICY_VERSION, ack_is_current, write_ack
+from open_hypergamy.llm.client import OpenAICompatClient
+from open_hypergamy.persistence import db as dbm
+from open_hypergamy.persistence import migrations as mig
 
 CLOCK = FixedClock(datetime(2026, 10, 29, 12, 0, tzinfo=UTC))
 BASE = "http://127.0.0.1:3001/v1"
@@ -29,7 +29,7 @@ PAGE = (
 
 
 def client(gw, key="sk-test-key-123456", **kw):
-    return OpenAICompatClient(BASE, "auto:radar-free", key, transport=gw.transport, **kw)
+    return OpenAICompatClient(BASE, "auto:ohg-free", key, transport=gw.transport, **kw)
 
 
 def good(p):
@@ -51,7 +51,7 @@ def test_client_request_shape_and_auth_header():
     [req] = gw.chat_requests
     assert req.headers["authorization"] == "Bearer sk-test-key-123456"
     body = json.loads(req.content)
-    assert body["model"] == "auto:radar-free" and body["temperature"] == 0.0
+    assert body["model"] == "auto:ohg-free" and body["temperature"] == 0.0
     assert [m["role"] for m in body["messages"]] == ["system", "user"]
     assert "tools" not in body and "functions" not in body  # the model gets no tools
 
@@ -102,11 +102,11 @@ def test_malformed_and_rejected_requests_are_invalid_response():
 
 def test_privacy_guard_blocks_requests_containing_forbidden_strings():
     gw = FakeGateway()
-    c = client(gw, forbidden=["/Users/private/.radar", "7654321:telegram-secret"])
+    c = client(gw, forbidden=["/Users/private/.ohg", "7654321:telegram-secret"])
     with pytest.raises(LLMUnavailable, match="privacy guard"):
         c.complete_json(
             system_prompt="s",
-            user_payload={"note": "in /Users/private/.radar/db"},
+            user_payload={"note": "in /Users/private/.ohg/db"},
             schema={},
             cache_key="k",
         )
@@ -114,8 +114,8 @@ def test_privacy_guard_blocks_requests_containing_forbidden_strings():
 
 
 def test_healthy_and_models_listing():
-    gw = FakeGateway(models=["auto:radar-free", "x"])
-    assert client(gw).healthy() and client(gw).list_models() == ["auto:radar-free", "x"]
+    gw = FakeGateway(models=["auto:ohg-free", "x"])
+    assert client(gw).healthy() and client(gw).list_models() == ["auto:ohg-free", "x"]
     down = FakeGateway(lambda p: None)
     down.transport = httpx.MockTransport(lambda r: (_ for _ in ()).throw(httpx.ConnectError("no")))
     assert not OpenAICompatClient(BASE, "m", "k", transport=down.transport).healthy()
@@ -126,7 +126,7 @@ def test_healthy_and_models_listing():
 def env(tmp_path, monkeypatch):
     monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "7654321:telegram-secret-token-value")
     monkeypatch.setenv("TELEGRAM_CHAT_ID", "99887766")
-    cfg = load_config(home=tmp_path / "home", env={"RADAR_FREELLMAPI_API_KEY": "x"})
+    cfg = load_config(home=tmp_path / "home", env={"OHG_FREELLMAPI_API_KEY": "x"})
     cfg.paths.ensure()
     conn = dbm.connect(cfg.paths.db, create=True)
     mig.migrate(conn, mig.discover(), CLOCK)
@@ -137,7 +137,7 @@ def env(tmp_path, monkeypatch):
 def service(env, gw, ack=True, **cfgkw):
     cfg, conn = env
     if ack:
-        write_ack(cfg.paths.llm_ack, CLOCK, "freellmapi", "auto:radar-free")
+        write_ack(cfg.paths.llm_ack, CLOCK, "freellmapi", "auto:ohg-free")
     return LLMExtractionService(conn, cfg, CLOCK, client(gw))
 
 
@@ -244,7 +244,7 @@ def test_prompt_injection_cannot_change_policy_or_add_actions(env):
 
 
 def test_local_provider_needs_no_acknowledgement_and_stays_local(tmp_path):
-    cfg = load_config(home=tmp_path / "h", env={"RADAR_LLM_PROVIDER": "local"})
+    cfg = load_config(home=tmp_path / "h", env={"OHG_LLM_PROVIDER": "local"})
     cfg.paths.ensure()
     conn = dbm.connect(cfg.paths.db, create=True)
     mig.migrate(conn, mig.discover(), CLOCK)
@@ -257,20 +257,20 @@ def test_local_provider_needs_no_acknowledgement_and_stays_local(tmp_path):
 
 def test_disabled_routes_build_no_service(tmp_path):
     for env_ in (
-        {"RADAR_LLM_ENABLED": "false"},
-        {"RADAR_LLM_ALLOW_REMOTE_PUBLIC_CONTENT": "false"},
+        {"OHG_LLM_ENABLED": "false"},
+        {"OHG_LLM_ALLOW_REMOTE_PUBLIC_CONTENT": "false"},
     ):
         cfg = load_config(home=tmp_path / "h", env=env_)
         assert not llm_enabled(cfg)
     cfg = load_config(
         home=tmp_path / "h",
-        env={"RADAR_LLM_PROVIDER": "local", "RADAR_LLM_ALLOW_REMOTE_PUBLIC_CONTENT": "false"},
+        env={"OHG_LLM_PROVIDER": "local", "OHG_LLM_ALLOW_REMOTE_PUBLIC_CONTENT": "false"},
     )
     assert llm_enabled(cfg)  # the remote-content switch only governs FreeLLMAPI
     conn = dbm.connect(tmp_path / "x.sqlite3", create=True)
     assert (
         build_llm_service(
-            conn, load_config(home=tmp_path / "h", env={"RADAR_LLM_ENABLED": "false"}), CLOCK
+            conn, load_config(home=tmp_path / "h", env={"OHG_LLM_ENABLED": "false"}), CLOCK
         )
         is None
     )
@@ -278,5 +278,5 @@ def test_disabled_routes_build_no_service(tmp_path):
 
 
 def test_no_fallback_provider_exists_in_client_module():
-    src = (Path(__file__).parents[2] / "src/opportunity_radar/llm/client.py").read_text()
+    src = (Path(__file__).parents[2] / "src/open_hypergamy/llm/client.py").read_text()
     assert "api.openai.com" not in src and "anthropic" not in src.lower()

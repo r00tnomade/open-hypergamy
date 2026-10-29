@@ -2,8 +2,8 @@ from pathlib import Path
 
 import pytest
 
-from opportunity_radar.config import load_config
-from opportunity_radar.errors import ConfigurationError
+from open_hypergamy.config import load_config
+from open_hypergamy.errors import ConfigurationError
 
 
 def test_defaults_match_lld(tmp_path):
@@ -11,15 +11,15 @@ def test_defaults_match_lld(tmp_path):
     s = cfg.settings
     assert s.llm.provider == "freellmapi"
     assert s.llm.freellmapi.base_url == "http://127.0.0.1:3001/v1"
-    assert s.llm.freellmapi.model == "auto:radar-free"
+    assert s.llm.freellmapi.model == "auto:ohg-free"
     assert s.app.per_host_min_interval_seconds == 3.0
-    assert cfg.paths.db == tmp_path.resolve() / "opportunity_radar.sqlite3"
+    assert cfg.paths.db == tmp_path.resolve() / "open_hypergamy.sqlite3"
 
 
 def test_precedence_yaml_then_env_then_cli(tmp_path):
     f = tmp_path / "s.yaml"
     f.write_text("app:\n  log_level: DEBUG\n  max_retries: 5\n")
-    env = {"RADAR_LOG_LEVEL": "WARNING"}
+    env = {"OHG_LOG_LEVEL": "WARNING"}
     cfg = load_config(config=f, env=env, cli_overrides={"app": {"max_retries": 7}})
     assert cfg.settings.app.log_level == "WARNING"  # env beats yaml
     assert cfg.settings.app.max_retries == 7  # cli beats all
@@ -27,7 +27,7 @@ def test_precedence_yaml_then_env_then_cli(tmp_path):
 
 def test_llm_base_url_env_targets_active_provider():
     cfg = load_config(
-        env={"RADAR_LLM_PROVIDER": "local", "RADAR_LLM_BASE_URL": "http://localhost:1234/v1"}
+        env={"OHG_LLM_PROVIDER": "local", "OHG_LLM_BASE_URL": "http://localhost:1234/v1"}
     )
     assert cfg.settings.llm.local.base_url == "http://localhost:1234/v1"
     assert cfg.settings.llm.freellmapi.base_url == "http://127.0.0.1:3001/v1"
@@ -35,7 +35,7 @@ def test_llm_base_url_env_targets_active_provider():
 
 def test_non_loopback_llm_rejected():
     with pytest.raises(ConfigurationError, match="loopback"):
-        load_config(env={"RADAR_FREELLMAPI_BASE_URL": "https://api.example.com/v1"})
+        load_config(env={"OHG_FREELLMAPI_BASE_URL": "https://api.example.com/v1"})
 
 
 def test_circumvention_flags_rejected(tmp_path):

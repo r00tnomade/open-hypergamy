@@ -4,10 +4,10 @@ from datetime import UTC, datetime
 
 import pytest
 
-from opportunity_radar.clock import FixedClock
-from opportunity_radar.errors import MigrationIntegrityError
-from opportunity_radar.persistence import db as dbm
-from opportunity_radar.persistence import migrations as mig
+from open_hypergamy.clock import FixedClock
+from open_hypergamy.errors import MigrationIntegrityError
+from open_hypergamy.persistence import db as dbm
+from open_hypergamy.persistence import migrations as mig
 
 CLOCK = FixedClock(datetime(2026, 10, 29, 12, 0, tzinfo=UTC))
 

@@ -9,21 +9,21 @@ from tests.helpers import FakeWeb, fixture, html, make_fetcher
 from tests.helpers_llm import FakeGateway, empty_output, ev
 from tests.helpers_tg import RecordingSink
 
-from opportunity_radar.clock import FixedClock
-from opportunity_radar.config import load_config
-from opportunity_radar.discovery import orchestrator as orch
-from opportunity_radar.errors import ConfigurationError
-from opportunity_radar.extraction.llm_extractor import build_llm_service
-from opportunity_radar.llm.ack import write_ack
-from opportunity_radar.llm.client import OpenAICompatClient
-from opportunity_radar.monitoring.cycle import score_and_alert
-from opportunity_radar.monitoring.deadlines import build_digest, prepare, queue_digest
-from opportunity_radar.monitoring.recheck import recheck_editions
-from opportunity_radar.notifications.outbox import Outbox
-from opportunity_radar.persistence import db as dbm
-from opportunity_radar.persistence import migrations as mig
-from opportunity_radar.persistence.repositories.sources import SourceRepository
-from opportunity_radar.sources.registry import load_source_files
+from open_hypergamy.clock import FixedClock
+from open_hypergamy.config import load_config
+from open_hypergamy.discovery import orchestrator as orch
+from open_hypergamy.errors import ConfigurationError
+from open_hypergamy.extraction.llm_extractor import build_llm_service
+from open_hypergamy.llm.ack import write_ack
+from open_hypergamy.llm.client import OpenAICompatClient
+from open_hypergamy.monitoring.cycle import score_and_alert
+from open_hypergamy.monitoring.deadlines import build_digest, prepare, queue_digest
+from open_hypergamy.monitoring.recheck import recheck_editions
+from open_hypergamy.notifications.outbox import Outbox
+from open_hypergamy.persistence import db as dbm
+from open_hypergamy.persistence import migrations as mig
+from open_hypergamy.persistence.repositories.sources import SourceRepository
+from open_hypergamy.sources.registry import load_source_files
 
 SEED = "https://example.edu/students/opportunities"
 CHILD = SEED + "/summer-school"
@@ -57,7 +57,7 @@ class Env:
         self.clock = Clk(datetime(2027, 2, 25, 12, tzinfo=UTC))
         self.cfg = load_config(
             home=tmp_path / "home",
-            env={"RADAR_FREELLMAPI_API_KEY": "k", "RADAR_TELEGRAM_SEND_DELAY_SECONDS": "0"},
+            env={"OHG_FREELLMAPI_API_KEY": "k", "OHG_TELEGRAM_SEND_DELAY_SECONDS": "0"},
         )
         self.cfg.paths.ensure()
         if profile:
@@ -67,7 +67,7 @@ class Env:
         SourceRepository(self.conn, self.clock).import_configs(
             load_source_files([FIXTURES / "sources_good.yaml"])
         )
-        write_ack(self.cfg.paths.llm_ack, self.clock, "freellmapi", "auto:radar-free")
+        write_ack(self.cfg.paths.llm_ack, self.clock, "freellmapi", "auto:ohg-free")
         self.sink = RecordingSink()
         self.programme = fixture("programme.html")
 
@@ -77,7 +77,7 @@ class Env:
     def discover(self, web=None, gw=None):
         gw = gw or FakeGateway(rich)
         svc = build_llm_service(self.conn, self.cfg, self.clock, client=OpenAICompatClient(
-            "http://127.0.0.1:3001/v1", "auto:radar-free", "k", transport=gw.transport))  # fmt: skip
+            "http://127.0.0.1:3001/v1", "auto:ohg-free", "k", transport=gw.transport))  # fmt: skip
         fetcher, _ = make_fetcher(web or self.web())
         return orch.run_discovery(self.conn, self.cfg, fetcher, self.clock, llm=svc)
 
@@ -412,7 +412,7 @@ def test_unverified_deadlines_never_drive_urgency_or_reminders(env):
     env.conn.execute("UPDATE sources SET trust_tier='t4_aggregator', discovery_only=1")
     env.discover()
     [cand] = env.q("SELECT id FROM candidates")
-    from opportunity_radar.discovery.pipeline import promote_from_db
+    from open_hypergamy.discovery.pipeline import promote_from_db
 
     promote_from_db(env.conn, env.cfg, env.clock, cand[0])
     env.cycle()
@@ -439,7 +439,7 @@ def test_telegram_down_keeps_messages_queued_and_later_delivers_once(env):
 
 
 def test_transient_telegram_failure_retries_later_without_duplicates(env):
-    from opportunity_radar.notifications.base import SendResult
+    from open_hypergamy.notifications.base import SendResult
 
     env.discover()
     flaky = RecordingSink([SendResult(False, error="HTTP 502")])
@@ -481,7 +481,7 @@ def test_source_health_alert_for_failing_source_behind_a_deadline(env):
     env.conn.execute("UPDATE sources SET failure_streak=3, last_success_at='2027-02-20T00:00:00Z'")
     env.cycle()
     health = next(t for t in env.texts() if t.startswith("⚠️ Monitoring issue"))
-    assert "Failure streak: 3" in health and "radar sources failures" in health
+    assert "Failure streak: 3" in health and "ohg sources failures" in health
     env.conn.execute("UPDATE sources SET failure_streak=3")
     assert env.cycle().alerts.queued == {}  # same bucket: no repeat
     env.conn.execute("UPDATE sources SET failure_streak=4")

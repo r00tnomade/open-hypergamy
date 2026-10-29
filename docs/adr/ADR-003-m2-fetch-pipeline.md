@@ -4,7 +4,7 @@
 
 1. **Migration 0002** adds `discovery_policy_json`, `extraction_hints_json`, `discovery_only`, `policy_override_at` to `sources`. LLD §6 requires these concepts but the 0001 schema has no columns for them; 0001 stays immutable.
 2. **`PageObservation` URLs are canonical `str`, not `HttpUrl`.** Pydantic's `HttpUrl` re-normalizes (e.g. appends `/`), which would silently change canonical identity. Added `entries`, `meta`, cache paths and `depth` fields.
-3. **Policy review gate.** A source is activated at import only if `robots_policy_checked_at` and a non-empty `terms_review_note` are present, or `--override-policy-review` is given (stored in `policy_override_at`). `radar sources add` always creates a disabled `review_required` source.
+3. **Policy review gate.** A source is activated at import only if `robots_policy_checked_at` and a non-empty `terms_review_note` are present, or `--override-policy-review` is given (stored in `policy_override_at`). `ohg sources add` always creates a disabled `review_required` source.
 4. **Discovery-only** = T4/T5 with no documented `authority_scope`; stored in `discovery_only`.
 5. **Robots:** 4xx robots.txt = allow; 5xx/network error = do not crawl that origin this run (recorded as `blocked_policy`, not a source failure). Cached per origin per process.
 6. **Failures vs. policy:** `blocked_policy` and `skipped` never increment `failure_streak`. Real failures back off 1h, 2h, 4h… capped at the source's fetch interval. A failed check never alters etag, content hash, `last_success_at` or stored observations.

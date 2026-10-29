@@ -2,7 +2,7 @@ import json
 
 from typer.testing import CliRunner
 
-from opportunity_radar.cli import app
+from open_hypergamy.cli import app
 
 runner = CliRunner()
 
@@ -10,7 +10,7 @@ runner = CliRunner()
 def test_init_is_idempotent_and_prints_checklist():
     r = runner.invoke(app, ["init"])
     assert r.exit_code == 0, r.output
-    assert "Created database" in r.output and "radar-free" in r.output
+    assert "Created database" in r.output and "ohg-free" in r.output
     r2 = runner.invoke(app, ["init"])
     assert r2.exit_code == 0 and "Opened database" in r2.output and "applied 0" in r2.output
 
@@ -32,14 +32,14 @@ def test_status_before_init_is_database_error():
 
 def test_doctor_strict_fails_when_gateway_down(monkeypatch):
     runner.invoke(app, ["init"])
-    monkeypatch.setenv("RADAR_FREELLMAPI_BASE_URL", "http://127.0.0.1:1/v1")  # nothing listens
+    monkeypatch.setenv("OHG_FREELLMAPI_BASE_URL", "http://127.0.0.1:1/v1")  # nothing listens
     assert runner.invoke(app, ["doctor"]).exit_code == 0
     assert runner.invoke(app, ["doctor", "--strict"]).exit_code == 5
 
 
 def test_doctor_strict_ok_when_llm_disabled(monkeypatch):
     runner.invoke(app, ["init"])
-    monkeypatch.setenv("RADAR_LLM_ENABLED", "false")
+    monkeypatch.setenv("OHG_LLM_ENABLED", "false")
     assert runner.invoke(app, ["doctor", "--strict"]).exit_code == 0
 
 
@@ -52,11 +52,9 @@ def test_backup_then_restore_check_then_integrity():
     r = runner.invoke(app, ["db", "backup"])
     assert r.exit_code == 0, r.output
     status = json.loads(runner.invoke(app, ["status", "--json"]).stdout)
-    assert status["latest_backup"].startswith("radar-")
+    assert status["latest_backup"].startswith("ohg-")
     backup = next(
-        (__import__("pathlib").Path(__import__("os").environ["RADAR_HOME"]) / "backups").glob(
-            "radar-*"
-        )
+        (__import__("pathlib").Path(__import__("os").environ["OHG_HOME"]) / "backups").glob("ohg-*")
     )
     assert runner.invoke(app, ["db", "restore", "--check", str(backup)]).exit_code == 0
     assert runner.invoke(app, ["db", "restore", str(backup)]).exit_code == 2

@@ -2,22 +2,22 @@ from datetime import date
 
 import pytest
 
-from opportunity_radar.discovery.normalize import (
+from open_hypergamy.discovery.normalize import (
     clean_title,
     edition_year,
     guess_edition_key,
     normalize_title,
     registrable_domain,
 )
-from opportunity_radar.domain.enums import FactStatus
-from opportunity_radar.domain.models import CandidateFact, EvidenceQuote
-from opportunity_radar.verification.chronology import (
+from open_hypergamy.domain.enums import FactStatus
+from open_hypergamy.domain.models import CandidateFact, EvidenceQuote
+from open_hypergamy.verification.chronology import (
     check_chronology,
     derive_application_status,
     freshness_window,
 )
-from opportunity_radar.verification.evidence import ground_facts, quote_grounded
-from opportunity_radar.verification.rules import verify_fact
+from open_hypergamy.verification.evidence import ground_facts, quote_grounded
+from open_hypergamy.verification.rules import verify_fact
 
 TODAY = date(2026, 10, 29)
 TEXT = "Applications close on 15 March 2027. Please prepare a CV."

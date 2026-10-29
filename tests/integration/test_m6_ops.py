@@ -7,18 +7,18 @@ from pathlib import Path
 import pytest
 from tests.integration.test_m5_flow import CHILD, Env
 
-from opportunity_radar import keychain
-from opportunity_radar.cli import app
-from opportunity_radar.config import load_config
-from opportunity_radar.monitoring.catchup import job_gaps
-from opportunity_radar.persistence import backups as bk
-from opportunity_radar.persistence import db as dbm
-from opportunity_radar.persistence import migrations as mig
-from opportunity_radar.reporting import changes as changes_report
-from opportunity_radar.reporting import sources as sources_report
-from opportunity_radar.reporting import weekly as weekly_report
-from opportunity_radar.reporting.calendar import build_ics, esc, fold
-from opportunity_radar.scheduling import launchd
+from open_hypergamy import keychain
+from open_hypergamy.cli import app
+from open_hypergamy.config import load_config
+from open_hypergamy.monitoring.catchup import job_gaps
+from open_hypergamy.persistence import backups as bk
+from open_hypergamy.persistence import db as dbm
+from open_hypergamy.persistence import migrations as mig
+from open_hypergamy.reporting import changes as changes_report
+from open_hypergamy.reporting import sources as sources_report
+from open_hypergamy.reporting import weekly as weekly_report
+from open_hypergamy.reporting.calendar import build_ics, esc, fold
+from open_hypergamy.scheduling import launchd
 
 
 @pytest.fixture
@@ -89,7 +89,7 @@ def test_uids_are_stable_across_exports(env):
     a = {i["UID"][0] for i in parse_ics(build_ics(env.conn, env.clock, actions={"apply"})[0])}
     env.clock.advance(hours=5)
     b = {i["UID"][0] for i in parse_ics(build_ics(env.conn, env.clock, actions={"apply"})[0])}
-    assert a == b and all(u.endswith("@opportunityradar.local") for u in a)
+    assert a == b and all(u.endswith("@openhypergamy.local") for u in a)
 
 
 def test_action_filter(env):
@@ -132,7 +132,7 @@ def test_only_confirmed_dates_unless_asked_and_always_labelled(env):
 # --- backups -----------------------------------------------------------------------------------------
 def mk(day: str, hhmm="0300"):
     return bk.BackupFile(
-        Path(f"radar-{day}T{hhmm}00Z.sqlite3"),
+        Path(f"ohg-{day}T{hhmm}00Z.sqlite3"),
         datetime.strptime(f"{day}{hhmm}", "%Y%m%d%H%M").replace(tzinfo=UTC),
     )
 
@@ -164,23 +164,23 @@ def test_newest_backup_is_never_pruned_even_when_ancient():
     assert keep == [old[1]] and remove == [old[0]]
 
 
-def test_prune_only_touches_radar_backups_and_removes_sidecars(tmp_path):
-    for name in ("radar-20240101T000000Z.sqlite3", "radar-20240101T000000Z.sqlite3-wal", "radar-20270330T000000Z.sqlite3",
-                 "pre-migration-20240101T000000Z.sqlite3", "notes.txt", "radar-bogus.sqlite3"):  # fmt: skip
+def test_prune_only_touches_ohg_backups_and_removes_sidecars(tmp_path):
+    for name in ("ohg-20240101T000000Z.sqlite3", "ohg-20240101T000000Z.sqlite3-wal", "ohg-20270330T000000Z.sqlite3",
+                 "pre-migration-20240101T000000Z.sqlite3", "notes.txt", "ohg-bogus.sqlite3"):  # fmt: skip
         (tmp_path / name).write_text("x")
     kept, removed = bk.prune(tmp_path, datetime(2027, 3, 31, tzinfo=UTC), 7, 4)
-    assert kept == 1 and [p.name for p in removed] == ["radar-20240101T000000Z.sqlite3"]
+    assert kept == 1 and [p.name for p in removed] == ["ohg-20240101T000000Z.sqlite3"]
     left = {p.name for p in tmp_path.iterdir()}
     assert left == {
-        "radar-20270330T000000Z.sqlite3",
+        "ohg-20270330T000000Z.sqlite3",
         "pre-migration-20240101T000000Z.sqlite3",
         "notes.txt",
-        "radar-bogus.sqlite3",
+        "ohg-bogus.sqlite3",
     }
 
 
 def test_backup_is_standalone_and_restore_goes_to_a_new_path_only(env, tmp_path):
-    dest = tmp_path / "b" / "radar-20270301T120000Z.sqlite3"
+    dest = tmp_path / "b" / "ohg-20270301T120000Z.sqlite3"
     assert dbm.backup_to(env.conn, dest) == []
     assert sorted(p.name for p in dest.parent.iterdir()) == [dest.name]  # no -wal/-shm sidecars
     ro = sqlite3.connect(f"file:{dest}?mode=ro", uri=True)
@@ -197,7 +197,7 @@ def test_backup_is_standalone_and_restore_goes_to_a_new_path_only(env, tmp_path)
 
 
 def test_corrupt_backup_is_rejected(tmp_path):
-    p = tmp_path / "radar-20270301T000000Z.sqlite3"
+    p = tmp_path / "ohg-20270301T000000Z.sqlite3"
     p.write_bytes(b"SQLite format 3\x00" + b"\x00" * 200)
     with pytest.raises(Exception):  # noqa: B017
         bk.check_backup(p)
@@ -214,19 +214,19 @@ def test_plists_are_absolute_secret_free_and_one_per_job(tmp_path):
     for s in specs:
         d = plistlib.loads(launchd.render_plist(s, cfg))
         seen[s.job] = d
-        assert d["Label"] == f"com.opportunityradar.{s.job}"
+        assert d["Label"] == f"com.openhypergamy.{s.job}"
         assert all(Path(a).is_absolute() for a in d["ProgramArguments"][:1])
         assert (
             d["WorkingDirectory"] == str(cfg.paths.home)
             and Path(d["WorkingDirectory"]).is_absolute()
         )
-        assert set(d["EnvironmentVariables"]) == {"PATH", "HOME", "RADAR_HOME", "RADAR_TRIGGER"}
-        assert d["EnvironmentVariables"]["RADAR_TRIGGER"] == "launchd" and d["RunAtLoad"] is False
+        assert set(d["EnvironmentVariables"]) == {"PATH", "HOME", "OHG_HOME", "OHG_TRIGGER"}
+        assert d["EnvironmentVariables"]["OHG_TRIGGER"] == "launchd" and d["RunAtLoad"] is False
         assert d["StandardOutPath"].startswith(str(cfg.paths.home / "logs"))
         assert "SECRET" not in plistlib.dumps(d).decode()
     program = seen["sentinel"]["ProgramArguments"]
     assert (
-        Path(program[0]).name == "radar" and Path(program[0]).is_file()
+        Path(program[0]).name == "ohg" and Path(program[0]).is_file()
     )  # the venv's console script
     assert (
         ".venv" in program[0]
@@ -245,7 +245,7 @@ def test_custom_config_path_is_passed_as_absolute(tmp_path):
     f = tmp_path / "s.yaml"
     f.write_text("{}")
     assert plistlib.loads(launchd.render_plist(spec, cfg, config_file=f))["EnvironmentVariables"][
-        "RADAR_CONFIG"
+        "OHG_CONFIG"
     ] == str(f.resolve())
 
 
@@ -261,7 +261,7 @@ def test_install_and_uninstall_manage_only_our_agents(tmp_path):
     )
     assert launchd.installed_jobs(agents) == set(launchd.JOB_COMMANDS)
     assert [c[0] for c in calls].count("bootstrap") == 4 and calls[0][0] == "bootout"
-    assert oct((agents / "com.opportunityradar.sentinel.plist").stat().st_mode & 0o777) == "0o644"
+    assert oct((agents / "com.openhypergamy.sentinel.plist").stat().st_mode & 0o777) == "0o644"
     failed = launchd.install(
         cfg, agents_dir=agents, runner=lambda a: (1, "boom") if a[0] == "bootstrap" else (0, "")
     )
@@ -301,7 +301,7 @@ def fake_security(monkeypatch):
 
     monkeypatch.setattr(keychain, "_runner", runner)
     monkeypatch.setattr(keychain.sys, "platform", "darwin")
-    monkeypatch.setenv("RADAR_USE_KEYCHAIN", "1")
+    monkeypatch.setenv("OHG_USE_KEYCHAIN", "1")
     keychain.clear_cache()
     yield store, calls
     keychain.clear_cache()
@@ -331,7 +331,7 @@ def test_environment_wins_then_keychain_and_unset_is_empty(fake_security, monkey
 
 def test_keychain_is_never_consulted_when_disabled(monkeypatch):
     monkeypatch.setattr(keychain, "_runner", lambda a, s: pytest.fail("security called"))
-    monkeypatch.setenv("RADAR_USE_KEYCHAIN", "0")
+    monkeypatch.setenv("OHG_USE_KEYCHAIN", "0")
     keychain.clear_cache()
     monkeypatch.delenv("TELEGRAM_BOT_TOKEN", raising=False)
     assert keychain.get_secret("TELEGRAM_BOT_TOKEN") == ""
@@ -387,7 +387,7 @@ def test_jobs_are_expected_once_installed_or_run_and_gaps_are_measured(env, tmp_
 
 
 def test_gap_alert_is_sent_once_per_gap(env):
-    from opportunity_radar.monitoring.cycle import queue_gap_alerts
+    from open_hypergamy.monitoring.cycle import queue_gap_alerts
 
     env.discover()
     env.conn.execute(
@@ -438,7 +438,7 @@ def test_digest_and_weekly_report_share_one_data_source(env):
     env.cycle()
     data = weekly_report.gather(env.conn, env.cfg, env.clock)
     text = weekly_report.render_text(data)
-    from opportunity_radar.monitoring.deadlines import build_digest
+    from open_hypergamy.monitoring.deadlines import build_digest
 
     assert build_digest(env.conn, env.cfg, env.clock) == text
 
@@ -487,7 +487,7 @@ def test_sources_report_never_reports_the_target_as_a_count(env):
 
 
 def test_source_skeleton_files_are_valid_and_empty():
-    from opportunity_radar.sources.registry import load_source_files
+    from open_hypergamy.sources.registry import load_source_files
 
     files = sorted((Path(__file__).parents[2] / "config" / "sources").glob("*.yaml"))
     assert len(files) == 8 and load_source_files(files) == []
@@ -499,8 +499,8 @@ def test_source_skeleton_files_are_valid_and_empty():
 
 
 def test_portfolio_field_is_validated_and_stored(env, tmp_path):
-    from opportunity_radar.errors import ConfigurationError
-    from opportunity_radar.sources.registry import load_source_files
+    from open_hypergamy.errors import ConfigurationError
+    from open_hypergamy.sources.registry import load_source_files
 
     base = (Path(__file__).parents[1] / "fixtures" / "sources_good.yaml").read_text()
     good = tmp_path / "g.yaml"

@@ -6,13 +6,13 @@ from pathlib import Path
 import pytest
 from tests.helpers_llm import FakeGateway, empty_output
 
-from opportunity_radar.clock import FixedClock
-from opportunity_radar.config import load_config
-from opportunity_radar.extraction.llm_extractor import LLMExtractionService
-from opportunity_radar.llm.ack import write_ack
-from opportunity_radar.llm.client import OpenAICompatClient
-from opportunity_radar.persistence import db as dbm
-from opportunity_radar.persistence import migrations as mig
+from open_hypergamy.clock import FixedClock
+from open_hypergamy.config import load_config
+from open_hypergamy.extraction.llm_extractor import LLMExtractionService
+from open_hypergamy.llm.ack import write_ack
+from open_hypergamy.llm.client import OpenAICompatClient
+from open_hypergamy.persistence import db as dbm
+from open_hypergamy.persistence import migrations as mig
 
 CLOCK = FixedClock(datetime(2026, 10, 29, 12, 0, tzinfo=UTC))
 
@@ -20,9 +20,9 @@ CLOCK = FixedClock(datetime(2026, 10, 29, 12, 0, tzinfo=UTC))
 def test_llm_output_can_never_reach_confirmed_official():
     from datetime import date
 
-    from opportunity_radar.domain.models import CandidateFact, EvidenceQuote
-    from opportunity_radar.verification.evidence import ground_facts
-    from opportunity_radar.verification.rules import verify_fact
+    from open_hypergamy.domain.models import CandidateFact, EvidenceQuote
+    from open_hypergamy.verification.evidence import ground_facts
+    from open_hypergamy.verification.rules import verify_fact
 
     text = "Applications close on 15 March 2027."
     f = CandidateFact(
@@ -48,10 +48,10 @@ def test_only_allow_listed_content_leaves_the_machine(tmp_path, monkeypatch):
     (tmp_path / "config" / "profile.yaml").write_text("academic: {institution: SecretUni}\n")
     conn = dbm.connect(cfg.paths.db, create=True)
     mig.migrate(conn, mig.discover(), CLOCK)
-    write_ack(cfg.paths.llm_ack, CLOCK, "freellmapi", "auto:radar-free")
+    write_ack(cfg.paths.llm_ack, CLOCK, "freellmapi", "auto:ohg-free")
     gw = FakeGateway(lambda p: empty_output())
     svc = LLMExtractionService(conn, cfg, CLOCK, OpenAICompatClient(
-        "http://127.0.0.1:3001/v1", "auto:radar-free", "key-abcdef", transport=gw.transport,
+        "http://127.0.0.1:3001/v1", "auto:ohg-free", "key-abcdef", transport=gw.transport,
         forbidden=[str(cfg.paths.home), "424242424", "key-abcdef"]))  # fmt: skip
     svc.extract(url="https://example.edu/p", trust_tier="t2_official_org", authority_scope="a",
                 observation_id="o", content_sha256="h", title="T", candidate_title="T",
@@ -65,7 +65,7 @@ def test_only_allow_listed_content_leaves_the_machine(tmp_path, monkeypatch):
 
 
 def test_no_network_client_other_than_loopback_gateway_in_llm_package():
-    root = Path(__file__).parents[2] / "src" / "opportunity_radar" / "llm"
+    root = Path(__file__).parents[2] / "src" / "open_hypergamy" / "llm"
     code = "\n".join(p.read_text() for p in root.glob("*.py"))
     assert code.count("httpx.Client(") == 1  # one client, constructed only after the loopback check
     for host in ("openai.com", "anthropic.com", "googleapis.com", "openrouter.ai"):
@@ -73,9 +73,9 @@ def test_no_network_client_other_than_loopback_gateway_in_llm_package():
 
 
 def test_non_loopback_llm_endpoint_cannot_be_configured():
-    from opportunity_radar.errors import ConfigurationError
+    from open_hypergamy.errors import ConfigurationError
 
-    for provider_env in ({"RADAR_FREELLMAPI_BASE_URL": "https://api.example.com/v1"},
-                         {"RADAR_LLM_PROVIDER": "local", "RADAR_LLM_BASE_URL": "http://10.0.0.5:1234/v1"}):  # fmt: skip
+    for provider_env in ({"OHG_FREELLMAPI_BASE_URL": "https://api.example.com/v1"},
+                         {"OHG_LLM_PROVIDER": "local", "OHG_LLM_BASE_URL": "http://10.0.0.5:1234/v1"}):  # fmt: skip
         with pytest.raises(ConfigurationError):
             load_config(env=provider_env)

@@ -4,15 +4,15 @@ import httpx
 import pytest
 from tests.helpers_tg import FakeBotApi, RecordingSink
 
-from opportunity_radar.clock import FixedClock
-from opportunity_radar.config import TelegramSettings
-from opportunity_radar.errors import ConfigurationError
-from opportunity_radar.notifications import templates as T
-from opportunity_radar.notifications.base import NotificationMessage, SendResult
-from opportunity_radar.notifications.outbox import Outbox
-from opportunity_radar.notifications.telegram import TelegramSink, split_message
-from opportunity_radar.persistence import db as dbm
-from opportunity_radar.persistence import migrations as mig
+from open_hypergamy.clock import FixedClock
+from open_hypergamy.config import TelegramSettings
+from open_hypergamy.errors import ConfigurationError
+from open_hypergamy.notifications import templates as T
+from open_hypergamy.notifications.base import NotificationMessage, SendResult
+from open_hypergamy.notifications.outbox import Outbox
+from open_hypergamy.notifications.telegram import TelegramSink, split_message
+from open_hypergamy.persistence import db as dbm
+from open_hypergamy.persistence import migrations as mig
 
 TOKEN = "1234567:AAH-secret-token-abcdefghijklmnop"
 

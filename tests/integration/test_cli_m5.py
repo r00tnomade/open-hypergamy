@@ -9,11 +9,11 @@ from tests.helpers import FakeWeb, fixture, html, make_fetcher
 from tests.helpers_tg import RecordingSink
 from typer.testing import CliRunner
 
-from opportunity_radar import cli
-from opportunity_radar.cli import app
-from opportunity_radar.clock import local_today
-from opportunity_radar.errors import ConfigurationError
-from opportunity_radar.notifications.base import SendResult
+from open_hypergamy import cli
+from open_hypergamy.cli import app
+from open_hypergamy.clock import local_today
+from open_hypergamy.errors import ConfigurationError
+from open_hypergamy.notifications.base import SendResult
 
 runner = CliRunner(env={"COLUMNS": "220"})
 FIX = Path(__file__).parent.parent / "fixtures"
@@ -51,7 +51,7 @@ def setup(monkeypatch):
 def add_profile():
     import os
 
-    shutil.copy(FIX / "profile.yaml", Path(os.environ["RADAR_HOME"]) / "profile.yaml")
+    shutil.copy(FIX / "profile.yaml", Path(os.environ["OHG_HOME"]) / "profile.yaml")
 
 
 def j(args):
@@ -145,10 +145,10 @@ def test_actions_done_and_dismiss_are_final(setup):
     assert "submit_application" in listing.output
     import os
 
-    from opportunity_radar.config import load_config
-    from opportunity_radar.persistence import db as dbm
+    from open_hypergamy.config import load_config
+    from open_hypergamy.persistence import db as dbm
 
-    conn = dbm.connect(load_config(home=Path(os.environ["RADAR_HOME"])).paths.db)
+    conn = dbm.connect(load_config(home=Path(os.environ["OHG_HOME"])).paths.db)
     ids = {r["action_type"]: r["id"] for r in conn.execute("SELECT * FROM action_items")}
     conn.close()
     assert runner.invoke(app, ["actions", "done", ids["submit_application"][:8]]).exit_code == 0
@@ -166,7 +166,7 @@ def test_profile_commands(setup):
     assert "bachelor" in shown.output
     import os
 
-    (Path(os.environ["RADAR_HOME"]) / "profile.yaml").write_text(
+    (Path(os.environ["OHG_HOME"]) / "profile.yaml").write_text(
         "version: 1\nprofile_version: x\nacademic: {country: DE}\n"
     )
     assert runner.invoke(app, ["profile", "validate"]).exit_code == 2
@@ -201,10 +201,10 @@ def test_sentinel_recheck_failure_is_partial_exit_4(setup):
     runner.invoke(app, ["run", "discovery", "--no-alerts"])
     import os
 
-    from opportunity_radar.config import load_config
-    from opportunity_radar.persistence import db as dbm
+    from open_hypergamy.config import load_config
+    from open_hypergamy.persistence import db as dbm
 
-    conn = dbm.connect(load_config(home=Path(os.environ["RADAR_HOME"])).paths.db)
+    conn = dbm.connect(load_config(home=Path(os.environ["OHG_HOME"])).paths.db)
     conn.execute("UPDATE editions SET source_fresh_until='2000-01-01T00:00:00Z'")
     conn.close()
     web.routes[CHILD] = httpx.Response(503)
@@ -269,7 +269,7 @@ def test_failed_deliveries_show_in_status_and_can_be_requeued(setup, monkeypatch
 def test_telegram_disabled_switch(setup, monkeypatch):
     web, sink = setup
     add_profile()
-    monkeypatch.setenv("RADAR_TELEGRAM_ENABLED", "false")
+    monkeypatch.setenv("OHG_TELEGRAM_ENABLED", "false")
     runner.invoke(app, ["run", "discovery"])
     assert sink.sent == [] and j(["status", "--json"])["notifications_pending"] == 0
     assert runner.invoke(app, ["notify", "test"]).exit_code == 2

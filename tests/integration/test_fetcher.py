@@ -2,15 +2,15 @@ import httpx
 import pytest
 from tests.helpers import FakeWeb, html, make_fetcher
 
-from opportunity_radar.config import AppSettings
-from opportunity_radar.errors import (
+from open_hypergamy.config import AppSettings
+from open_hypergamy.errors import (
     ContentTooLarge,
     FetchHTTPError,
     FetchTimeout,
     SourcePolicyDenied,
     UnsupportedContentType,
 )
-from opportunity_radar.sources.policy import Scope
+from open_hypergamy.sources.policy import Scope
 
 SCOPE = Scope(("example.edu",), deny_paths=("/login",))
 URL = "https://example.edu/page"
@@ -200,7 +200,7 @@ def test_robots_disallow_blocks_without_fetching_page():
 
 
 def test_robots_agent_specific_rule():
-    robots = httpx.Response(200, text="User-agent: OpportunityRadar\nDisallow: /\n")
+    robots = httpx.Response(200, text="User-agent: OpenHypergamy\nDisallow: /\n")
     f, _ = make_fetcher(FakeWeb({"https://example.edu/robots.txt": robots, URL: html(b"ok")}))
     with pytest.raises(SourcePolicyDenied):
         f.fetch(URL, SCOPE)

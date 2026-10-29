@@ -1,4 +1,4 @@
-# Copy to $RADAR_HOME/profile.yaml (or config/profile.yaml; both are git-ignored).
+# Copy to $OHG_HOME/profile.yaml (or config/profile.yaml; both are git-ignored).
 # Keep only what eligibility and ranking need. This file is never sent to any LLM or to Telegram.
 version: 1
 profile_id: primary

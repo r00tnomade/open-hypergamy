@@ -2,7 +2,7 @@ from datetime import date
 
 import pytest
 
-from opportunity_radar.extraction.dates import EVENT, classify_context, find_dates
+from open_hypergamy.extraction.dates import EVENT, classify_context, find_dates
 
 
 def one(text):

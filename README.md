@@ -1,75 +1,110 @@
-# Opportunity Radar
+# OpenHypergamy
 
-A single-user, local CLI that discovers, verifies, scores and monitors research/education
-opportunities (internships, summer schools, fellowships, CFPs, hackathons) and alerts you on
-Telegram. Everything runs on your machine; the only data that can leave it are redacted
-**public** page excerpts sent to your local FreeLLMAPI gateway (see below).
+**Career hypergamy. Open source.**
 
-Design: `opportunity_radar_hld_v1_2.md`, `opportunity_radar_lld_v1_2.md`; decisions in `docs/adr/`.
-Contributor/agent notes: `CLAUDE.md`.
+*LARP never stops. Professionally.*
 
-## Principles
+Stop finding out about the good stuff after the deadline.
 
-- Official sources establish facts. A date is *confirmed* only when a T1/T2 source states it in
-  grounded text and deterministic checks pass. LLM output, feeds, aggregators and manual entries
-  can never confirm anything.
-- A failed fetch is never a fact: it does not clear a deadline or cancel an edition.
-- Coverage is reported honestly: `radar report sources` shows real counts, never the ~200 target.
+OpenHypergamy watches the places where good opportunities actually get announced (research labs, fellowships, summer schools, hackathons, calls for papers), checks the facts against the official page, scores what's worth your time, and pings you on Telegram before the window closes. It runs on your laptop. Your profile never leaves it.
+
+> Short name: the command is `ohg`, the package is `open_hypergamy`.
+
+Design docs: `open_hypergamy_hld_v1_2.md` and `open_hypergamy_lld_v1_2.md`. Decisions: `docs/adr/`. Contributor and agent notes: `CLAUDE.md`.
+
+## The rules of the game
+
+1. **Official page or it didn't happen.** A date is *confirmed* only when an official source says it in text we can quote back, and the checks pass. Feeds, aggregators, manual entries and the LLM can all tell you where to look. None of them can confirm anything.
+2. **A broken fetch is not news.** A 404 doesn't cancel a programme. A timeout doesn't erase a deadline. The last known fact stays, and it gets marked stale until someone re-checks it.
+3. **Estimated stays estimated.** If a date isn't confirmed, you'll see that label everywhere: alerts, reports, calendar. No joke is worth a wrong deadline.
+4. **Honest coverage.** The goal is about 200 curated sources. `ohg report sources` tells you how many you actually have, how many are healthy, and what's missing. It never rounds up.
+5. **No guarantees.** This finds the doors. It doesn't get you through them.
 
 ## Setup
 
 ```bash
 uv sync
-uv run radar init                              # creates ~/Library/Application Support/OpportunityRadar
-cp config/profile.example.yaml "$HOME/Library/Application Support/OpportunityRadar/profile.yaml"   # edit it
-uv run radar doctor
+uv run ohg init        # creates ~/Library/Application Support/OpenHypergamy
+uv run ohg doctor      # tells you what's missing
 ```
 
-Secrets go in the Keychain (launchd jobs do not inherit your shell):
+Write your profile (degree level, year, interests; stays local, never goes to the LLM or Telegram):
 
 ```bash
-uv run radar secrets set TELEGRAM_BOT_TOKEN
-uv run radar secrets set TELEGRAM_CHAT_ID
-uv run radar secrets set RADAR_FREELLMAPI_API_KEY   # only if you use the LLM route
-uv run radar notify test
+cp config/profile.example.yaml "$HOME/Library/Application Support/OpenHypergamy/profile.yaml"
 ```
 
-LLM (optional): run FreeLLMAPI on 127.0.0.1:3001 with a free-tier-only chain named `radar-free`,
-then `uv run radar llm ack` (records that redacted public excerpts may reach upstream providers) and
-`uv run radar llm status`. Without it, everything except LLM-proposed fields still works.
-
-## Adding sources (the quality bar matters more than the count)
-
-`config/sources/*.yaml` are empty batch files. For each batch of ~10 real, official sources:
-review robots.txt and terms, record them (`robots_policy_checked_at`, `terms_review_note`), set a
-`portfolio`, then:
+Telegram, so the pipeline can yell at you. Tokens go in the macOS Keychain, because scheduled jobs don't inherit your shell:
 
 ```bash
-uv run radar sources probe config/sources/de_research.yaml    # live check, imports nothing
-uv run radar sources import config/sources/de_research.yaml
-uv run radar sources audit
+uv run ohg secrets set TELEGRAM_BOT_TOKEN
+uv run ohg secrets set TELEGRAM_CHAT_ID
+uv run ohg notify test
 ```
 
-## Running
+Optional LLM route, for the messy prose (eligibility wording, funding details): run [FreeLLMAPI](https://github.com/tashfeenahmed/freellmapi) on `127.0.0.1:3001` with a free-tier-only chain called `ohg-free`, then:
 
 ```bash
-uv run radar run all            # catch-up: sentinel, discovery, LLM queue, scoring, alerts
-uv run radar run sentinel       # daily: stale marking, re-verify imminent deadlines, reminders
-uv run radar run digest         # weekly Telegram digest
-uv run radar opportunities list
-uv run radar deadlines --within 60d
-uv run radar report weekly      # Markdown in <home>/reports
-uv run radar export-ics --output ~/radar.ics
+uv run ohg secrets set OHG_FREELLMAPI_API_KEY
+uv run ohg llm ack     # you confirm: redacted public excerpts may reach upstream providers
+uv run ohg llm status
 ```
 
-Schedule it: `scripts/install_launchd.sh` (sentinel daily, discovery + digest weekly, backup daily;
-times in the `schedule:` settings). `radar status` lists overdue jobs if the Mac was asleep.
-Remove with `scripts/uninstall_launchd.sh`.
+Skip it and everything still works. You just lose the LLM-proposed extras, which were only ever suggestions anyway.
+
+## Find the sauce (adding sources)
+
+The `config/sources/*.yaml` batch files are **empty on purpose**. Nobody verified real URLs, robots rules or site terms on your behalf, and filling the quota with junk defeats the point. Quality over count.
+
+For each batch of ~10 official sources: check robots.txt and terms, write them down in the entry (`robots_policy_checked_at`, `terms_review_note`), pick a `portfolio`, then:
+
+```bash
+uv run ohg sources probe  config/sources/de_research.yaml   # live check, imports nothing
+uv run ohg sources import config/sources/de_research.yaml
+uv run ohg sources audit                                    # what's still weak?
+```
+
+Sources without a recorded policy review get imported disabled. That's a feature.
+
+## Run the pipeline
+
+```bash
+uv run ohg run all          # catch-up: sentinel, discovery, LLM queue, scoring, alerts
+uv run ohg run sentinel     # daily: re-verify imminent deadlines, fire reminders
+uv run ohg run digest       # weekly Telegram digest
+```
+
+What you get out:
+
+```bash
+uv run ohg opportunities list           # ranked, with fit, urgency, eligibility
+uv run ohg opportunities show <id> --evidence   # the quote and link behind every fact
+uv run ohg deadlines --within 60d
+uv run ohg actions list                 # what to actually do next
+uv run ohg report weekly                # Markdown, links included
+uv run ohg export-ics --output ~/ohg.ics
+```
+
+Reminders land at 30, 14, 7 and 2 days, for confirmed deadlines on things worth your time. If your laptop slept through a week, you get the most urgent reminder and a note that monitoring had a gap, not a pile of stale pings.
+
+When you decide something yourself, tell it: `ohg opportunities set-action <id> applied`. The planner leaves that alone until you hand it back with `auto`.
+
+### Put it on a schedule
+
+```bash
+scripts/install_launchd.sh      # sentinel + backup daily, discovery + digest weekly
+scripts/uninstall_launchd.sh
+```
+
+`ohg status` lists anything overdue, so a sleeping Mac doesn't fail silently.
 
 ## Backups
 
-`radar db backup` (daily via launchd; keeps 7 daily + 4 weekly), `radar db restore --check FILE`,
-`radar db restore FILE --to /tmp/test.sqlite3`. The live database is never overwritten.
+`ohg db backup` runs daily (keeps 7 daily + 4 weekly). Check one with `ohg db restore --check FILE`, or restore into a throwaway file with `ohg db restore FILE --to /tmp/test.sqlite3`. Your live database is never overwritten.
+
+## Share the sauce
+
+Gatekeeping opportunities is a poverty mindset. Sources, fixes and better extraction rules are all welcome. The one rule: don't trade factual clarity for a punchline, and don't let anything but an official source confirm a deadline.
 
 ## Development
 
@@ -77,5 +112,8 @@ Remove with `scripts/uninstall_launchd.sh`.
 uv run pytest && uv run ruff check . && uv run ruff format --check . && uv run mypy
 ```
 
-Tests use fakes for HTTP, DNS, the LLM gateway, Telegram, the Keychain and launchd; none of them
-touch the network.
+Tests fake the network, DNS, the LLM gateway, Telegram, the Keychain and launchd. None of them touch the real ones.
+
+## Status
+
+Built and tested end to end against fakes. Not yet run against the real FreeLLMAPI gateway, the real Telegram API, a live Keychain or an actual launchd. Run `ohg doctor`, then `ohg notify test`, before you trust it with a deadline. Touch grass occasionally.

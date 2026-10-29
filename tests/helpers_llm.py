@@ -44,7 +44,7 @@ class FakeGateway:
     def __init__(self, responder: Callable[[dict[str, Any]], Any] | None = None,
                  models: list[str] | None = None) -> None:  # fmt: skip
         self.responder = responder or (lambda p: empty_output())
-        self.models = models if models is not None else ["auto:radar-free"]
+        self.models = models if models is not None else ["auto:ohg-free"]
         self.requests: list[httpx.Request] = []
         self.transport = httpx.MockTransport(self._handle)
 

@@ -2,13 +2,13 @@ import httpx
 import pytest
 from tests.helpers import FakeWeb, fixture, html, make_fetcher
 
-from opportunity_radar.config import AppSettings
-from opportunity_radar.errors import ParseError
-from opportunity_radar.sources.base import FetchContext, SourceRecord
-from opportunity_radar.sources.fetch import BodyCache
-from opportunity_radar.sources.html import HtmlAdapter, parse_html
-from opportunity_radar.sources.rss_atom import RssAtomAdapter
-from opportunity_radar.sources.sitemap import SitemapAdapter, parse_sitemap
+from open_hypergamy.config import AppSettings
+from open_hypergamy.errors import ParseError
+from open_hypergamy.sources.base import FetchContext, SourceRecord
+from open_hypergamy.sources.fetch import BodyCache
+from open_hypergamy.sources.html import HtmlAdapter, parse_html
+from open_hypergamy.sources.rss_atom import RssAtomAdapter
+from open_hypergamy.sources.sitemap import SitemapAdapter, parse_sitemap
 
 
 def source(url="https://example.edu/students/opportunities", adapter="html", **kw) -> SourceRecord:

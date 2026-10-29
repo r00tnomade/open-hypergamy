@@ -6,15 +6,15 @@ import httpx
 import pytest
 from tests.helpers import FakeWeb, fixture, html, make_fetcher
 
-from opportunity_radar.clock import FixedClock
-from opportunity_radar.config import load_config
-from opportunity_radar.discovery import orchestrator as orch
-from opportunity_radar.discovery.pipeline import promote_from_db
-from opportunity_radar.persistence import db as dbm
-from opportunity_radar.persistence import migrations as mig
-from opportunity_radar.persistence.repositories.opportunities import OpportunityRepository
-from opportunity_radar.persistence.repositories.sources import SourceRepository
-from opportunity_radar.sources.registry import load_source_files
+from open_hypergamy.clock import FixedClock
+from open_hypergamy.config import load_config
+from open_hypergamy.discovery import orchestrator as orch
+from open_hypergamy.discovery.pipeline import promote_from_db
+from open_hypergamy.persistence import db as dbm
+from open_hypergamy.persistence import migrations as mig
+from open_hypergamy.persistence.repositories.opportunities import OpportunityRepository
+from open_hypergamy.persistence.repositories.sources import SourceRepository
+from open_hypergamy.sources.registry import load_source_files
 
 SEED = "https://example.edu/students/opportunities"
 CHILD = "https://example.edu/students/opportunities/summer-school"

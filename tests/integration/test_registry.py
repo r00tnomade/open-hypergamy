@@ -3,12 +3,12 @@ from pathlib import Path
 
 import pytest
 
-from opportunity_radar.clock import FixedClock
-from opportunity_radar.errors import ConfigurationError
-from opportunity_radar.persistence import db as dbm
-from opportunity_radar.persistence import migrations as mig
-from opportunity_radar.persistence.repositories.sources import SourceRepository
-from opportunity_radar.sources.registry import load_source_files
+from open_hypergamy.clock import FixedClock
+from open_hypergamy.errors import ConfigurationError
+from open_hypergamy.persistence import db as dbm
+from open_hypergamy.persistence import migrations as mig
+from open_hypergamy.persistence.repositories.sources import SourceRepository
+from open_hypergamy.sources.registry import load_source_files
 
 CLOCK = FixedClock(datetime(2026, 10, 29, 12, 0, tzinfo=UTC))
 

@@ -8,7 +8,7 @@ from typing import Any
 
 import httpx
 
-from opportunity_radar.notifications.base import NotificationMessage, SendResult
+from open_hypergamy.notifications.base import NotificationMessage, SendResult
 
 
 class FakeBotApi:
