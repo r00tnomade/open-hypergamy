@@ -1,0 +1,9 @@
+{
+  "migrations": [
+    {
+      "version": 1,
+      "name": "initial",
+      "sha256": "05f6cf7fd505a37030508a68d0c34dcf6ca38f9ec911aeb863f6d0c09a9e6199"
+    }
+  ]
+}

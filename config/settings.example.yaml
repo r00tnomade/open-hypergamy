@@ -1,0 +1,79 @@
+# Copy to config/settings.yaml (git-ignored) to override defaults. Secrets never go here.
+app:
+  timezone: Europe/Berlin
+  horizon_months: 24
+  actionable_horizon_months: 12
+  log_level: INFO
+  user_agent: "OpportunityRadar/0.1 (+local research opportunity monitor)"
+  max_response_bytes: 8000000
+  request_timeout_seconds: 25
+  max_redirects: 5
+  max_retries: 2
+  per_host_min_interval_seconds: 3.0
+  max_concurrent_hosts: 4
+  max_pages_per_source_run: 40
+  max_crawl_depth: 2
+  default_source_poll_interval_hours: 168
+
+database:
+  # path: defaults to <RADAR_HOME>/opportunity_radar.sqlite3
+  journal_mode: WAL
+  busy_timeout_ms: 5000
+  backup_keep_daily: 7
+  backup_keep_weekly: 4
+
+cache:
+  enabled: true
+  body_retention_days: 180
+  llm_retention_days: 365
+
+llm:
+  enabled: true
+  provider: freellmapi # freellmapi | local
+  timeout_seconds: 90
+  max_concurrency: 1
+  temperature: 0.0
+  max_output_tokens: 4000
+  allow_remote_public_content: true
+  extraction_cache: true
+  freellmapi:
+    base_url: "http://127.0.0.1:3001/v1"
+    model: "auto:radar-free"
+    api_key_env: RADAR_FREELLMAPI_API_KEY
+    required_profile_name: radar-free
+    require_loopback: true
+    free_tier_only: true # operator attestation; see `radar init` checklist
+    max_input_chars: 12000
+  local:
+    base_url: "http://127.0.0.1:3000/v1"
+    model: "REPLACE_WITH_LOADED_LOCAL_MODEL_ID"
+    manual_mode_only: true
+
+browser:
+  enable_playwright: false
+  playwright_allowed_source_ids: []
+
+telegram:
+  enabled: true
+  digest_enabled: true
+  deadline_offsets_days: [30, 14, 7, 2]
+  minimum_fit_score_for_immediate_alert: 75
+  maximum_messages_per_run: 10
+  retry_limit: 3
+
+crawling:
+  obey_robots_txt: true
+  require_source_policy_review: true
+  discover_outbound_sources_as_unverified: true
+  allow_login_pages: false
+  allow_captcha_bypass: false
+  allow_paywall_bypass: false
+  permitted_schemes: [https, http]
+
+scoring:
+  weights:
+    career_alignment: 30
+    technical_research_value: 25
+    eligibility_feasibility: 20
+    funding_accessibility: 15
+    time_cost: 10
