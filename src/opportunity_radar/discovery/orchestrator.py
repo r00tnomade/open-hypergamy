@@ -14,6 +14,7 @@ from opportunity_radar.clock import Clock, iso_z
 from opportunity_radar.config import LoadedConfig
 from opportunity_radar.discovery.pipeline import PipelineStats, process_observations
 from opportunity_radar.errors import FetchError, ParseError, RadarError, SourcePolicyDenied
+from opportunity_radar.extraction.llm_extractor import LLMExtractionService
 from opportunity_radar.persistence.repositories.jobs import JobRepository
 from opportunity_radar.persistence.repositories.sources import CheckOutcome, SourceRepository
 from opportunity_radar.sources.base import (
@@ -40,6 +41,7 @@ class RunSummary:
     considered: int = 0
     results: list[dict[str, object]] = field(default_factory=list)
     pipeline: PipelineStats = field(default_factory=PipelineStats)
+    llm: dict[str, int] = field(default_factory=dict)
 
     def count(self, *statuses: str) -> int:
         return sum(1 for r in self.results if r["status"] in statuses)
@@ -145,6 +147,7 @@ def run_discovery(
     limit: int | None = None,
     dry_run: bool = False,
     trigger: str = "manual",
+    llm: LLMExtractionService | None = None,
 ) -> RunSummary:
     repo = SourceRepository(conn, clock)
     if source_ref:
@@ -178,7 +181,9 @@ def run_discovery(
             summary.results.append(result)
             if fresh:
                 before = summary.pipeline.errors
-                process_observations(conn, cfg, fetcher, clock, source, fresh, summary.pipeline)
+                process_observations(
+                    conn, cfg, fetcher, clock, source, fresh, summary.pipeline, llm
+                )
                 if summary.pipeline.errors > before and result["status"] == "success":
                     result["status"] = "partial"  # candidate processing failed for this source
     except BaseException as e:
@@ -194,6 +199,10 @@ def run_discovery(
             "candidates": summary.pipeline.created,
             "failed": summary.count("failed", "blocked_policy"),
         },
-        summary={"results": summary.results, "candidates": vars(summary.pipeline)},
+        summary={
+            "results": summary.results,
+            "candidates": vars(summary.pipeline),
+            "llm": llm.stats.as_dict() if llm else {},
+        },
     )
     return summary

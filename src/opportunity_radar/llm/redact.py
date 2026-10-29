@@ -11,6 +11,7 @@ from dataclasses import dataclass
 
 _RULES: list[tuple[str, re.Pattern[str], str]] = [
     ("email", re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+"), "[EMAIL]"),
+    ("bearer", re.compile(r"(?i)\bbearer\s+[A-Za-z0-9._~+/=-]{8,}"), "[REDACTED]"),
     (
         "secret_kv",
         re.compile(
@@ -19,7 +20,6 @@ _RULES: list[tuple[str, re.Pattern[str], str]] = [
         ),
         "[REDACTED]",
     ),  # fmt: skip
-    ("bearer", re.compile(r"(?i)\bbearer\s+[A-Za-z0-9._~+/=-]{8,}"), "[REDACTED]"),
     ("sk_key", re.compile(r"\bsk-[A-Za-z0-9_-]{12,}\b"), "[REDACTED]"),
     ("telegram", re.compile(r"\b\d{6,}:[A-Za-z0-9_-]{20,}\b"), "[REDACTED]"),
     (
@@ -59,5 +59,6 @@ def redact(text: str) -> Redacted:
         text, n = pat.subn(repl, text)
         if n:
             counts[name] = n
+    text = text.replace("?&", "?").replace("&&", "&")
     text = re.sub(r"[?&]+(?=[\s)\]>,.]|$)", "", text)  # dangling separators after tracking removal
     return Redacted(text, counts)

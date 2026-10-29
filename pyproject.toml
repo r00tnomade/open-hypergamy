@@ -62,4 +62,6 @@ ignore_missing_imports = true
 "tests/**" = ["E501", "UP031"]
 "src/opportunity_radar/persistence/repositories/*.py" = ["E501"]  # long SQL literals
 "src/opportunity_radar/discovery/review.py" = ["E501"]
+"src/opportunity_radar/llm/*.py" = ["E501"]
+"src/opportunity_radar/extraction/llm_extractor.py" = ["E501"]
 "src/opportunity_radar/discovery/promotion.py" = ["E501"]

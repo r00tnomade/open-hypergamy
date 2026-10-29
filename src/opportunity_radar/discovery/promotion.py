@@ -163,6 +163,10 @@ def promote_candidate(
 
 
 # ----------------------------------------------------------------------------------------
+def _is_date_field(name: str) -> bool:
+    return name.startswith(DEADLINE_PREFIX) or name in ("event_start_date", "event_end_date")
+
+
 def _priority(reason: str, field_name: str) -> str:
     if reason.endswith("conflict"):
         return "critical"
@@ -180,7 +184,7 @@ def _apply_facts(
     facts = ground_facts(inp.facts, haystack)
     values: dict[str, set[str]] = {}
     for f in facts:
-        if f.date_value:
+        if f.date_value and f.extraction_method != "llm":  # advisory output can't block rules
             values.setdefault(f.field_name, set()).add(f.date_value)
     year = edition_year(inp.edition_key)
 
@@ -201,6 +205,8 @@ def _apply_facts(
             excerpt=q.excerpt,
             method=f.extraction_method,
             note=";".join(v.reasons),
+            model_name=f.model_name,
+            prompt_version=f.prompt_version,
         )
         out.claims_added += int(inserted)
         if v.needs_review and inserted:
@@ -239,8 +245,8 @@ def _apply_facts(
         if f.grounded is not True:
             out.rejected += 1  # unsupported claim: rejected, never stored (LLD §9.5)
             continue
-        if f.field_name == "application_status":
-            claim(f, unverified)
+        if f.field_name == "application_status" or not _is_date_field(f.field_name):
+            claim(f, unverified)  # descriptive/non-date claims are recorded, never confirmed
             continue
         v = verify_fact(
             f,

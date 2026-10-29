@@ -130,6 +130,16 @@ class OpportunityRepository:
                 ),
             )
 
+    def merge_candidate_metadata(self, cid: str, extra: dict[str, Any]) -> None:
+        with transaction(self.conn):
+            old = self.conn.execute(
+                "SELECT metadata_json FROM candidates WHERE id=?", (cid,)
+            ).fetchone()
+            self.conn.execute(
+                "UPDATE candidates SET metadata_json=? WHERE id=?",
+                (j({**json.loads(old["metadata_json"]), **extra}), cid),
+            )
+
     def get_candidate(self, cid: str) -> sqlite3.Row | None:
         row = self.conn.execute(
             "SELECT * FROM candidates WHERE id = ? OR id LIKE ?", (cid, cid + "%")
@@ -248,6 +258,8 @@ class OpportunityRepository:
         method: str,
         note: str = "",
         supersedes: str | None = None,
+        model_name: str | None = None,
+        prompt_version: str | None = None,
     ) -> tuple[str, bool]:
         """Append a claim unless an identical one already exists. Returns (id, inserted)."""
         target_col = "deadline_id" if deadline_id else "edition_id"
@@ -265,7 +277,8 @@ class OpportunityRepository:
             "INSERT INTO claims(id, edition_id, deadline_id, field_name, proposed_value_json, "
             "normalized_value_json, fact_status, source_id, source_observation_id, source_url, "
             "source_trust_tier, excerpt, excerpt_sha256, extraction_method, verifier_note, "
-            "supersedes_claim_id, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            "supersedes_claim_id, created_at, model_name, prompt_version) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             (
                 cid,
                 None if deadline_id else edition_id,
@@ -284,6 +297,8 @@ class OpportunityRepository:
                 note,
                 supersedes,
                 self.now,
+                model_name,
+                prompt_version,
             ),
         )
         return cid, True

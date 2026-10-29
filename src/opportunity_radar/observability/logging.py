@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import os
 import re
+import sys
 
 _TELEGRAM_TOKEN = re.compile(r"(bot)?\d{6,}:[A-Za-z0-9_-]{20,}")
 _SECRET_ENV = ("TELEGRAM_BOT_TOKEN", "RADAR_FREELLMAPI_API_KEY")
@@ -26,8 +27,27 @@ class RedactingFilter(logging.Filter):
         return True
 
 
+class _StderrHandler(logging.StreamHandler):  # type: ignore[type-arg,unused-ignore]
+    """Writes to the *current* sys.stderr (stdout is reserved for --json output) and never lets
+    a closed or redirected stream turn a log line into an error."""
+
+    def __init__(self) -> None:
+        super().__init__()
+
+    @property  # type: ignore[override,unused-ignore]
+    def stream(self):  # type: ignore[no-untyped-def]
+        return sys.stderr
+
+    @stream.setter
+    def stream(self, _value) -> None:  # type: ignore[no-untyped-def]
+        pass
+
+    def handleError(self, record: logging.LogRecord) -> None:
+        pass
+
+
 def setup_logging(level: str = "INFO") -> None:
-    handler = logging.StreamHandler()  # stderr: stdout is reserved for --json output
+    handler = _StderrHandler()
     handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
     handler.addFilter(RedactingFilter())
     root = logging.getLogger()

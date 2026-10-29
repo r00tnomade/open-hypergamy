@@ -11,6 +11,9 @@ from typing import Any, Literal
 from urllib.parse import urlparse
 
 from opportunity_radar.config import LoadedConfig
+from opportunity_radar.errors import RadarError
+from opportunity_radar.llm.ack import ack_is_current
+from opportunity_radar.llm.client import LLMClient
 from opportunity_radar.persistence import db as dbm
 from opportunity_radar.persistence import migrations as mig
 
@@ -35,7 +38,7 @@ def _tcp_reachable(base_url: str, timeout: float = 1.5) -> bool:
         return False
 
 
-def run_doctor(cfg: LoadedConfig) -> list[Check]:
+def run_doctor(cfg: LoadedConfig, llm_client: LLMClient | None = None) -> list[Check]:
     s = cfg.settings
     checks: list[Check] = []
     v = sys.version_info
@@ -95,7 +98,21 @@ def run_doctor(cfg: LoadedConfig) -> list[Check]:
                     "(cannot be verified by this tool)",
                 )
             )
-            acked = cfg.paths.llm_ack.exists()
+            if reachable:  # models listing is not an inference request
+                from opportunity_radar.extraction.llm_extractor import build_client
+
+                client = llm_client or build_client(cfg)
+                try:
+                    listed = block.model in client.list_models()
+                    detail = (
+                        f"alias {block.model!r} is listed by the gateway"
+                        if listed
+                        else f"alias {block.model!r} is NOT listed; create the `radar-free` chain"
+                    )
+                    checks.append(Check("llm_alias", "ok" if listed else "warn", detail))
+                except RadarError as e:
+                    checks.append(Check("llm_alias", "warn", f"could not list models: {e}"))
+            acked = ack_is_current(cfg.paths.llm_ack, llm.provider)
             checks.append(
                 Check(
                     "llm_acknowledgement",

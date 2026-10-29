@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
 from collections.abc import Iterator
@@ -32,6 +33,9 @@ from opportunity_radar.errors import (
     DatabaseInitializationError,
     RadarError,
 )
+from opportunity_radar.extraction.llm_extractor import build_client, build_llm_service, llm_enabled
+from opportunity_radar.llm.ack import CHECKLIST, ack_is_current, read_ack, write_ack
+from opportunity_radar.llm.cache import LLMCache
 from opportunity_radar.observability.health import collect_status, run_doctor
 from opportunity_radar.observability.logging import redact, setup_logging
 from opportunity_radar.persistence import db as dbm
@@ -57,7 +61,9 @@ app.add_typer(sources_app, name="sources")
 candidates_app = typer.Typer(help="Opportunity candidates.", no_args_is_help=True)
 review_app = typer.Typer(help="Manual review queue.", no_args_is_help=True)
 opps_app = typer.Typer(help="Verified opportunities.", no_args_is_help=True)
+llm_app = typer.Typer(help="LLM route (FreeLLMAPI).", no_args_is_help=True)
 app.add_typer(run_app, name="run")
+app.add_typer(llm_app, name="llm")
 app.add_typer(candidates_app, name="candidates")
 app.add_typer(review_app, name="review")
 app.add_typer(opps_app, name="opportunities")
@@ -71,19 +77,7 @@ HomeOpt = Annotated[
 ConfigOpt = Annotated[Path | None, typer.Option("--config", help="settings.yaml path.")]
 JsonOpt = Annotated[bool, typer.Option("--json", help="Machine-readable output on stdout.")]
 
-EXTERNAL_PROCESSING_CHECKLIST = """\
-External-processing and zero-cost checklist (LLM route: FreeLLMAPI)
-  1. FreeLLMAPI runs locally but may forward redacted PUBLIC page excerpts to upstream providers.
-     Inference is not local-only. Your profile, CV, database content, paths, secrets and
-     Telegram identifiers are never sent.
-  2. Configure a gateway chain named `radar-free` containing ONLY genuinely free-tier routes.
-     Do not add billing-enabled provider credentials, paid routes, or the Premium catalog.
-  3. Bind the gateway to 127.0.0.1 only and set RADAR_FREELLMAPI_API_KEY (dedicated unified key).
-  4. Free quotas can change. If the gateway or quota is unavailable, LLM work is queued and
-     deterministic processing continues; no other provider is ever used automatically.
-  5. If you cannot establish free-only operation, set llm.provider: local (LM Studio) or
-     RADAR_LLM_ENABLED=false.
-The acknowledgement is recorded on the first LLM request (Milestone 4), not by `radar init`."""
+EXTERNAL_PROCESSING_CHECKLIST = CHECKLIST
 
 
 @contextmanager
@@ -619,6 +613,7 @@ def run_discovery_cmd(
                 source_ref=source_id,
                 limit=limit_sources,
                 dry_run=dry_run,
+                llm=None if dry_run else build_llm_service(conn, cfg, clock),
             )
         finally:
             fetcher.close()
@@ -633,6 +628,11 @@ def run_discovery_cmd(
             )
         out.print(table)
         p = summary.pipeline
+        if p.llm_done or p.llm_queued or p.llm_invalid:
+            out.print(
+                f"llm: {p.llm_done} extracted, {p.llm_queued} queued (gateway/ack unavailable), "
+                f"{p.llm_invalid} invalid"
+            )
         if p.created or p.duplicates or p.errors:
             out.print(
                 f"candidates: {p.created} new, {p.promoted} promoted, {p.needs_review} held for "
@@ -1149,6 +1149,107 @@ def deadlines(
         for d in data:
             table.add_row(d["date"], d["status"], d["type"], d["raw"], d["title"][:50])
         out.print(table)
+
+
+@llm_app.command("ack")
+def llm_ack(
+    yes: Annotated[bool, typer.Option("--yes", help="Acknowledge without prompting.")] = False,
+    home: HomeOpt = None,
+    config: ConfigOpt = None,
+) -> None:
+    """Record the one-time acknowledgement that public excerpts may reach upstream providers."""
+    with guard():
+        cfg = _load(home, config)
+        s = cfg.settings.llm
+        if s.provider == "local":
+            out.print(
+                "Provider is `local`: requests stay on this machine; no acknowledgement needed."
+            )
+            return
+        out.print(CHECKLIST, markup=False, highlight=False)
+        if not yes and not typer.confirm("\nI understand and accept this policy"):
+            err.print("Not acknowledged; no LLM request will be made.")
+            raise typer.Exit(EXIT_FAILURE)
+        cfg.paths.ensure()
+        a = write_ack(cfg.paths.llm_ack, SystemClock(), s.provider, s.freellmapi.model)
+        out.print(f"Acknowledged at {a.acknowledged_at} (policy {a.policy_version}).")
+
+
+@llm_app.command("status")
+def llm_status(json_out: JsonOpt = False, home: HomeOpt = None, config: ConfigOpt = None) -> None:
+    """Gateway, acknowledgement, cache and queue state. Makes no inference request."""
+    with guard():
+        cfg = _load(home, config)
+        s = cfg.settings.llm
+        data: dict[str, object] = {
+            "enabled": llm_enabled(cfg),
+            "provider": s.provider,
+            "base_url": s.active.base_url,
+            "model": s.active.model,
+            "external_processing": s.provider == "freellmapi",
+            "acknowledged": s.provider == "local" or ack_is_current(cfg.paths.llm_ack, s.provider),
+            "acknowledged_at": (a.acknowledged_at if (a := read_ack(cfg.paths.llm_ack)) else None),
+            "api_key_set": bool(os.environ.get(s.freellmapi.api_key_env)),
+        }
+        if data["enabled"]:
+            client = build_client(cfg)
+            try:
+                data["reachable"] = client.healthy()
+                if data["reachable"]:
+                    try:
+                        data["alias_listed"] = s.active.model in client.list_models()
+                    except RadarError:
+                        data["alias_listed"] = None
+            finally:
+                client.close()
+        if cfg.paths.db.exists():
+            conn = _open(cfg)
+            try:
+                data["cache"] = LLMCache(conn, SystemClock(), s.provider).stats()
+                data["queued_candidates"] = conn.execute(
+                    "SELECT COUNT(*) FROM candidates WHERE "
+                    "json_extract(metadata_json, '$.llm_state') = 'pending'"
+                ).fetchone()[0]
+            finally:
+                conn.close()
+        data["note"] = "free-only routing is operator-attested; it cannot be verified from here"
+        if json_out:
+            sys.stdout.write(json.dumps(data, indent=2, sort_keys=True) + "\n")
+            return
+        table = Table("field", "value", show_header=False)
+        for k, v in data.items():
+            table.add_row(k, str(v))
+        out.print(table)
+
+
+@run_app.command("llm")
+def run_llm(
+    limit: Annotated[int, typer.Option("--limit")] = 20,
+    dry_run: Annotated[bool, typer.Option("--dry-run")] = False,
+    home: HomeOpt = None,
+    config: ConfigOpt = None,
+) -> None:
+    """Process candidates whose LLM step was deferred (gateway down, quota, no acknowledgement)."""
+    from opportunity_radar.discovery.pipeline import run_llm_queue
+
+    with guard():
+        cfg = _load(home, config)
+        clock = SystemClock()
+        conn = _open(cfg)
+        try:
+            svc = build_llm_service(conn, cfg, clock)
+            if svc is None:
+                out.print("LLM route is disabled; deterministic processing only.")
+                return
+            stats = run_llm_queue(conn, cfg, clock, svc, limit=limit, dry_run=dry_run)
+        finally:
+            conn.close()
+        out.print(
+            f"{'[dry run] ' if dry_run else ''}llm: {stats.llm_done} extracted, "
+            f"{stats.llm_queued} still queued, {stats.llm_invalid} invalid"
+        )
+        if stats.llm_queued and not dry_run:
+            raise typer.Exit(EXIT_PARTIAL)
 
 
 if __name__ == "__main__":

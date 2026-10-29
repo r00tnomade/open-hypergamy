@@ -32,8 +32,9 @@ from opportunity_radar.discovery.promotion import (
 )
 from opportunity_radar.domain.enums import TrustTier
 from opportunity_radar.domain.models import CandidateFact, ExtractionMethod
-from opportunity_radar.errors import RadarError
+from opportunity_radar.errors import LLMInvalidResponse, LLMUnavailable, RadarError
 from opportunity_radar.extraction.deterministic import detect_not_open, extract_date_facts
+from opportunity_radar.extraction.llm_extractor import LLMExtractionService
 from opportunity_radar.persistence.db import transaction
 from opportunity_radar.persistence.repositories.observations import insert_observation, load_text
 from opportunity_radar.persistence.repositories.opportunities import OpportunityRepository
@@ -57,6 +58,9 @@ class PipelineStats:
     followed: int = 0
     follow_failed: int = 0
     errors: int = 0
+    llm_done: int = 0
+    llm_queued: int = 0
+    llm_invalid: int = 0
 
 
 def authority_of(source: SourceRecord | None) -> Authority:
@@ -98,6 +102,7 @@ def build_input(
     observation_id: str | None,
     method: ExtractionMethod,
     edition_key: str | None,
+    extra_facts: list[CandidateFact] | None = None,
 ) -> PromotionInput:
     facts = extract_date_facts(
         text, source_url=evidence_url, method=method, observation_id=observation_id
@@ -107,6 +112,7 @@ def build_input(
     )
     if not_open:
         facts.append(not_open)
+    facts += extra_facts or []  # advisory LLM facts: verify_fact caps them at `unverified`
     return PromotionInput(
         candidate_id=cand["id"],
         title=title,
@@ -209,6 +215,7 @@ def process_observations(
     source: SourceRecord,
     new_obs: list[tuple[str, PageObservation]],
     stats: PipelineStats,
+    llm: LLMExtractionService | None = None,
 ) -> None:
     repo = OpportunityRepository(conn, clock)
     budget = cfg.settings.app.max_pages_per_source_run
@@ -217,7 +224,7 @@ def process_observations(
         for draft in drafts_from_observation(source, obs, obs_id):
             try:
                 _process_draft(
-                    conn, cfg, fetcher, clock, repo, source, obs_id, draft, stats, budget
+                    conn, cfg, fetcher, clock, repo, source, obs_id, draft, stats, budget, llm
                 )
             except Exception:  # noqa: BLE001 - one bad draft must not stop the run
                 log.exception("candidate processing failed for %s", draft.url)
@@ -235,6 +242,7 @@ def _process_draft(
     draft: CandidateDraft,
     stats: PipelineStats,
     budget: int,
+    llm: LLMExtractionService | None = None,
 ) -> None:
     title = clean_title(draft.title)
     norm, domain, key, fp, category = _identity(title, draft.url, draft.facts)
@@ -317,6 +325,10 @@ def _process_draft(
         return
     cand = repo.get_candidate(cid)
     assert cand is not None
+    extra = _llm_facts(
+        llm, repo, conn, cid, source=source, title=title, text=text, evidence_url=evidence_url,
+        obs_id=page_obs_id, edition_key=key, stats=stats,
+    )  # fmt: skip
     result = promote_candidate(
         conn,
         clock,
@@ -329,9 +341,121 @@ def _process_draft(
             observation_id=page_obs_id,
             method=method,
             edition_key=key,
+            extra_facts=extra,
         ),
     )
     if result.status == "promoted":
         stats.promoted += 1
     else:
         stats.needs_review += 1
+
+
+def _llm_facts(
+    llm: LLMExtractionService | None,
+    repo: OpportunityRepository,
+    conn: sqlite3.Connection,
+    cid: str,
+    *,
+    source: SourceRecord,
+    title: str,
+    text: str,
+    evidence_url: str,
+    obs_id: str,
+    edition_key: str | None,
+    stats: PipelineStats,
+) -> list[CandidateFact]:
+    """Advisory facts from the LLM, or [] with the candidate queued when the route is down.
+
+    Deterministic promotion proceeds either way; an unavailable gateway never blocks it.
+    """
+    if llm is None:
+        return []
+    row = conn.execute(
+        "SELECT content_hash, title FROM source_observations WHERE id=?", (obs_id,)
+    ).fetchone()
+    try:
+        outcome = llm.extract(
+            url=evidence_url, trust_tier=source.trust_tier, authority_scope=source.authority_scope,
+            observation_id=obs_id, content_sha256=row["content_hash"] if row else "",
+            title=(row["title"] if row else "") or title, text=text, candidate_title=title,
+            known_edition_key=edition_key,
+        )  # fmt: skip
+    except LLMUnavailable as e:
+        log.info("LLM unavailable, queueing %s: %s", cid, e)
+        repo.merge_candidate_metadata(cid, {"llm_state": "pending", "llm_note": str(e)[:200]})
+        stats.llm_queued += 1
+        return []
+    except LLMInvalidResponse as e:
+        repo.merge_candidate_metadata(cid, {"llm_state": "invalid", "llm_note": str(e)[:200]})
+        with transaction(conn):
+            repo.add_review_tx(
+                reason="llm_invalid_output", priority="medium", candidate_id=cid,
+                title=f"LLM output unusable: {title}", details=str(e)[:300],
+            )  # fmt: skip
+        stats.llm_invalid += 1
+        return []
+    repo.merge_candidate_metadata(
+        cid,
+        {
+            "llm_state": "done",
+            "llm_rejected": outcome.rejected[:20],
+            "llm_ambiguities": outcome.ambiguities,
+        },
+    )
+    stats.llm_done += 1
+    return outcome.facts
+
+
+def run_llm_queue(
+    conn: sqlite3.Connection, cfg: LoadedConfig, clock: Clock, llm: LLMExtractionService, *,
+    limit: int, dry_run: bool = False,
+) -> PipelineStats:  # fmt: skip
+    """Process candidates whose LLM step was deferred. Stops at the first unavailability."""
+    repo = OpportunityRepository(conn, clock)
+    stats = PipelineStats()
+    rows = conn.execute(
+        "SELECT id FROM candidates WHERE json_extract(metadata_json, '$.llm_state') = 'pending' "
+        "AND status NOT IN ('rejected','duplicate') ORDER BY last_seen_at LIMIT ?",
+        (limit,),
+    ).fetchall()
+    for r in rows:
+        if dry_run:
+            stats.llm_queued += 1
+            continue
+        cand = repo.get_candidate(r["id"])
+        assert cand is not None
+        meta = json.loads(cand["metadata_json"])
+        obs_id = meta.get("page_observation_id")
+        try:
+            obs_title, text = load_text(conn, cfg.paths.cache, obs_id)
+        except (FileNotFoundError, TypeError):
+            repo.merge_candidate_metadata(
+                cand["id"], {"llm_state": "skipped", "llm_note": "text not cached"}
+            )
+            continue
+        source = (
+            SourceRepository(conn, clock).get(cand["discovered_by_source_id"])
+            if cand["discovered_by_source_id"]
+            else None
+        )
+        if source is None:
+            continue
+        title = meta.get("title", obs_title)
+        before = stats.llm_queued
+        extra = _llm_facts(
+            llm, repo, conn, cand["id"], source=source, title=title, text=text,
+            evidence_url=meta.get("evidence_url", cand["canonical_url"]), obs_id=obs_id,
+            edition_key=cand["edition_key"], stats=stats,
+        )  # fmt: skip
+        if stats.llm_queued > before:
+            break  # gateway/quota/ack problem: leave the rest queued
+        if extra:
+            result = promote_candidate(
+                conn, clock,
+                build_input(cand, source=source, title=title, text=text,
+                            evidence_url=meta.get("evidence_url", cand["canonical_url"]),
+                            observation_id=obs_id, method=meta.get("method", "rule"),
+                            edition_key=None, extra_facts=extra),
+            )  # fmt: skip
+            stats.promoted += int(result.status == "promoted")
+    return stats
