@@ -68,9 +68,13 @@ class Fee(_Strict):
 
 class Funding(_Strict):
     status: Literal[
-        "fully_funded", "partially_funded", "available_competitive", "self_funded", "unknown",
+        "fully_funded",
+        "partially_funded",
+        "available_competitive",
+        "self_funded",
+        "unknown",
         "not_applicable",
-    ] = "unknown"  # fmt: skip
+    ] = "unknown"
     details: str | None = Field(default=None, max_length=500)
     evidence: Evidence
 

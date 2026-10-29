@@ -14,6 +14,11 @@
       "version": 3,
       "name": "candidate_links",
       "sha256": "9a43c2bca6e0174b9912b9b3f6b19eec986f290ea6a557046442f722cd2b783a"
+    },
+    {
+      "version": 4,
+      "name": "scoring_notifications",
+      "sha256": "b1a8f1b1dd433b2952dcf42ea8612ad8f74460b9b6d7f2ad4dbcf67ddbe02081"
     }
   ]
 }

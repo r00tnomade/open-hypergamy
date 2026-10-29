@@ -415,6 +415,8 @@ def refresh_edition(
     today: date,
     now_dt: datetime,
     announced_now: bool,
+    *,
+    verified_now: bool = True,
 ) -> None:
     rows = repo.deadlines_for(eid)
     conflicting = any(r["fact_status"] == "conflicting_sources" for r in rows) or bool(
@@ -450,6 +452,9 @@ def refresh_edition(
             "SELECT 1 FROM editions WHERE id=? AND event_start_date IS NOT NULL", (eid,)
         ).fetchone()
     )
+    # Only a fresh verification (promotion from a just-read page) renews freshness; recomputing
+    # state from the clock must not, or facts would never go stale.
+    confirmed_any = confirmed_any and verified_now
     fresh_until = iso_z(now_dt + freshness_window(close_d, today)) if confirmed_any else None
     conn.execute(
         "UPDATE editions SET fact_status=?, application_status=?, lifecycle_status=?, "

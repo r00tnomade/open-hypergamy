@@ -20,7 +20,7 @@ def test_status_json_is_valid_and_honest_about_empty_registry():
     r = runner.invoke(app, ["status", "--json"])
     assert r.exit_code == 0
     data = json.loads(r.stdout)
-    assert data["schema_version"] == 3
+    assert data["schema_version"] == 4
     assert data["sources_configured"] == 0 and data["last_jobs"] == {}
     assert data["latest_backup"] is None
 

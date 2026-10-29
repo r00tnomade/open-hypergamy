@@ -28,9 +28,13 @@ class LLMClient(Protocol):
     def healthy(self) -> bool: ...
     def list_models(self) -> list[str]: ...
     def complete_json(
-        self, *, system_prompt: str, user_payload: dict[str, Any], schema: dict[str, Any],
+        self,
+        *,
+        system_prompt: str,
+        user_payload: dict[str, Any],
+        schema: dict[str, Any],
         cache_key: str,
-    ) -> dict[str, Any]: ...  # fmt: skip
+    ) -> dict[str, Any]: ...
 
 
 def extract_json(content: str) -> dict[str, Any]:
@@ -48,11 +52,18 @@ def extract_json(content: str) -> dict[str, Any]:
 
 class OpenAICompatClient:
     def __init__(
-        self, base_url: str, model: str, api_key: str | None, *, timeout: float = 90,
-        temperature: float = 0.0, max_tokens: int = 4000, forbidden: list[str] | None = None,
+        self,
+        base_url: str,
+        model: str,
+        api_key: str | None,
+        *,
+        timeout: float = 90,
+        temperature: float = 0.0,
+        max_tokens: int = 4000,
+        forbidden: list[str] | None = None,
         transport: httpx.BaseTransport | None = None,
         require_key: bool = False,
-    ) -> None:  # fmt: skip
+    ) -> None:
         host = urlparse(base_url).hostname
         if host not in _LOOPBACK:
             raise ConfigurationError(f"LLM endpoint must be loopback, got {host!r}")
@@ -63,9 +74,11 @@ class OpenAICompatClient:
         # Strings that must never appear in an outgoing request (secrets, local paths, ids).
         self._forbidden = [f for f in (forbidden or []) if f and len(f) >= 4]
         self._http = httpx.Client(
-            base_url=base_url.rstrip("/"), transport=transport, follow_redirects=False,
+            base_url=base_url.rstrip("/"),
+            transport=transport,
+            follow_redirects=False,
             timeout=httpx.Timeout(10.0, read=timeout),
-        )  # fmt: skip
+        )
 
     def close(self) -> None:
         self._http.close()
@@ -92,9 +105,13 @@ class OpenAICompatClient:
             raise LLMUnavailable("outgoing request failed the privacy guard; nothing was sent")
 
     def complete_json(
-        self, *, system_prompt: str, user_payload: dict[str, Any], schema: dict[str, Any],
+        self,
+        *,
+        system_prompt: str,
+        user_payload: dict[str, Any],
+        schema: dict[str, Any],
         cache_key: str,
-    ) -> dict[str, Any]:  # fmt: skip
+    ) -> dict[str, Any]:
         if self._require_key and not self._key:
             raise LLMUnavailable("LLM API key is not set; nothing was sent")
         _ = (

@@ -92,9 +92,15 @@ def build_segments(text: str, max_chars: int) -> list[dict[str, str]]:
         paras.append((heading, line))
     scored = sorted(
         range(len(paras)),
-        key=lambda i: (-(3 * len(find_dates(paras[i][1])) + len(_RELEVANT.findall(paras[i][1]))
-                         + (2 if i == 0 else 0)), i),
-    )  # fmt: skip
+        key=lambda i: (
+            -(
+                3 * len(find_dates(paras[i][1]))
+                + len(_RELEVANT.findall(paras[i][1]))
+                + (2 if i == 0 else 0)
+            ),
+            i,
+        ),
+    )
     chosen: list[int] = []
     used = 0
     for i in scored:
@@ -149,12 +155,24 @@ class _Grounder:
         return out
 
     def add(self, name: str, value: object, quote: str, raw: str | None = None) -> None:
-        self.facts.append(CandidateFact(
-            field_name=name, proposed_value=value, raw_text=raw,
-            evidence=[EvidenceQuote(source_url=self.url, observation_id=self.obs_id,
-                                    excerpt=quote, field_name=name)],
-            extraction_method="llm", model_name=self.model, prompt_version=PROMPT_VERSION,
-        ))  # fmt: skip
+        self.facts.append(
+            CandidateFact(
+                field_name=name,
+                proposed_value=value,
+                raw_text=raw,
+                evidence=[
+                    EvidenceQuote(
+                        source_url=self.url,
+                        observation_id=self.obs_id,
+                        excerpt=quote,
+                        field_name=name,
+                    )
+                ],
+                extraction_method="llm",
+                model_name=self.model,
+                prompt_version=PROMPT_VERSION,
+            )
+        )
 
     def text(self, out_name: str, f) -> None:  # type: ignore[no-untyped-def]
         if not f.value:
@@ -178,17 +196,26 @@ class _Grounder:
                 if ctx not in (None, expected):  # quote says it is a different kind of date
                     self.rejected.append(f"{out_name}: context_mismatch({ctx})")
                     return
-                payload = {"date": f.value, "raw": m.raw, "precision": m.precision, "context": expected,
-                           "ambiguity": None}  # fmt: skip
+                payload = {
+                    "date": f.value,
+                    "raw": m.raw,
+                    "precision": m.precision,
+                    "context": expected,
+                    "ambiguity": None,
+                }
                 self.add(out_name, payload, q, m.raw)
                 return
         self.rejected.append(f"{out_name}: quote_does_not_contain_value")
 
 
 def ground_output(
-    out: OpportunityExtract, segments: list[dict[str, str]], *, url: str, observation_id: str | None,
+    out: OpportunityExtract,
+    segments: list[dict[str, str]],
+    *,
+    url: str,
+    observation_id: str | None,
     model: str,
-) -> LLMOutcome:  # fmt: skip
+) -> LLMOutcome:
     g = _Grounder({s["segment_id"]: s["text"] for s in segments}, url, observation_id, model)
     g.date("event_start_date", out.event_start_date, EVENT)
     g.date("event_end_date", out.event_end_date, EVENT)
@@ -242,19 +269,33 @@ class LLMExtractionService:
         self.stats = LLMStats()
 
     def extract(
-        self, *, url: str, trust_tier: str, authority_scope: str, observation_id: str,
-        content_sha256: str, title: str, text: str, candidate_title: str,
+        self,
+        *,
+        url: str,
+        trust_tier: str,
+        authority_scope: str,
+        observation_id: str,
+        content_sha256: str,
+        title: str,
+        text: str,
+        candidate_title: str,
         known_edition_key: str | None,
-    ) -> LLMOutcome:  # fmt: skip
+    ) -> LLMOutcome:
         llm = self.cfg.settings.llm
         require_ack(self.cfg.paths.llm_ack, self.provider)
         segments = build_segments(text, llm.active.max_input_chars)
         payload = build_payload(
-            url=url, trust_tier=trust_tier, authority_scope=redact(authority_scope).text,
-            observation_id=observation_id, retrieved_at=iso_z(self.clock.now_utc()),
-            content_sha256=content_sha256, title=redact(title).text, segments=segments,
-            title_guess=redact(candidate_title).text, known_edition_key=known_edition_key,
-        )  # fmt: skip
+            url=url,
+            trust_tier=trust_tier,
+            authority_scope=redact(authority_scope).text,
+            observation_id=observation_id,
+            retrieved_at=iso_z(self.clock.now_utc()),
+            content_sha256=content_sha256,
+            title=redact(title).text,
+            segments=segments,
+            title_guess=redact(candidate_title).text,
+            known_edition_key=known_edition_key,
+        )
         while (
             len(json.dumps(payload, ensure_ascii=False)) > llm.active.max_input_chars and segments
         ):
@@ -278,9 +319,11 @@ class LLMExtractionService:
                 self.stats.calls += 1
                 try:
                     raw = self.client.complete_json(
-                        system_prompt=system_message(), user_payload=payload,
-                        schema=OpportunityExtract.model_json_schema(), cache_key=key,
-                    )  # fmt: skip
+                        system_prompt=system_message(),
+                        user_payload=payload,
+                        schema=OpportunityExtract.model_json_schema(),
+                        cache_key=key,
+                    )
                 except LLMUnavailable:
                     self.stats.unavailable += 1
                     raise
@@ -293,14 +336,24 @@ class LLMExtractionService:
                 except ValidationError:
                     self.stats.malformed += 1
                     if self.cache:
-                        self.cache.put(key, model=llm.active.model, prompt_version=PROMPT_VERSION,
-                                       input_sha256=normalized_input_sha256(payload),
-                                       response=raw, status="invalid")  # fmt: skip
+                        self.cache.put(
+                            key,
+                            model=llm.active.model,
+                            prompt_version=PROMPT_VERSION,
+                            input_sha256=normalized_input_sha256(payload),
+                            response=raw,
+                            status="invalid",
+                        )
                     continue
                 if self.cache:
-                    self.cache.put(key, model=llm.active.model, prompt_version=PROMPT_VERSION,
-                                   input_sha256=normalized_input_sha256(payload),
-                                   response=parsed.model_dump(), status="valid")  # fmt: skip
+                    self.cache.put(
+                        key,
+                        model=llm.active.model,
+                        prompt_version=PROMPT_VERSION,
+                        input_sha256=normalized_input_sha256(payload),
+                        response=parsed.model_dump(),
+                        status="valid",
+                    )
                 break
             if parsed is None:
                 raise LLMInvalidResponse("model output failed schema validation after retries")

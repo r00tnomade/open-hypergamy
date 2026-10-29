@@ -1,0 +1,21 @@
+# Copy to $RADAR_HOME/profile.yaml (or config/profile.yaml; both are git-ignored).
+# Keep only what eligibility and ranking need. This file is never sent to any LLM or to Telegram.
+version: 1
+profile_id: primary
+profile_version: "2026-10"
+academic:
+  country: DE
+  institution_type: university_of_applied_sciences
+  degree_level: bachelor        # bachelor | master | phd
+  subject_tags: [computer_engineering, computer_science]
+  current_year: 1
+  expected_graduation_year: null
+skills: [python, c, linux, software_engineering, applied_ai]
+research_tags: [ai_systems, applied_ml, robotics, autonomous_systems, computer_vision, systems_security]
+preferences:
+  primary_regions: [DE, EU, Europe]
+  international_when_funded: true
+  needs_funding_or_low_cost: true
+  budget_limit_eur: null
+  formats: [in_person, online, hybrid]
+  career_goals: [research_engineering, ai_systems_engineering, robotics]

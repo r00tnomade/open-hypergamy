@@ -167,6 +167,13 @@ def collect_status(conn: sqlite3.Connection, cfg: LoadedConfig) -> dict[str, Any
         "notifications_pending": one(
             "SELECT COUNT(*) FROM notification_log WHERE status IN ('pending','sending')"
         ),
+        "last_notification_error": (
+            conn.execute(
+                "SELECT last_error_redacted FROM notification_log WHERE last_error_redacted IS NOT NULL "
+                "ORDER BY last_attempt_at DESC, rowid DESC LIMIT 1"
+            ).fetchone()
+            or [None]
+        )[0],
         "notifications_failed": one(
             "SELECT COUNT(*) FROM notification_log WHERE status = 'failed'"
         ),

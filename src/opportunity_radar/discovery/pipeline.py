@@ -326,9 +326,18 @@ def _process_draft(
     cand = repo.get_candidate(cid)
     assert cand is not None
     extra = _llm_facts(
-        llm, repo, conn, cid, source=source, title=title, text=text, evidence_url=evidence_url,
-        obs_id=page_obs_id, edition_key=key, stats=stats,
-    )  # fmt: skip
+        llm,
+        repo,
+        conn,
+        cid,
+        source=source,
+        title=title,
+        text=text,
+        evidence_url=evidence_url,
+        obs_id=page_obs_id,
+        edition_key=key,
+        stats=stats,
+    )
     result = promote_candidate(
         conn,
         clock,
@@ -375,11 +384,16 @@ def _llm_facts(
     ).fetchone()
     try:
         outcome = llm.extract(
-            url=evidence_url, trust_tier=source.trust_tier, authority_scope=source.authority_scope,
-            observation_id=obs_id, content_sha256=row["content_hash"] if row else "",
-            title=(row["title"] if row else "") or title, text=text, candidate_title=title,
+            url=evidence_url,
+            trust_tier=source.trust_tier,
+            authority_scope=source.authority_scope,
+            observation_id=obs_id,
+            content_sha256=row["content_hash"] if row else "",
+            title=(row["title"] if row else "") or title,
+            text=text,
+            candidate_title=title,
             known_edition_key=edition_key,
-        )  # fmt: skip
+        )
     except LLMUnavailable as e:
         log.info("LLM unavailable, queueing %s: %s", cid, e)
         repo.merge_candidate_metadata(cid, {"llm_state": "pending", "llm_note": str(e)[:200]})
@@ -389,9 +403,12 @@ def _llm_facts(
         repo.merge_candidate_metadata(cid, {"llm_state": "invalid", "llm_note": str(e)[:200]})
         with transaction(conn):
             repo.add_review_tx(
-                reason="llm_invalid_output", priority="medium", candidate_id=cid,
-                title=f"LLM output unusable: {title}", details=str(e)[:300],
-            )  # fmt: skip
+                reason="llm_invalid_output",
+                priority="medium",
+                candidate_id=cid,
+                title=f"LLM output unusable: {title}",
+                details=str(e)[:300],
+            )
         stats.llm_invalid += 1
         return []
     repo.merge_candidate_metadata(
@@ -407,9 +424,14 @@ def _llm_facts(
 
 
 def run_llm_queue(
-    conn: sqlite3.Connection, cfg: LoadedConfig, clock: Clock, llm: LLMExtractionService, *,
-    limit: int, dry_run: bool = False,
-) -> PipelineStats:  # fmt: skip
+    conn: sqlite3.Connection,
+    cfg: LoadedConfig,
+    clock: Clock,
+    llm: LLMExtractionService,
+    *,
+    limit: int,
+    dry_run: bool = False,
+) -> PipelineStats:
     """Process candidates whose LLM step was deferred. Stops at the first unavailability."""
     repo = OpportunityRepository(conn, clock)
     stats = PipelineStats()
@@ -443,19 +465,35 @@ def run_llm_queue(
         title = meta.get("title", obs_title)
         before = stats.llm_queued
         extra = _llm_facts(
-            llm, repo, conn, cand["id"], source=source, title=title, text=text,
-            evidence_url=meta.get("evidence_url", cand["canonical_url"]), obs_id=obs_id,
-            edition_key=cand["edition_key"], stats=stats,
-        )  # fmt: skip
+            llm,
+            repo,
+            conn,
+            cand["id"],
+            source=source,
+            title=title,
+            text=text,
+            evidence_url=meta.get("evidence_url", cand["canonical_url"]),
+            obs_id=obs_id,
+            edition_key=cand["edition_key"],
+            stats=stats,
+        )
         if stats.llm_queued > before:
             break  # gateway/quota/ack problem: leave the rest queued
         if extra:
             result = promote_candidate(
-                conn, clock,
-                build_input(cand, source=source, title=title, text=text,
-                            evidence_url=meta.get("evidence_url", cand["canonical_url"]),
-                            observation_id=obs_id, method=meta.get("method", "rule"),
-                            edition_key=None, extra_facts=extra),
-            )  # fmt: skip
+                conn,
+                clock,
+                build_input(
+                    cand,
+                    source=source,
+                    title=title,
+                    text=text,
+                    evidence_url=meta.get("evidence_url", cand["canonical_url"]),
+                    observation_id=obs_id,
+                    method=meta.get("method", "rule"),
+                    edition_key=None,
+                    extra_facts=extra,
+                ),
+            )
             stats.promoted += int(result.status == "promoted")
     return stats

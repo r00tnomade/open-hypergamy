@@ -88,4 +88,6 @@ def resolve_conflict(
             "UPDATE editions SET last_material_change_at=? WHERE id=?",
             (iso_z(now_dt), rev["edition_id"]),
         )
-        refresh_edition(repo, conn, rev["edition_id"], now_dt.date(), now_dt, False)
+        refresh_edition(
+            repo, conn, rev["edition_id"], now_dt.date(), now_dt, False, verified_now=False
+        )

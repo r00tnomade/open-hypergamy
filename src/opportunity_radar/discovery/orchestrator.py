@@ -148,6 +148,7 @@ def run_discovery(
     dry_run: bool = False,
     trigger: str = "manual",
     llm: LLMExtractionService | None = None,
+    only_ids: set[str] | None = None,
 ) -> RunSummary:
     repo = SourceRepository(conn, clock)
     if source_ref:
@@ -158,7 +159,11 @@ def run_discovery(
             raise RadarError(f"source {source_ref} is not enabled (state={src.state})")
         due = [src]
     else:
-        due = repo.list_due(iso_z(clock.now_utc()), limit)
+        due = repo.list_due(iso_z(clock.now_utc()), None)
+        if only_ids is not None:
+            due = [s for s in due if s.id in only_ids]
+        if limit:
+            due = due[:limit]
     summary = RunSummary(considered=len(due))
     if dry_run:
         summary.results = [{"source": s.source_key or s.id, "status": "would_check"} for s in due]

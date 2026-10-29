@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import sqlite3
 import sys
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -36,6 +37,12 @@ from opportunity_radar.errors import (
 from opportunity_radar.extraction.llm_extractor import build_client, build_llm_service, llm_enabled
 from opportunity_radar.llm.ack import CHECKLIST, ack_is_current, read_ack, write_ack
 from opportunity_radar.llm.cache import LLMCache
+from opportunity_radar.monitoring.cycle import CycleReport, SinkFactory, score_and_alert
+from opportunity_radar.monitoring.deadlines import build_digest, prepare, queue_digest
+from opportunity_radar.monitoring.recheck import recheck_editions
+from opportunity_radar.notifications.base import NotificationMessage
+from opportunity_radar.notifications.outbox import Outbox
+from opportunity_radar.notifications.telegram import TelegramSink
 from opportunity_radar.observability.health import collect_status, run_doctor
 from opportunity_radar.observability.logging import redact, setup_logging
 from opportunity_radar.persistence import db as dbm
@@ -43,6 +50,7 @@ from opportunity_radar.persistence import migrations as mig
 from opportunity_radar.persistence.repositories.observations import insert_observation
 from opportunity_radar.persistence.repositories.opportunities import OpportunityRepository
 from opportunity_radar.persistence.repositories.sources import SourceRepository
+from opportunity_radar.profile import load_profile, load_profile_for, profile_path
 from opportunity_radar.sources.base import FetchContext, SourceRecord
 from opportunity_radar.sources.common import build_observation, decode_body
 from opportunity_radar.sources.fetch import BodyCache, build_fetcher
@@ -67,6 +75,12 @@ app.add_typer(llm_app, name="llm")
 app.add_typer(candidates_app, name="candidates")
 app.add_typer(review_app, name="review")
 app.add_typer(opps_app, name="opportunities")
+actions_app = typer.Typer(help="Action items.", no_args_is_help=True)
+notify_app = typer.Typer(help="Telegram notifications.", no_args_is_help=True)
+profile_app = typer.Typer(help="Local profile.", no_args_is_help=True)
+app.add_typer(actions_app, name="actions")
+app.add_typer(notify_app, name="notify")
+app.add_typer(profile_app, name="profile")
 
 out = Console()
 err = Console(stderr=True)
@@ -78,6 +92,11 @@ ConfigOpt = Annotated[Path | None, typer.Option("--config", help="settings.yaml 
 JsonOpt = Annotated[bool, typer.Option("--json", help="Machine-readable output on stdout.")]
 
 EXTERNAL_PROCESSING_CHECKLIST = CHECKLIST
+
+
+def build_sink() -> TelegramSink:
+    """Overridden in tests; raises ConfigurationError when the bot is not configured."""
+    return TelegramSink.from_env()
 
 
 @contextmanager
@@ -595,6 +614,9 @@ def run_discovery_cmd(
     limit_sources: Annotated[int | None, typer.Option("--limit-sources")] = None,
     source_id: Annotated[str | None, typer.Option("--source-id")] = None,
     dry_run: Annotated[bool, typer.Option("--dry-run")] = False,
+    no_alerts: Annotated[
+        bool, typer.Option("--no-alerts", help="Skip scoring and Telegram.")
+    ] = False,
     home: HomeOpt = None,
     config: ConfigOpt = None,
 ) -> None:
@@ -642,6 +664,8 @@ def run_discovery_cmd(
             f"{'[dry run] ' if dry_run else ''}{summary.considered} source(s) considered; "
             f"run status: {summary.status if not dry_run else 'n/a'}"
         )
+        if not dry_run:
+            _after_run(cfg, no_alerts)
         if not dry_run and summary.status == "partial":
             raise typer.Exit(EXIT_PARTIAL)
         if not dry_run and summary.status == "failed":
@@ -986,25 +1010,56 @@ def review_resolve(
         out.print("Conflict resolved with the chosen official claim.")
 
 
+def _latest_snapshot(conn: sqlite3.Connection, eid: str) -> sqlite3.Row | None:
+    row: sqlite3.Row | None = conn.execute(
+        "SELECT * FROM score_snapshots WHERE edition_id=? ORDER BY created_at DESC, rowid DESC LIMIT 1",
+        (eid,),
+    ).fetchone()
+    return row
+
+
 @opps_app.command("list")
 def opps_list(
+    action: Annotated[str | None, typer.Option("--action")] = None,
+    min_fit: Annotated[float, typer.Option("--min-fit")] = 0.0,
+    within: Annotated[
+        str | None, typer.Option("--within", help="Verified close date within e.g. 90d.")
+    ] = None,
     json_out: JsonOpt = False,
     limit: Annotated[int, typer.Option("--limit")] = 100,
     home: HomeOpt = None,
     config: ConfigOpt = None,
 ) -> None:
-    """List editions with verification and application status."""
+    """List editions with verification, eligibility and score."""
     with guard():
         cfg = _load(home, config)
         conn = _open(cfg)
+        clock = SystemClock()
         try:
-            repo = OpportunityRepository(conn, SystemClock())
+            repo = OpportunityRepository(conn, clock)
+            horizon = (clock.now_utc() + _duration(within)).date().isoformat() if within else None
             data = []
             for e in repo.list_editions(limit):
-                close = repo.deadlines_for(e["id"])
+                if action and e["user_action"] != action:
+                    continue
+                snap = _latest_snapshot(conn, e["id"])
+                fit = snap["fit_score"] if snap else None
+                if min_fit and (fit is None or fit < min_fit):
+                    continue
                 close_row = next(
-                    (d for d in close if d["deadline_type"] == "application_close"), None
+                    (
+                        d
+                        for d in repo.deadlines_for(e["id"])
+                        if d["deadline_type"] == "application_close"
+                    ),
+                    None,
                 )
+                if horizon and not (
+                    close_row
+                    and close_row["due_date_local"]
+                    and close_row["due_date_local"] <= horizon
+                ):
+                    continue
                 data.append(
                     {
                         "id": e["id"],
@@ -1019,6 +1074,11 @@ def opps_list(
                         if close_row
                         else None,
                         "url": e["official_url"],
+                        "action": e["user_action"],
+                        "fit": fit,
+                        "urgency": snap["urgency_score"] if snap else None,
+                        "band": snap["priority_band"] if snap else None,
+                        "eligibility": snap["eligibility_status"] if snap else None,
                     }
                 )
         finally:
@@ -1026,28 +1086,29 @@ def opps_list(
         if json_out:
             sys.stdout.write(json.dumps(data, indent=2) + "\n")
             return
-        table = Table("id", "name", "ed.", "facts", "applications", "closes", "event")
+        table = Table("id", "name", "ed.", "action", "band", "fit", "elig.", "facts", "closes")
         for d in data:
             closes = (
                 f"{d['application_close']} ({d['application_close_status']})"
                 if d["application_close"]
                 else "unknown"
             )
-            event = (
-                f"{d['event_start_date']}..{d['event_end_date']}"
-                if d["event_start_date"]
-                else "unknown"
-            )
             table.add_row(
                 d["id"][:8],
-                d["name"][:40],
+                d["name"][:36],
                 d["edition"],
+                d["action"],
+                d["band"] or "-",
+                "-" if d["fit"] is None else f"{d['fit']:g}",
+                d["eligibility"] or "-",
                 _label(d["fact_status"]),
-                d["application_status"],
                 closes,
-                event,
             )
         out.print(table)
+        if any(d["fit"] is None for d in data):
+            out.print(
+                "Some editions are unscored: create a profile (see config/profile.example.yaml) and run `radar run score`."
+            )
 
 
 @opps_app.command("show")
@@ -1067,6 +1128,15 @@ def opps_show(
             if e is None:
                 raise ConfigurationError(f"unknown or ambiguous edition id: {eid}")
             dls, claims = repo.deadlines_for(e["id"]), repo.claims_for_edition(e["id"])
+            snap = _latest_snapshot(conn, e["id"])
+            assess = conn.execute(
+                "SELECT * FROM eligibility_assessments WHERE edition_id=? ORDER BY created_at DESC, rowid DESC LIMIT 1",
+                (e["id"],),
+            ).fetchone()
+            actions = conn.execute(
+                "SELECT * FROM action_items WHERE edition_id=? ORDER BY status, due_date_local",
+                (e["id"],),
+            ).fetchall()
         finally:
             conn.close()
         table = Table("field", "value", show_header=False)
@@ -1075,6 +1145,8 @@ def opps_show(
             "display_name",
             "edition_key",
             "official_url",
+            "user_action",
+            "action_locked",
             "fact_status",
             "application_status",
             "lifecycle_status",
@@ -1083,8 +1155,24 @@ def opps_show(
             "last_verified_at",
             "source_fresh_until",
             "last_material_change_at",
+            "user_notes",
         ):
             table.add_row(k, str(e[k]))
+        if snap:
+            table.add_row(
+                "score",
+                f"fit {snap['fit_score']:g} · urgency {snap['urgency_score']:g} · "
+                f"band {snap['priority_band']} (profile {snap['profile_version']})",
+            )
+            table.add_row("reasons", snap["reason_codes_json"])
+            table.add_row("components", snap["component_scores_json"])
+        if assess:
+            table.add_row("eligibility", f"{assess['status']}: {assess['assessment_summary']}")
+            for c in json.loads(assess["criteria_json"]):
+                table.add_row(
+                    "  requirement",
+                    f"[{c['assessment']}] {c['requirement_text']} — {c['rationale']}",
+                )
         out.print(table)
         dtable = Table("deadline", "date", "status", "as written")
         for d in dls:
@@ -1095,6 +1183,17 @@ def opps_show(
                 d["raw_date_text"],
             )
         out.print(dtable)
+        if actions:
+            atable = Table("action", "status", "priority", "due", "title")
+            for a in actions:
+                atable.add_row(
+                    a["action_type"],
+                    a["status"],
+                    a["priority"],
+                    a["due_date_local"] or "",
+                    a["title"],
+                )
+            out.print(atable)
         if evidence:
             ctable = Table("field", "status", "method", "tier", "excerpt", "source")
             for c in claims:
@@ -1107,6 +1206,168 @@ def opps_show(
                     c["source_url"],
                 )
             out.print(ctable)
+
+
+@opps_app.command("set-action")
+def opps_set_action(
+    eid: str,
+    action: str,
+    note: Annotated[str | None, typer.Option("--note")] = None,
+    home: HomeOpt = None,
+    config: ConfigOpt = None,
+) -> None:
+    """Set the tracked state (apply, prepare, monitor, applied, …). `auto` returns control to the planner."""
+    from opportunity_radar.domain.enums import OpportunityAction
+
+    with guard():
+        valid = [a.value for a in OpportunityAction]
+        if action != "auto" and action not in valid:
+            raise ConfigurationError(f"unknown action {action!r}; use auto or one of {valid}")
+        cfg = _load(home, config)
+        conn = _open(cfg)
+        clock = SystemClock()
+        try:
+            repo = OpportunityRepository(conn, clock)
+            e = repo.get_edition(eid)
+            if e is None:
+                raise ConfigurationError(f"unknown or ambiguous edition id: {eid}")
+            with dbm.transaction(conn):
+                if action == "auto":
+                    conn.execute(
+                        "UPDATE editions SET action_locked=0, updated_at=? WHERE id=?",
+                        (iso_z(clock.now_utc()), e["id"]),
+                    )
+                else:
+                    conn.execute(
+                        "UPDATE editions SET user_action=?, action_locked=1, updated_at=? WHERE id=?",
+                        (action, iso_z(clock.now_utc()), e["id"]),
+                    )
+                if note:
+                    conn.execute(
+                        "UPDATE editions SET user_notes = trim(user_notes || char(10) || ?) WHERE id=?",
+                        (note, e["id"]),
+                    )
+        finally:
+            conn.close()
+        out.print(
+            f"{e['display_name']}: {'planner control restored' if action == 'auto' else 'action set to ' + action}."
+        )
+
+
+@opps_app.command("note")
+def opps_note(eid: str, text: str, home: HomeOpt = None, config: ConfigOpt = None) -> None:
+    """Append a private note to an edition."""
+    with guard():
+        cfg = _load(home, config)
+        conn = _open(cfg)
+        try:
+            e = OpportunityRepository(conn, SystemClock()).get_edition(eid)
+            if e is None:
+                raise ConfigurationError(f"unknown or ambiguous edition id: {eid}")
+            with dbm.transaction(conn):
+                conn.execute(
+                    "UPDATE editions SET user_notes = trim(user_notes || char(10) || ?) WHERE id=?",
+                    (text, e["id"]),
+                )
+        finally:
+            conn.close()
+        out.print("Note added.")
+
+
+@opps_app.command("refresh")
+def opps_refresh(eid: str, home: HomeOpt = None, config: ConfigOpt = None) -> None:
+    """Re-check the edition's source now and rescore."""
+    with guard():
+        cfg = _load(home, config)
+        clock = SystemClock()
+        conn = _open(cfg)
+        fetcher = build_fetcher(cfg, clock)
+        try:
+            e = OpportunityRepository(conn, clock).get_edition(eid)
+            if e is None:
+                raise ConfigurationError(f"unknown or ambiguous edition id: {eid}")
+            row = conn.execute(
+                "SELECT discovered_by_source_id FROM candidates WHERE promoted_edition_id=? "
+                "AND discovered_by_source_id IS NOT NULL LIMIT 1",
+                (e["id"],),
+            ).fetchone()
+            if row is None:
+                raise ConfigurationError("this edition has no registered source to refresh")
+            summary = run_discovery(
+                conn,
+                cfg,
+                fetcher,
+                clock,
+                source_ref=row[0],
+                llm=build_llm_service(conn, cfg, clock),
+            )
+            rep = score_and_alert(conn, cfg, clock, sink_factory=build_sink)
+        finally:
+            fetcher.close()
+            conn.close()
+        out.print(f"Source re-checked ({summary.status}); {len(rep.outcomes)} edition(s) rescored.")
+
+
+@actions_app.command("list")
+def actions_list(
+    status: Annotated[str, typer.Option("--status")] = "open",
+    home: HomeOpt = None,
+    config: ConfigOpt = None,
+) -> None:
+    """List action items."""
+    with guard():
+        cfg = _load(home, config)
+        conn = _open(cfg)
+        try:
+            rows = conn.execute(
+                "SELECT a.*, e.display_name FROM action_items a LEFT JOIN editions e ON e.id=a.edition_id "
+                "WHERE a.status=? ORDER BY CASE a.priority WHEN 'critical' THEN 0 WHEN 'high' THEN 1 "
+                "WHEN 'medium' THEN 2 ELSE 3 END, a.due_date_local IS NULL, a.due_date_local",
+                (status,),
+            ).fetchall()
+        finally:
+            conn.close()
+        table = Table("id", "priority", "due", "type", "title")
+        for r in rows:
+            table.add_row(
+                r["id"][:8], r["priority"], r["due_date_local"] or "", r["action_type"], r["title"]
+            )
+        out.print(table)
+        out.print(f"{len(rows)} {status} action(s).")
+
+
+def _close_action(aid: str, status: str, home: Path | None, config: Path | None) -> None:
+    with guard():
+        cfg = _load(home, config)
+        conn = _open(cfg)
+        clock = SystemClock()
+        try:
+            rows = conn.execute(
+                "SELECT id FROM action_items WHERE id LIKE ?", (aid + "%",)
+            ).fetchall()
+            if len(rows) != 1:
+                raise ConfigurationError(f"unknown or ambiguous action id: {aid}")
+            now = iso_z(clock.now_utc())
+            with dbm.transaction(conn):
+                conn.execute(
+                    "UPDATE action_items SET status=?, updated_at=?, completed_at=? WHERE id=?",
+                    (status, now, now if status == "done" else None, rows[0]["id"]),
+                )
+        finally:
+            conn.close()
+        out.print(f"Action marked {status}.")
+
+
+@actions_app.command("done")
+def actions_done(aid: str, home: HomeOpt = None, config: ConfigOpt = None) -> None:
+    """Mark an action done (it will not be recreated)."""
+    _close_action(aid, "done", home, config)
+
+
+@actions_app.command("dismiss")
+def actions_dismiss(aid: str, home: HomeOpt = None, config: ConfigOpt = None) -> None:
+    """Dismiss an action (it will not be recreated)."""
+    _close_action(aid, "dismissed", home, config)
 
 
 @app.command()
@@ -1249,6 +1510,254 @@ def run_llm(
             f"{stats.llm_queued} still queued, {stats.llm_invalid} invalid"
         )
         if stats.llm_queued and not dry_run:
+            raise typer.Exit(EXIT_PARTIAL)
+
+
+def _after_run(cfg: LoadedConfig, skip: bool, *, sink: SinkFactory | None = None) -> None:
+    """Score everything and queue/deliver alerts after a fetch job (idempotent)."""
+    if skip:
+        return
+    conn = _open(cfg)
+    try:
+        rep = score_and_alert(conn, cfg, SystemClock(), sink_factory=sink or build_sink)
+    finally:
+        conn.close()
+    _print_cycle(rep)
+
+
+def _print_cycle(rep: CycleReport) -> None:
+    if not rep.profile_found:
+        out.print("No profile found: scoring and alerts skipped (see config/profile.example.yaml).")
+        return
+    queued = ", ".join(f"{n} {k}" for k, n in rep.alerts.queued.items()) or "no new alerts"
+    out.print(
+        f"scored {len(rep.outcomes)} edition(s); alerts: {queued}"
+        f" ({rep.alerts.skipped_duplicates} already sent/queued)"
+    )
+    if rep.delivery:
+        d = rep.delivery
+        out.print(
+            f"telegram: {d.sent} sent, {d.retry_scheduled} to retry, {d.failed} failed, "
+            f"{d.suppressed} folded into digest, {d.deferred} deferred"
+        )
+    elif rep.delivery_note:
+        out.print(f"telegram: {rep.delivery_note}")
+
+
+@profile_app.command("show")
+def profile_show(home: HomeOpt = None, config: ConfigOpt = None) -> None:
+    """Show the profile in use (local only; never sent anywhere)."""
+    with guard():
+        cfg = _load(home, config)
+        path = profile_path(cfg)
+        if path is None:
+            raise ConfigurationError(
+                "no profile found; copy config/profile.example.yaml to "
+                f"{cfg.paths.home / 'profile.yaml'}"
+            )
+        out.print(f"[bold]{path}[/bold]")
+        out.print(load_profile(path).model_dump_json(indent=2))
+
+
+@profile_app.command("validate")
+def profile_validate(home: HomeOpt = None, config: ConfigOpt = None) -> None:
+    """Validate the profile file."""
+    with guard():
+        cfg = _load(home, config)
+        p = load_profile_for(cfg)
+        if p is None:
+            raise ConfigurationError("no profile found")
+        out.print(f"Profile {p.profile_id} ({p.profile_version}) is valid.")
+
+
+@run_app.command("score")
+def run_score(home: HomeOpt = None, config: ConfigOpt = None) -> None:
+    """Recompute eligibility, scores and actions (no network, no messages)."""
+    with guard():
+        cfg = _load(home, config)
+        conn = _open(cfg)
+        try:
+            rep = score_and_alert(conn, cfg, SystemClock(), sink_factory=None, deliver=False)
+        finally:
+            conn.close()
+        _print_cycle(rep)
+        if not rep.profile_found:
+            raise typer.Exit(2)
+
+
+@run_app.command("sentinel")
+def run_sentinel(
+    dry_run: Annotated[
+        bool, typer.Option("--dry-run", help="Show alerts; write/send nothing.")
+    ] = False,
+    no_fetch: Annotated[bool, typer.Option("--no-fetch")] = False,
+    home: HomeOpt = None,
+    config: ConfigOpt = None,
+) -> None:
+    """Daily job: mark stale facts, recheck sources behind imminent deadlines, rescore, alert."""
+    with guard():
+        cfg = _load(home, config)
+        clock = SystemClock()
+        conn = _open(cfg)
+        status = "success"
+        try:
+            if dry_run:
+                rep = score_and_alert(conn, cfg, clock, sink_factory=None, dry_run=True)
+                _print_cycle(rep)
+                for key, m in rep.preview:
+                    out.print(f"\n[dim]{key}[/dim]\n{m.text}", markup=True, highlight=False)
+                return
+            prep = prepare(conn, cfg, clock)
+            out.print(
+                f"{prep.marked_stale} fact(s) marked stale; "
+                f"{len(prep.editions_to_recheck)} edition(s) to re-verify."
+            )
+            if prep.editions_to_recheck and not no_fetch:
+                fetcher = build_fetcher(cfg, clock)
+                try:
+                    r = recheck_editions(
+                        conn,
+                        cfg,
+                        fetcher,
+                        clock,
+                        prep.editions_to_recheck,
+                        build_llm_service(conn, cfg, clock),
+                    )
+                finally:
+                    fetcher.close()
+                out.print(f"re-verified {r.reverified}, changed {r.changed}, failed {r.failed}")
+                if r.failed:
+                    status = "partial"
+        finally:
+            conn.close()
+        _after_run(cfg, False)
+        if status == "partial":
+            raise typer.Exit(EXIT_PARTIAL)
+        if status == "failed":
+            raise typer.Exit(EXIT_FAILURE)
+
+
+@run_app.command("digest")
+def run_digest(
+    dry_run: Annotated[bool, typer.Option("--dry-run")] = False,
+    home: HomeOpt = None,
+    config: ConfigOpt = None,
+) -> None:
+    """Weekly digest: print it (--dry-run) or queue and send it via Telegram."""
+    with guard():
+        cfg = _load(home, config)
+        clock = SystemClock()
+        conn = _open(cfg)
+        try:
+            if dry_run:
+                out.print(build_digest(conn, cfg, clock), highlight=False, markup=False)
+                return
+            text, queued = queue_digest(
+                conn, cfg, clock, Outbox(conn, clock, cfg.settings.telegram)
+            )
+            rep = (
+                score_and_alert(conn, cfg, clock, sink_factory=build_sink, deliver=True)
+                if False
+                else None
+            )
+            _ = rep
+            outbox = Outbox(conn, clock, cfg.settings.telegram)
+            if cfg.settings.telegram.enabled:
+                try:
+                    d = outbox.deliver(build_sink())
+                    out.print(
+                        f"digest queued ({queued} part(s)); telegram: {d.sent} sent, {d.failed} failed"
+                    )
+                except ConfigurationError as e:
+                    out.print(f"digest queued ({queued} part(s)) but not delivered ({e})")
+            else:
+                out.print(text, highlight=False, markup=False)
+        finally:
+            conn.close()
+
+
+@run_app.command("all")
+def run_all(
+    dry_run: Annotated[bool, typer.Option("--dry-run")] = False,
+    home: HomeOpt = None,
+    config: ConfigOpt = None,
+) -> None:
+    """Discovery of all due sources, deferred LLM work, scoring and alerts."""
+    from opportunity_radar.discovery.pipeline import run_llm_queue
+
+    with guard():
+        cfg = _load(home, config)
+        clock = SystemClock()
+        conn = _open(cfg)
+        status = "success"
+        try:
+            if dry_run:
+                n = len(SourceRepository(conn, clock).list_due(iso_z(clock.now_utc())))
+                out.print(f"[dry run] {n} source(s) due.")
+                return
+            prepare(conn, cfg, clock)
+            fetcher = build_fetcher(cfg, clock)
+            llm = build_llm_service(conn, cfg, clock)
+            try:
+                summary = run_discovery(conn, cfg, fetcher, clock, llm=llm)
+            finally:
+                fetcher.close()
+            status = summary.status
+            out.print(f"discovery: {summary.considered} source(s), status {summary.status}")
+            if llm is not None:
+                q = run_llm_queue(conn, cfg, clock, llm, limit=cfg.settings.llm.max_calls_per_run)
+                out.print(f"llm queue: {q.llm_done} extracted, {q.llm_queued} still queued")
+        finally:
+            conn.close()
+        _after_run(cfg, False)
+        if status == "partial":
+            raise typer.Exit(EXIT_PARTIAL)
+        if status == "failed":
+            raise typer.Exit(EXIT_FAILURE)
+
+
+@notify_app.command("test")
+def notify_test(home: HomeOpt = None, config: ConfigOpt = None) -> None:
+    """Send one test message (not logged in the outbox; never sent by scheduled runs)."""
+    with guard():
+        cfg = _load(home, config)
+        if not cfg.settings.telegram.enabled:
+            raise ConfigurationError("telegram.enabled is false")
+        sink = build_sink()
+        res = sink.send(
+            NotificationMessage(
+                "✅ Opportunity Radar: Telegram is configured correctly.", "test", "system", "test"
+            ),
+            "test",
+        )
+        if not res.ok:
+            err.print(f"[red]Telegram test failed[/red]: {redact(res.error or '')}")
+            raise typer.Exit(EXIT_FAILURE)
+        out.print("Test message sent.")
+
+
+@notify_app.command("retry")
+def notify_retry(
+    limit: Annotated[int, typer.Option("--limit")] = 20,
+    include_failed: Annotated[bool, typer.Option("--include-failed")] = False,
+    home: HomeOpt = None,
+    config: ConfigOpt = None,
+) -> None:
+    """Deliver pending messages whose retry time has come (optionally re-queue failed ones)."""
+    with guard():
+        cfg = _load(home, config)
+        conn = _open(cfg)
+        try:
+            outbox = Outbox(conn, SystemClock(), cfg.settings.telegram)
+            if include_failed:
+                out.print(f"re-queued {outbox.requeue_failed()} failed message(s)")
+            d = outbox.deliver(build_sink(), max_messages=limit)
+        finally:
+            conn.close()
+        out.print(
+            f"{d.sent} sent, {d.retry_scheduled} to retry, {d.failed} failed, {d.deferred} deferred"
+        )
+        if d.failed or d.retry_scheduled:
             raise typer.Exit(EXIT_PARTIAL)
 
 

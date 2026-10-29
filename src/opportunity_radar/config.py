@@ -112,6 +112,7 @@ class TelegramSettings(_Section):
     minimum_fit_score_for_immediate_alert: int = 75
     maximum_messages_per_run: int = 10
     retry_limit: int = 3
+    send_delay_seconds: float = 1.0
 
 
 class CrawlingSettings(_Section):
@@ -242,6 +243,7 @@ def _env_overrides(env: dict[str, str]) -> dict[str, Any]:
         "RADAR_FREELLMAPI_BASE_URL": "llm.freellmapi.base_url",
         "RADAR_FREELLMAPI_MODEL": "llm.freellmapi.model",
         "RADAR_TELEGRAM_ENABLED": "telegram.enabled",
+        "RADAR_TELEGRAM_SEND_DELAY_SECONDS": "telegram.send_delay_seconds",
     }
     for var, path in simple.items():
         if env.get(var):

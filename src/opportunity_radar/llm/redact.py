@@ -19,31 +19,31 @@ _RULES: list[tuple[str, re.Pattern[str], str]] = [
             r"\s*[:=]\s*\S+"
         ),
         "[REDACTED]",
-    ),  # fmt: skip
+    ),
     ("sk_key", re.compile(r"\bsk-[A-Za-z0-9_-]{12,}\b"), "[REDACTED]"),
     ("telegram", re.compile(r"\b\d{6,}:[A-Za-z0-9_-]{20,}\b"), "[REDACTED]"),
     (
         "long_token",
         re.compile(r"\b(?=[A-Za-z0-9_-]*\d)(?=[A-Za-z0-9_-]*[A-Za-z])[A-Za-z0-9_-]{32,}\b"),
         "[TOKEN]",
-    ),  # fmt: skip
+    ),
     ("phone_intl", re.compile(r"(?<![\w/])(?:\+|00)\d[\d\s().-]{6,}\d"), "[PHONE]"),
     ("phone_paren", re.compile(r"\(\d{2,5}\)\s?\d[\d\s.-]{4,}\d"), "[PHONE]"),
     (
         "phone_label",
         re.compile(r"(?i)\b(?:tel|phone|fon|fax|mobile)\.?\s*:?\s*[\d\s()./+-]{7,}"),
         "[PHONE]",
-    ),  # fmt: skip
+    ),
     (
         "path",
         re.compile(r"(?:/Users|/home|/var/folders|/private)/[^\s\"']+|[A-Za-z]:\\Users\\[^\s\"']+"),
         "[PATH]",
-    ),  # fmt: skip
+    ),
     (
         "tracking",
         re.compile(r"(?i)([?&])(?:utm_[a-z]+|fbclid|gclid|msclkid|mc_[a-z]+|igshid)=[^&\s#]*"),
         r"\1",
-    ),  # fmt: skip
+    ),
 ]
 
 
