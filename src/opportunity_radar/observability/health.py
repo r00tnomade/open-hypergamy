@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 import socket
 import sqlite3
 import sys
@@ -10,12 +9,16 @@ from dataclasses import dataclass
 from typing import Any, Literal
 from urllib.parse import urlparse
 
+from opportunity_radar.clock import Clock, SystemClock
 from opportunity_radar.config import LoadedConfig
 from opportunity_radar.errors import RadarError
+from opportunity_radar.keychain import get_secret, source_of
 from opportunity_radar.llm.ack import ack_is_current
 from opportunity_radar.llm.client import LLMClient
+from opportunity_radar.monitoring.catchup import job_gaps
 from opportunity_radar.persistence import db as dbm
 from opportunity_radar.persistence import migrations as mig
+from opportunity_radar.persistence.backups import last_restore_check
 
 Level = Literal["ok", "warn", "fail"]
 
@@ -86,8 +89,8 @@ def run_doctor(cfg: LoadedConfig, llm_client: LLMClient | None = None) -> list[C
             checks.append(
                 Check(
                     "llm_api_key",
-                    "ok" if os.environ.get(key_env) else "warn",
-                    f"${key_env} {'set' if os.environ.get(key_env) else 'not set'}",
+                    "ok" if get_secret(key_env) else "warn",
+                    f"${key_env} {'set (' + source_of(key_env) + ')' if get_secret(key_env) else 'not set'}",
                 )
             )
             checks.append(
@@ -128,9 +131,7 @@ def run_doctor(cfg: LoadedConfig, llm_client: LLMClient | None = None) -> list[C
                 )
             )
     if s.telegram.enabled:
-        have = bool(os.environ.get("TELEGRAM_BOT_TOKEN")) and bool(
-            os.environ.get("TELEGRAM_CHAT_ID")
-        )
+        have = bool(get_secret("TELEGRAM_BOT_TOKEN")) and bool(get_secret("TELEGRAM_CHAT_ID"))
         checks.append(
             Check(
                 "telegram",
@@ -143,7 +144,9 @@ def run_doctor(cfg: LoadedConfig, llm_client: LLMClient | None = None) -> list[C
     return checks
 
 
-def collect_status(conn: sqlite3.Connection, cfg: LoadedConfig) -> dict[str, Any]:
+def collect_status(
+    conn: sqlite3.Connection, cfg: LoadedConfig, clock: Clock | None = None
+) -> dict[str, Any]:
     def one(sql: str) -> Any:
         return conn.execute(sql).fetchone()[0]
 
@@ -179,4 +182,7 @@ def collect_status(conn: sqlite3.Connection, cfg: LoadedConfig) -> dict[str, Any
         ),
         "last_jobs": last_jobs,
         "latest_backup": backups[-1].name if backups else None,
+        "backups_kept": len(backups),
+        "latest_restore_check": last_restore_check(cfg.paths.backups),
+        "overdue_jobs": [g.describe() for g in job_gaps(conn, cfg, clock or SystemClock())],
     }

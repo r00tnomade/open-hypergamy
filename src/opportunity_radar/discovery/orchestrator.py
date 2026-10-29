@@ -15,6 +15,7 @@ from opportunity_radar.config import LoadedConfig
 from opportunity_radar.discovery.pipeline import PipelineStats, process_observations
 from opportunity_radar.errors import FetchError, ParseError, RadarError, SourcePolicyDenied
 from opportunity_radar.extraction.llm_extractor import LLMExtractionService
+from opportunity_radar.observability.jobs import current_trigger
 from opportunity_radar.persistence.repositories.jobs import JobRepository
 from opportunity_radar.persistence.repositories.sources import CheckOutcome, SourceRepository
 from opportunity_radar.sources.base import (
@@ -170,7 +171,9 @@ def run_discovery(
         return summary
 
     jobs = JobRepository(conn, clock)
-    summary.job_id = job_id = jobs.start("discovery", trigger)
+    summary.job_id = job_id = jobs.start(
+        "discovery", current_trigger() if trigger == "manual" else trigger
+    )
     try:
         for source in due:
             fresh: list[tuple[str, PageObservation]] = []

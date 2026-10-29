@@ -13,6 +13,7 @@ from urllib.parse import urlparse
 import yaml
 from pydantic import BaseModel, ConfigDict, ValidationError, model_validator
 
+from opportunity_radar.clock import set_local_timezone
 from opportunity_radar.errors import ConfigurationError
 
 DEFAULT_HOME = "~/Library/Application Support/OpportunityRadar"
@@ -115,6 +116,29 @@ class TelegramSettings(_Section):
     send_delay_seconds: float = 1.0
 
 
+class ScheduleSettings(_Section):
+    """Launchd run times (local time) and how stale a job may get before it is called overdue."""
+
+    sentinel_time: str = "07:30"
+    discovery_time: str = "06:00"
+    discovery_weekday: int = 1  # launchd: 0/7 = Sunday, 1 = Monday
+    digest_time: str = "08:30"
+    digest_weekday: int = 1
+    backup_time: str = "03:00"
+    sentinel_max_age_hours: int = 36
+    backup_max_age_hours: int = 36
+    discovery_max_age_days: int = 9
+    digest_max_age_days: int = 9
+
+    @model_validator(mode="after")
+    def _times(self) -> ScheduleSettings:
+        for name in ("sentinel_time", "discovery_time", "digest_time", "backup_time"):
+            h, _, m = getattr(self, name).partition(":")
+            if not (h.isdigit() and m.isdigit() and 0 <= int(h) < 24 and 0 <= int(m) < 60):
+                raise ValueError(f"schedule.{name} must be HH:MM")
+        return self
+
+
 class CrawlingSettings(_Section):
     obey_robots_txt: bool = True
     require_source_policy_review: bool = True
@@ -151,6 +175,7 @@ class Settings(_Section):
     browser: BrowserSettings = BrowserSettings()
     telegram: TelegramSettings = TelegramSettings()
     crawling: CrawlingSettings = CrawlingSettings()
+    schedule: ScheduleSettings = ScheduleSettings()
     scoring: ScoringSettings = ScoringSettings()
 
 
@@ -302,6 +327,10 @@ def load_config(
         settings = Settings.model_validate(data)
     except ValidationError as e:
         raise ConfigurationError(f"invalid configuration:\n{e}") from e
+    try:
+        set_local_timezone(settings.app.timezone)
+    except ValueError as e:
+        raise ConfigurationError(str(e)) from e
 
     home_path = resolve_home(home, env)
     db_path = (

@@ -187,6 +187,7 @@ class SourceRepository:
             "domain": c.domain,
             "source_type": c.source_type,
             "adapter_type": c.adapter_type.value,
+            "portfolio": c.portfolio,
             "trust_tier": c.trust_tier.value,
             "authority_scope": c.authority_scope,
             "topic_tags_json": _j(c.topic_tags),

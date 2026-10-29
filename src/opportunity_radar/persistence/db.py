@@ -59,6 +59,8 @@ def backup_to(conn: sqlite3.Connection, dest: Path) -> list[str]:
     target = sqlite3.connect(dest)
     try:
         conn.backup(target)
+        # A backup is a standalone file: no -wal/-shm sidecars, safe to open read-only.
+        target.execute("PRAGMA journal_mode = DELETE")
         target.row_factory = sqlite3.Row
         problems = integrity_problems(target)
     finally:

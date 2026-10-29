@@ -1,6 +1,6 @@
 import json
 import shutil
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
 import httpx
@@ -11,6 +11,7 @@ from typer.testing import CliRunner
 
 from opportunity_radar import cli
 from opportunity_radar.cli import app
+from opportunity_radar.clock import local_today
 from opportunity_radar.errors import ConfigurationError
 from opportunity_radar.notifications.base import SendResult
 
@@ -26,7 +27,7 @@ def d(dt: date) -> str:
 
 def live_page() -> bytes:
     """A programme page whose dates are relative to today, so system-clock CLI runs are stable."""
-    t = date.today()
+    t = local_today(datetime.now(UTC))  # the app's notion of today (configured timezone), not UTC
     close, opens, start = t + timedelta(days=10), t - timedelta(days=5), t + timedelta(days=70)
     end = start + timedelta(days=4)
     page = fixture("programme.html").decode()

@@ -122,5 +122,15 @@ def source_health(*, source: str, streak: int, last_ok: str | None, impact: str)
     )
 
 
+def monitoring_gap(*, job: str, last_success: str, overdue_hours: int) -> str:
+    return (
+        f"⏸ Monitoring gap: `{job}` has not completed since {last_success} "
+        f"({overdue_hours} h overdue).\n"
+        "The machine may have been asleep or offline. Deadlines were recalculated from the current "
+        "time and overdue checks are running now.\n"
+        "Action: inspect with `radar status`"
+    )
+
+
 def days_between(a: date, b: date) -> int:
     return (b - a).days

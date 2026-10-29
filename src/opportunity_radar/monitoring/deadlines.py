@@ -11,7 +11,7 @@ import sqlite3
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 
-from opportunity_radar.clock import Clock, iso_z
+from opportunity_radar.clock import Clock, iso_z, local_today
 from opportunity_radar.config import LoadedConfig
 from opportunity_radar.discovery.promotion import refresh_edition
 from opportunity_radar.notifications import templates as T
@@ -20,6 +20,7 @@ from opportunity_radar.notifications.outbox import Outbox
 from opportunity_radar.notifications.telegram import split_message
 from opportunity_radar.persistence.db import transaction
 from opportunity_radar.persistence.repositories.opportunities import OpportunityRepository
+from opportunity_radar.reporting.weekly import gather, render_text
 from opportunity_radar.scoring.service import FINAL_ACTIONS, ScoreOutcome
 
 ALERT_ACTIONS = ("apply", "prepare", "monitor")
@@ -53,7 +54,7 @@ def prepare(conn: sqlite3.Connection, cfg: LoadedConfig, clock: Clock) -> Prepar
     and list editions whose imminent deadlines need re-verification (LLD §6.5, §10.3)."""
     rep = PrepareReport()
     now_dt = clock.now_utc()
-    today, now = now_dt.date(), _fmt_ts(now_dt)
+    today, now = local_today(now_dt), _fmt_ts(now_dt)
     repo = OpportunityRepository(conn, clock)
     with transaction(conn):
         rep.marked_stale = conn.execute(
@@ -101,7 +102,7 @@ def queue_alerts(
     if not cfg.settings.telegram.enabled:
         return rep
     now_dt = clock.now_utc()
-    today = now_dt.date()
+    today = local_today(now_dt)
     tg = cfg.settings.telegram
     repo = OpportunityRepository(conn, clock)
 
@@ -302,107 +303,8 @@ def queue_alerts(
 
 # ----------------------------------------------------------------------------------------------
 def build_digest(conn: sqlite3.Connection, cfg: LoadedConfig, clock: Clock) -> str:
-    now_dt = clock.now_utc()
-    today = now_dt.date()
-    week_ago = _fmt_ts(now_dt - timedelta(days=7))
-    lines = [f"📋 Opportunity Radar weekly digest · {today.isoformat()}", ""]
-
-    def section(title: str, items: list[str]) -> None:
-        lines.append(title)
-        lines.extend(items or ["  – none"])
-        lines.append("")
-
-    acts = conn.execute(
-        "SELECT a.title, a.due_date_local, a.priority, e.official_url FROM action_items a "
-        "JOIN editions e ON e.id=a.edition_id WHERE a.status='open' ORDER BY "
-        "CASE a.priority WHEN 'critical' THEN 0 WHEN 'high' THEN 1 WHEN 'medium' THEN 2 ELSE 3 END, "
-        "a.due_date_local IS NULL, a.due_date_local LIMIT 3"
-    ).fetchall()
-    section(
-        "1. Top actions",
-        [
-            f"  – [{a['priority']}] {a['title']}"
-            + (f" (by {a['due_date_local']})" if a["due_date_local"] else "")
-            + f"\n    {a['official_url']}"
-            for a in acts
-        ],
-    )
-    new = conn.execute(
-        "SELECT e.display_name, e.official_url, e.fact_status, s.fit_score FROM editions e JOIN score_snapshots s "
-        "ON s.edition_id=e.id AND s.rowid=(SELECT MAX(rowid) FROM score_snapshots WHERE edition_id=e.id) "
-        "WHERE e.first_seen_at >= ? AND s.priority_band != 'excluded' ORDER BY s.fit_score DESC LIMIT 5",
-        (week_ago,),
-    ).fetchall()
-    section(
-        "2. New this week",
-        [
-            f"  – {n['display_name']} · fit {n['fit_score']:g} · {T.label(n['fact_status'])}\n    {n['official_url']}"
-            for n in new
-        ],
-    )
-    opening = conn.execute(
-        "SELECT e.display_name, d.raw_date_text, d.fact_status FROM deadlines d JOIN editions e ON e.id=d.edition_id "
-        "WHERE d.deadline_type='application_open' AND d.due_date_local BETWEEN ? AND ? ORDER BY d.due_date_local",
-        (today.isoformat(), (today + timedelta(days=90)).isoformat()),
-    ).fetchall()
-    section(
-        "3. Applications opening within 90 days",
-        [
-            f"  – {r['display_name']}: {r['raw_date_text']} ({T.label(r['fact_status'])})"
-            for r in opening
-        ],
-    )
-    soon = conn.execute(
-        "SELECT e.display_name, d.raw_date_text, d.fact_status, d.due_date_local FROM deadlines d "
-        "JOIN editions e ON e.id=d.edition_id WHERE d.deadline_type='application_close' AND "
-        "d.fact_status IN ('confirmed_official','stale') AND d.due_date_local BETWEEN ? AND ? "
-        "AND e.user_action NOT IN ('applied','accepted','rejected','withdrawn','archived') ORDER BY d.due_date_local",
-        (today.isoformat(), (today + timedelta(days=30)).isoformat()),
-    ).fetchall()
-    section(
-        "4. Deadlines within 30 days",
-        [
-            f"  – {r['display_name']}: {r['raw_date_text']} ({T.label(r['fact_status'])}, "
-            f"{(date.fromisoformat(r['due_date_local']) - today).days} d)"
-            for r in soon
-        ],
-    )
-    changed = conn.execute(
-        "SELECT display_name FROM editions WHERE last_material_change_at >= ?", (week_ago,)
-    ).fetchall()
-    section("5. Material changes", [f"  – {r['display_name']}" for r in changed])
-    future = conn.execute(
-        "SELECT display_name FROM editions WHERE user_action='future_cycle' LIMIT 5"
-    ).fetchall()
-    section("6. Future-cycle opportunities", [f"  – {r['display_name']}" for r in future])
-    pending = conn.execute("SELECT COUNT(*) FROM review_queue WHERE state='pending'").fetchone()[0]
-    conflicts = conn.execute(
-        "SELECT COUNT(*) FROM review_queue WHERE state='pending' AND reason_code LIKE '%conflict'"
-    ).fetchone()[0]
-    stale = conn.execute("SELECT COUNT(*) FROM deadlines WHERE fact_status='stale'").fetchone()[0]
-    failing = conn.execute("SELECT COUNT(*) FROM sources WHERE failure_streak >= 2").fetchone()[0]
-    section(
-        "7. Verification & monitoring",
-        [
-            f"  – review queue: {pending} pending ({conflicts} conflicts)",
-            f"  – stale deadlines: {stale}",
-            f"  – sources failing: {failing}",
-        ],
-    )
-    cov = conn.execute(
-        "SELECT COUNT(*), SUM(enabled), SUM(last_success_at >= ?) FROM sources", (week_ago,)
-    ).fetchone()
-    last = conn.execute(
-        "SELECT job_type, MAX(started_at) FROM job_runs WHERE status IN ('success','partial') GROUP BY job_type"
-    ).fetchall()
-    section(
-        "8. Monitoring health",
-        [
-            f"  – sources: {cov[0]} configured, {cov[1] or 0} enabled, {cov[2] or 0} checked this week",
-            *[f"  – last {r[0]}: {r[1]}" for r in last],
-        ],
-    )
-    return "\n".join(lines).rstrip()
+    """Plain-text weekly digest; same data as `radar report weekly`."""
+    return render_text(gather(conn, cfg, clock))
 
 
 def queue_digest(

@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-import os
-
 import httpx
 
 from opportunity_radar.errors import ConfigurationError
+from opportunity_radar.keychain import get_secret
 from opportunity_radar.notifications.base import NotificationMessage, SendResult
 
 API = "https://api.telegram.org"
@@ -53,8 +52,8 @@ class TelegramSink:
     @classmethod
     def from_env(cls, *, transport: httpx.BaseTransport | None = None) -> TelegramSink:
         return cls(
-            os.environ.get("TELEGRAM_BOT_TOKEN", ""),
-            os.environ.get("TELEGRAM_CHAT_ID", ""),
+            get_secret("TELEGRAM_BOT_TOKEN"),
+            get_secret("TELEGRAM_CHAT_ID"),
             transport=transport,
         )
 

@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from typing import Protocol
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 
 class Clock(Protocol):
@@ -33,3 +34,21 @@ def iso_compact(dt: datetime) -> str:
 def iso_z(dt: datetime) -> str:
     """Persisted timestamp format: UTC ISO-8601 with a `Z` suffix."""
     return dt.astimezone(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+_local_tz = ZoneInfo("Europe/Berlin")
+
+
+def set_local_timezone(name: str) -> None:
+    """Zone used for "today" in date-only arithmetic (config: app.timezone)."""
+    global _local_tz
+    try:
+        _local_tz = ZoneInfo(name)
+    except (ZoneInfoNotFoundError, ValueError) as e:
+        raise ValueError(f"unknown timezone {name!r}") from e
+
+
+def local_today(dt: datetime) -> date:
+    """The user's calendar date at `dt`. Date-only deadlines have no timezone of their own, so
+    they are compared with the local date, not the UTC date (which lags local midnight by 1-2 h)."""
+    return dt.astimezone(_local_tz).date()

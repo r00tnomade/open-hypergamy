@@ -102,6 +102,10 @@ class Env:
     def types(self):
         return [m.notification_type for m, _ in self.sink.sent]
 
+    def alerts_sent(self):
+        """Messages other than monitoring-gap notices (clock jumps in tests create genuine gaps)."""
+        return [t for t in self.types() if t != "monitoring_gap"]
+
 
 @pytest.fixture
 def env(tmp_path):
@@ -213,9 +217,9 @@ def test_reminder_thresholds_and_catch_up_sends_only_the_most_urgent(env):
     env.cycle()
     assert len([t for t in env.texts() if t.startswith("⏳")]) == 2  # nothing repeated
     env.clock.set(2027, 3, 16)  # deadline passed: no stale reminder
-    before = len(env.sink.sent)
+    before = len(env.alerts_sent())
     env.cycle()
-    assert len(env.sink.sent) == before
+    assert len(env.alerts_sent()) == before
 
 
 def test_unchanged_page_recheck_renews_freshness_and_restores_confirmed(env):
@@ -284,16 +288,16 @@ def test_manual_action_locks_the_planner_until_auto(env):
     )
     env.clock.set(2027, 3, 10)
     env.recheck(env.web())
-    before = len(env.sink.sent)
+    before = len(env.alerts_sent())
     out = env.cycle()
     assert (
         env.q("SELECT user_action FROM editions")[0][0] == "applied"
-        and len(env.sink.sent) == before
+        and len(env.alerts_sent()) == before
     )
     assert not env.q(
         "SELECT 1 FROM action_items WHERE status='open'"
     )  # open items are dismissed, none created
-    assert out.alerts.queued == {}
+    assert set(out.alerts.queued) <= {"monitoring_gap"}  # a real gap, nothing else
 
 
 def test_completed_and_dismissed_actions_are_not_recreated(env):

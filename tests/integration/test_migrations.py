@@ -21,9 +21,9 @@ def conn(tmp_path):
 
 def test_apply_is_repeatable(conn):
     ms = mig.discover()
-    assert len(mig.migrate(conn, ms, CLOCK)) == 4
+    assert len(mig.migrate(conn, ms, CLOCK)) == 5
     assert mig.migrate(conn, ms, CLOCK) == []
-    assert mig.schema_version(conn) == 4
+    assert mig.schema_version(conn) == 5
     row = conn.execute(
         "SELECT checksum, applied_at FROM schema_migrations WHERE version=1"
     ).fetchone()

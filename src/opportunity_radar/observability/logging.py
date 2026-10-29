@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import logging
-import os
 import re
 import sys
+
+from opportunity_radar.keychain import get_secret
 
 _TELEGRAM_TOKEN = re.compile(r"(bot)?\d{6,}:[A-Za-z0-9_-]{20,}")
 _SECRET_ENV = ("TELEGRAM_BOT_TOKEN", "RADAR_FREELLMAPI_API_KEY")
@@ -14,7 +15,7 @@ _SECRET_ENV = ("TELEGRAM_BOT_TOKEN", "RADAR_FREELLMAPI_API_KEY")
 def redact(text: str) -> str:
     text = _TELEGRAM_TOKEN.sub("[REDACTED]", text)
     for var in _SECRET_ENV:
-        secret = os.environ.get(var)
+        secret = get_secret(var)
         if secret and len(secret) >= 8:
             text = text.replace(secret, "[REDACTED]")
     return text

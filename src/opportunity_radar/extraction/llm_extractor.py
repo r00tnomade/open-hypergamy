@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import contextlib
 import json
-import os
 import re
 import sqlite3
 from dataclasses import dataclass, field
@@ -23,6 +22,7 @@ from opportunity_radar.config import LoadedConfig
 from opportunity_radar.domain.models import CandidateFact, EvidenceQuote
 from opportunity_radar.errors import LLMInvalidResponse, LLMUnavailable
 from opportunity_radar.extraction.dates import EVENT, classify_context, find_dates
+from opportunity_radar.keychain import get_secret
 from opportunity_radar.llm.ack import require_ack
 from opportunity_radar.llm.cache import LLMCache
 from opportunity_radar.llm.client import LLMClient, OpenAICompatClient
@@ -375,12 +375,12 @@ def llm_enabled(cfg: LoadedConfig) -> bool:
 
 def build_client(cfg: LoadedConfig) -> OpenAICompatClient:
     llm = cfg.settings.llm
-    key = os.environ.get(llm.freellmapi.api_key_env) if llm.provider == "freellmapi" else None
+    key = get_secret(llm.freellmapi.api_key_env) if llm.provider == "freellmapi" else None
     forbidden = [
         str(cfg.paths.home),
         key or "",
-        os.environ.get("TELEGRAM_BOT_TOKEN", ""),
-        os.environ.get("TELEGRAM_CHAT_ID", ""),
+        get_secret("TELEGRAM_BOT_TOKEN"),
+        get_secret("TELEGRAM_CHAT_ID"),
     ]
     return OpenAICompatClient(
         llm.active.base_url,

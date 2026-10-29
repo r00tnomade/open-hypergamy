@@ -9,7 +9,9 @@ from dataclasses import dataclass, field
 from opportunity_radar.clock import Clock
 from opportunity_radar.config import LoadedConfig
 from opportunity_radar.errors import ConfigurationError
+from opportunity_radar.monitoring.catchup import Gap, gap_key
 from opportunity_radar.monitoring.deadlines import AlertReport, queue_alerts
+from opportunity_radar.notifications import templates as T
 from opportunity_radar.notifications.base import NotificationMessage, NotificationSink
 from opportunity_radar.notifications.outbox import DeliveryReport, Outbox
 from opportunity_radar.profile import load_profile_for
@@ -40,6 +42,30 @@ class CycleReport:
     delivery: DeliveryReport | None = None
     delivery_note: str = ""
     preview: list[tuple[str, NotificationMessage]] = field(default_factory=list)
+
+
+def queue_gap_alerts(
+    conn: sqlite3.Connection, cfg: LoadedConfig, clock: Clock, gaps: list[Gap]
+) -> int:
+    """One alert per gap (keyed by the last success date), queued *before* the catch-up run closes it.
+    Jobs that never completed are only shown in `radar status`."""
+    if not cfg.settings.telegram.enabled:
+        return 0
+    outbox = Outbox(conn, clock, cfg.settings.telegram)
+    n = 0
+    for g in gaps:
+        if g.last_success_at is None or g.overdue_hours is None:
+            continue
+        msg = NotificationMessage(
+            T.monitoring_gap(
+                job=g.job, last_success=g.last_success_at, overdue_hours=g.overdue_hours
+            ),
+            "monitoring_gap",
+            "job",
+            g.job,
+        )
+        n += int(outbox.enqueue(msg, gap_key(g)))
+    return n
 
 
 def score_and_alert(

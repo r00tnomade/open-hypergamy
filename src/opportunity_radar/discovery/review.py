@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import sqlite3
 
-from opportunity_radar.clock import Clock, iso_z
+from opportunity_radar.clock import Clock, iso_z, local_today
 from opportunity_radar.discovery.promotion import CONFIRMED, refresh_edition
 from opportunity_radar.errors import RadarError
 from opportunity_radar.persistence.db import transaction
@@ -89,5 +89,5 @@ def resolve_conflict(
             (iso_z(now_dt), rev["edition_id"]),
         )
         refresh_edition(
-            repo, conn, rev["edition_id"], now_dt.date(), now_dt, False, verified_now=False
+            repo, conn, rev["edition_id"], local_today(now_dt), now_dt, False, verified_now=False
         )

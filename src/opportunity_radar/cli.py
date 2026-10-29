@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import os
 import re
 import sqlite3
 import sys
@@ -18,7 +17,7 @@ from rich.console import Console
 from rich.table import Table
 
 from opportunity_radar import __version__
-from opportunity_radar.clock import SystemClock, iso_compact, iso_z
+from opportunity_radar.clock import SystemClock, iso_compact, iso_z, local_today
 from opportunity_radar.config import LoadedConfig, load_config
 from opportunity_radar.discovery import review as review_svc
 from opportunity_radar.discovery.normalize import clean_title
@@ -35,16 +34,25 @@ from opportunity_radar.errors import (
     RadarError,
 )
 from opportunity_radar.extraction.llm_extractor import build_client, build_llm_service, llm_enabled
+from opportunity_radar.keychain import get_secret
 from opportunity_radar.llm.ack import CHECKLIST, ack_is_current, read_ack, write_ack
 from opportunity_radar.llm.cache import LLMCache
-from opportunity_radar.monitoring.cycle import CycleReport, SinkFactory, score_and_alert
+from opportunity_radar.monitoring.catchup import job_gaps
+from opportunity_radar.monitoring.cycle import (
+    CycleReport,
+    SinkFactory,
+    queue_gap_alerts,
+    score_and_alert,
+)
 from opportunity_radar.monitoring.deadlines import build_digest, prepare, queue_digest
 from opportunity_radar.monitoring.recheck import recheck_editions
 from opportunity_radar.notifications.base import NotificationMessage
 from opportunity_radar.notifications.outbox import Outbox
 from opportunity_radar.notifications.telegram import TelegramSink
 from opportunity_radar.observability.health import collect_status, run_doctor
+from opportunity_radar.observability.jobs import JobHandle, tracked_job
 from opportunity_radar.observability.logging import redact, setup_logging
+from opportunity_radar.persistence import backups
 from opportunity_radar.persistence import db as dbm
 from opportunity_radar.persistence import migrations as mig
 from opportunity_radar.persistence.repositories.observations import insert_observation
@@ -85,11 +93,7 @@ app.add_typer(profile_app, name="profile")
 out = Console()
 err = Console(stderr=True)
 
-HomeOpt = Annotated[
-    Path | None, typer.Option("--home", help="Data directory (default: $RADAR_HOME).")
-]
-ConfigOpt = Annotated[Path | None, typer.Option("--config", help="settings.yaml path.")]
-JsonOpt = Annotated[bool, typer.Option("--json", help="Machine-readable output on stdout.")]
+from opportunity_radar.cli_common import ConfigOpt, HomeOpt, JsonOpt  # noqa: E402
 
 EXTERNAL_PROCESSING_CHECKLIST = CHECKLIST
 
@@ -217,23 +221,65 @@ def status(json_out: JsonOpt = False, home: HomeOpt = None, config: ConfigOpt = 
 @db_app.command("backup")
 def db_backup(
     output: Annotated[Path | None, typer.Option("--output")] = None,
+    no_prune: Annotated[bool, typer.Option("--no-prune", help="Skip retention pruning.")] = False,
     home: HomeOpt = None,
     config: ConfigOpt = None,
 ) -> None:
-    """Create a consistent backup using the SQLite backup API and verify it."""
+    """Create a consistent backup (SQLite backup API), verify it, and apply the retention policy."""
     with guard():
         cfg = _load(home, config)
         conn = _open(cfg)
+        clock = SystemClock()
         try:
-            stamp = iso_compact(SystemClock().now_utc())
-            dest = output or cfg.paths.backups / f"radar-{stamp}.sqlite3"
-            problems = dbm.backup_to(conn, dest.expanduser())
+            with tracked_job(conn, clock, "backup") as job:
+                stamp = iso_compact(clock.now_utc())
+                dest = (output or cfg.paths.backups / f"radar-{stamp}.sqlite3").expanduser()
+                problems = dbm.backup_to(conn, dest)
+                if problems:
+                    job.status = "failed"
+                    err.print(f"[red]backup failed integrity check[/red]: {'; '.join(problems)}")
+                    raise typer.Exit(EXIT_DATABASE)
+                version = backups.check_backup(dest)
+                job.summary = {"file": dest.name, "schema_version": version}
+                kept = removed = 0
+                if output is None and not no_prune:
+                    s = cfg.settings.database
+                    kept, gone = backups.prune(
+                        cfg.paths.backups,
+                        clock.now_utc(),
+                        s.backup_keep_daily,
+                        s.backup_keep_weekly,
+                    )
+                    removed = len(gone)
         finally:
             conn.close()
-        if problems:
-            err.print(f"[red]backup failed integrity check[/red]: {'; '.join(problems)}")
-            raise typer.Exit(EXIT_DATABASE)
-        out.print(f"Backup written and verified: {dest}")
+        out.print(f"Backup written and verified: {dest}", soft_wrap=True)
+        if output is None and not no_prune:
+            out.print(f"Retention: kept {kept}, removed {removed} old backup(s).")
+
+
+@db_app.command("prune-backups")
+def db_prune_backups(
+    dry_run: Annotated[bool, typer.Option("--dry-run")] = False,
+    home: HomeOpt = None,
+    config: ConfigOpt = None,
+) -> None:
+    """Apply the retention policy (daily for a week, weekly for a month) to backups/."""
+    with guard():
+        cfg = _load(home, config)
+        s = cfg.settings.database
+        kept, gone = backups.prune(
+            cfg.paths.backups,
+            SystemClock().now_utc(),
+            s.backup_keep_daily,
+            s.backup_keep_weekly,
+            dry_run=dry_run,
+        )
+        out.print(
+            f"{'\\[dry run] ' if dry_run else ''}kept {kept}, {'would remove' if dry_run else 'removed'} {len(gone)}."
+        )
+        for p in gone:
+            out.print(f"  - {p.name}", highlight=False, markup=False)
 
 
 @db_app.command("integrity-check")
@@ -277,37 +323,36 @@ def db_migrate(
 
 @db_app.command("restore")
 def db_restore(
-    backup_file: Annotated[Path, typer.Argument(help="Backup file to check.")],
+    backup_file: Annotated[Path, typer.Argument(help="Backup file.")],
     check: Annotated[
         bool, typer.Option("--check", help="Verify only; never touches the live DB.")
     ] = False,
+    to: Annotated[
+        Path | None, typer.Option("--to", help="Restore into a NEW file at this path.")
+    ] = None,
+    home: HomeOpt = None,
+    config: ConfigOpt = None,
 ) -> None:
-    """Verify a backup file (restoring over the live database is not implemented in M1)."""
+    """Verify a backup (--check) or restore it into a new file (--to). The live database is never overwritten."""
     with guard():
-        if not check:
-            err.print("Only `--check` is supported in this version.")
+        if not check and to is None:
+            err.print("Use --check to verify a backup, or --to NEWFILE to restore it elsewhere.")
             raise typer.Exit(2)
+        cfg = _load(home, config)
         path = backup_file.expanduser().resolve()
-        if not path.is_file():
-            raise DatabaseInitializationError(f"backup not found: {path}")
-        import sqlite3
-
-        conn = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
-        conn.row_factory = sqlite3.Row
-        try:
-            conn.execute("PRAGMA foreign_keys = ON")
-            problems = dbm.integrity_problems(conn)
-            migrations = mig.discover()
-            mig.verify_applied(conn, migrations)
-            version = mig.schema_version(conn)
-        except sqlite3.Error as e:
-            raise DatabaseInitializationError(f"not a valid SQLite backup: {e}") from e
-        finally:
-            conn.close()
-        if problems:
-            err.print("[red]backup is corrupt[/red]:\n" + "\n".join(problems))
-            raise typer.Exit(EXIT_DATABASE)
-        out.print(f"Backup OK: schema v{version} (latest known v{migrations[-1].version}).")
+        clock = SystemClock()
+        if to is not None:
+            dest = to.expanduser().resolve()
+            if dest == cfg.paths.db.resolve():
+                raise DatabaseInitializationError("refusing to restore over the live database")
+            version = backups.restore_to(path, dest)
+            out.print(
+                f"Restored schema v{version} to {dest} (live database untouched).", soft_wrap=True
+            )
+        else:
+            version = backups.check_backup(path)
+            out.print(f"Backup OK: schema v{version} (latest known v{mig.discover()[-1].version}).")
+        backups.record_restore_check(cfg.paths.backups, path, version, clock.now_utc())
 
 
 def _duration(text: str) -> timedelta:
@@ -434,7 +479,7 @@ def sources_import(
         finally:
             conn.close()
         out.print(
-            f"{'[dry run] ' if dry_run else ''}created {len(rep.created)}, "
+            f"{'\\[dry run] ' if dry_run else ''}created {len(rep.created)}, "
             f"updated {len(rep.updated)}, awaiting policy review {len(rep.review_required)}"
         )
         for key in rep.review_required:
@@ -661,7 +706,7 @@ def run_discovery_cmd(
                 f"review, {p.leads} leads, {p.duplicates} duplicates, {p.errors} errors"
             )
         out.print(
-            f"{'[dry run] ' if dry_run else ''}{summary.considered} source(s) considered; "
+            f"{'\\[dry run] ' if dry_run else ''}{summary.considered} source(s) considered; "
             f"run status: {summary.status if not dry_run else 'n/a'}"
         )
         if not dry_run:
@@ -1037,7 +1082,9 @@ def opps_list(
         clock = SystemClock()
         try:
             repo = OpportunityRepository(conn, clock)
-            horizon = (clock.now_utc() + _duration(within)).date().isoformat() if within else None
+            horizon = (
+                local_today(clock.now_utc() + _duration(within)).isoformat() if within else None
+            )
             data = []
             for e in repo.list_editions(limit):
                 if action and e["user_action"] != action:
@@ -1386,7 +1433,7 @@ def deadlines(
         try:
             now = clock.now_utc()
             rows = OpportunityRepository(conn, clock).deadlines_between(
-                now.date().isoformat(), (now + _duration(within)).date().isoformat()
+                local_today(now).isoformat(), local_today(now + _duration(within)).isoformat()
             )
         finally:
             conn.close()
@@ -1450,7 +1497,7 @@ def llm_status(json_out: JsonOpt = False, home: HomeOpt = None, config: ConfigOp
             "external_processing": s.provider == "freellmapi",
             "acknowledged": s.provider == "local" or ack_is_current(cfg.paths.llm_ack, s.provider),
             "acknowledged_at": (a.acknowledged_at if (a := read_ack(cfg.paths.llm_ack)) else None),
-            "api_key_set": bool(os.environ.get(s.freellmapi.api_key_env)),
+            "api_key_set": bool(get_secret(s.freellmapi.api_key_env)),
         }
         if data["enabled"]:
             client = build_client(cfg)
@@ -1506,7 +1553,7 @@ def run_llm(
         finally:
             conn.close()
         out.print(
-            f"{'[dry run] ' if dry_run else ''}llm: {stats.llm_done} extracted, "
+            f"{'\\[dry run] ' if dry_run else ''}llm: {stats.llm_done} extracted, "
             f"{stats.llm_queued} still queued, {stats.llm_invalid} invalid"
         )
         if stats.llm_queued and not dry_run:
@@ -1594,12 +1641,11 @@ def run_sentinel(
     home: HomeOpt = None,
     config: ConfigOpt = None,
 ) -> None:
-    """Daily job: mark stale facts, recheck sources behind imminent deadlines, rescore, alert."""
+    """Daily job: mark stale facts, re-verify pages behind imminent deadlines, rescore, alert."""
     with guard():
         cfg = _load(home, config)
         clock = SystemClock()
         conn = _open(cfg)
-        status = "success"
         try:
             if dry_run:
                 rep = score_and_alert(conn, cfg, clock, sink_factory=None, dry_run=True)
@@ -1607,34 +1653,42 @@ def run_sentinel(
                 for key, m in rep.preview:
                     out.print(f"\n[dim]{key}[/dim]\n{m.text}", markup=True, highlight=False)
                 return
-            prep = prepare(conn, cfg, clock)
-            out.print(
-                f"{prep.marked_stale} fact(s) marked stale; "
-                f"{len(prep.editions_to_recheck)} edition(s) to re-verify."
-            )
-            if prep.editions_to_recheck and not no_fetch:
-                fetcher = build_fetcher(cfg, clock)
-                try:
-                    r = recheck_editions(
-                        conn,
-                        cfg,
-                        fetcher,
-                        clock,
-                        prep.editions_to_recheck,
-                        build_llm_service(conn, cfg, clock),
-                    )
-                finally:
-                    fetcher.close()
-                out.print(f"re-verified {r.reverified}, changed {r.changed}, failed {r.failed}")
-                if r.failed:
-                    status = "partial"
+            queue_gap_alerts(conn, cfg, clock, job_gaps(conn, cfg, clock))
+            with tracked_job(conn, clock, "sentinel") as job:
+                _sentinel(conn, cfg, clock, no_fetch, job)
         finally:
             conn.close()
         _after_run(cfg, False)
-        if status == "partial":
+        if job.status == "partial":
             raise typer.Exit(EXIT_PARTIAL)
-        if status == "failed":
-            raise typer.Exit(EXIT_FAILURE)
+
+
+def _sentinel(
+    conn: sqlite3.Connection, cfg: LoadedConfig, clock: SystemClock, no_fetch: bool, job: JobHandle
+) -> None:
+    """Shared by `run sentinel` and `run all`; sets job.status to partial when a recheck fails."""
+    prep = prepare(conn, cfg, clock)
+    out.print(
+        f"{prep.marked_stale} fact(s) marked stale; {len(prep.editions_to_recheck)} edition(s) to re-verify."
+    )
+    job.summary = {"marked_stale": prep.marked_stale, "to_recheck": len(prep.editions_to_recheck)}
+    if prep.editions_to_recheck and not no_fetch:
+        fetcher = build_fetcher(cfg, clock)
+        try:
+            r = recheck_editions(
+                conn,
+                cfg,
+                fetcher,
+                clock,
+                prep.editions_to_recheck,
+                build_llm_service(conn, cfg, clock),
+            )
+        finally:
+            fetcher.close()
+        out.print(f"re-verified {r.reverified}, changed {r.changed}, failed {r.failed}")
+        job.summary |= {"reverified": r.reverified, "changed": r.changed, "failed": r.failed}
+        if r.failed:
+            job.status = "partial"
 
 
 @run_app.command("digest")
@@ -1652,28 +1706,29 @@ def run_digest(
             if dry_run:
                 out.print(build_digest(conn, cfg, clock), highlight=False, markup=False)
                 return
-            text, queued = queue_digest(
-                conn, cfg, clock, Outbox(conn, clock, cfg.settings.telegram)
-            )
-            rep = (
-                score_and_alert(conn, cfg, clock, sink_factory=build_sink, deliver=True)
-                if False
-                else None
-            )
-            _ = rep
-            outbox = Outbox(conn, clock, cfg.settings.telegram)
-            if cfg.settings.telegram.enabled:
-                try:
-                    d = outbox.deliver(build_sink())
-                    out.print(
-                        f"digest queued ({queued} part(s)); telegram: {d.sent} sent, {d.failed} failed"
-                    )
-                except ConfigurationError as e:
-                    out.print(f"digest queued ({queued} part(s)) but not delivered ({e})")
-            else:
-                out.print(text, highlight=False, markup=False)
+            with tracked_job(conn, clock, "digest") as job:
+                text, queued = queue_digest(
+                    conn, cfg, clock, Outbox(conn, clock, cfg.settings.telegram)
+                )
+                job.summary = {"parts_queued": queued}
+                outbox = Outbox(conn, clock, cfg.settings.telegram)
+                if cfg.settings.telegram.enabled:
+                    try:
+                        d = outbox.deliver(build_sink())
+                        out.print(
+                            f"digest queued ({queued} part(s)); telegram: {d.sent} sent, {d.failed} failed"
+                        )
+                        if d.failed:
+                            job.status = "partial"
+                    except ConfigurationError as e:
+                        out.print(f"digest queued ({queued} part(s)) but not delivered ({e})")
+                        job.status = "partial"
+                else:
+                    out.print(text, highlight=False, markup=False)
         finally:
             conn.close()
+        if job.status == "partial":
+            raise typer.Exit(EXIT_PARTIAL)
 
 
 @run_app.command("all")
@@ -1682,7 +1737,8 @@ def run_all(
     home: HomeOpt = None,
     config: ConfigOpt = None,
 ) -> None:
-    """Discovery of all due sources, deferred LLM work, scoring and alerts."""
+    """Catch-up run: sentinel first (at the real current time), then all due sources, deferred
+    LLM work, scoring and alerts. Missed runs are reported, never silently skipped."""
     from opportunity_radar.discovery.pipeline import run_llm_queue
 
     with guard():
@@ -1691,18 +1747,26 @@ def run_all(
         conn = _open(cfg)
         status = "success"
         try:
+            gaps = job_gaps(conn, cfg, clock)
+            for g in gaps:
+                err.print(f"[yellow]monitoring gap[/yellow]: {g.describe()}")
             if dry_run:
                 n = len(SourceRepository(conn, clock).list_due(iso_z(clock.now_utc())))
-                out.print(f"[dry run] {n} source(s) due.")
+                out.print(f"\\[dry run] {n} source(s) due; {len(gaps)} overdue job(s).")
                 return
-            prepare(conn, cfg, clock)
+            queue_gap_alerts(conn, cfg, clock, gaps)
+            with tracked_job(conn, clock, "sentinel") as sjob:
+                _sentinel(conn, cfg, clock, False, sjob)
+            if sjob.status == "partial":
+                status = "partial"
             fetcher = build_fetcher(cfg, clock)
             llm = build_llm_service(conn, cfg, clock)
             try:
                 summary = run_discovery(conn, cfg, fetcher, clock, llm=llm)
             finally:
                 fetcher.close()
-            status = summary.status
+            if summary.status != "success":
+                status = summary.status if status == "success" else status
             out.print(f"discovery: {summary.considered} source(s), status {summary.status}")
             if llm is not None:
                 q = run_llm_queue(conn, cfg, clock, llm, limit=cfg.settings.llm.max_calls_per_run)
@@ -1759,6 +1823,11 @@ def notify_retry(
         )
         if d.failed or d.retry_scheduled:
             raise typer.Exit(EXIT_PARTIAL)
+
+
+from opportunity_radar import cli_ops  # noqa: E402
+
+cli_ops.register(__import__(__name__, fromlist=["x"]))
 
 
 if __name__ == "__main__":

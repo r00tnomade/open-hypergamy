@@ -13,9 +13,22 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_valida
 
 from opportunity_radar.domain.enums import AdapterType, TrustTier
 from opportunity_radar.errors import ConfigurationError, SourcePolicyDenied
+from opportunity_radar.sources.base import SourceRecord
 from opportunity_radar.sources.urls import canonicalize_url, check_static_host, host_of
 
 _KEY = re.compile(r"^[a-z0-9][a-z0-9-]{2,80}$")
+
+# HLD §6.2 portfolio targets (~200). A target, never a reported count.
+PORTFOLIO_TARGETS: dict[str, int] = {
+    "de_research": 45,
+    "europe_research": 40,
+    "international_programmes": 20,
+    "conferences_societies": 30,
+    "industry_programmes": 25,
+    "funding_fellowships": 20,
+    "hackathons_challenges": 10,
+    "discovery_only": 10,
+}
 
 
 class OrganizationConfig(BaseModel):
@@ -50,6 +63,7 @@ class SourceConfig(BaseModel):
     canonical_url: str
     domain: str
     source_type: str
+    portfolio: str | None = None
     adapter_type: AdapterType
     trust_tier: TrustTier
     authority_scope: str = ""
@@ -66,6 +80,13 @@ class SourceConfig(BaseModel):
     robots_policy_checked_at: date | datetime | None = None
     discovery_policy: DiscoveryPolicy = DiscoveryPolicy()
     extraction_hints: dict[str, Any] = {}
+
+    @field_validator("portfolio")
+    @classmethod
+    def _portfolio(cls, v: str | None) -> str | None:
+        if v is not None and v not in PORTFOLIO_TARGETS:
+            raise ValueError(f"portfolio must be one of {sorted(PORTFOLIO_TARGETS)}")
+        return v
 
     @field_validator("source_key")
     @classmethod
@@ -175,3 +196,39 @@ def load_source_files(
     if problems:
         raise ConfigurationError("source registry validation failed:\n  " + "\n  ".join(problems))
     return configs
+
+
+def record_from_config(c: SourceConfig) -> SourceRecord:
+    """An in-memory SourceRecord for probing a YAML entry that is not (yet) in the database."""
+    return SourceRecord(
+        id=f"probe-{c.source_key}",
+        source_key=c.source_key,
+        name=c.name,
+        canonical_url=c.canonical_url,
+        domain=c.domain,
+        source_type=c.source_type,
+        adapter_type=c.adapter_type.value,
+        trust_tier=c.trust_tier.value,
+        authority_scope=c.authority_scope,
+        allowed_domains=tuple(c.allowed_domains),
+        allow_paths=tuple(c.allow_paths),
+        deny_paths=tuple(c.deny_paths),
+        fetch_interval_hours=c.fetch_interval_hours,
+        priority=c.priority,
+        enabled=True,
+        state="active",
+        discovery_only=c.discovery_only,
+        discovery_policy=c.discovery_policy.model_dump(),
+        failure_streak=0,
+        etag=None,
+        last_modified=None,
+        last_content_hash=None,
+        next_due_at=None,
+        last_success_at=None,
+        last_attempt_at=None,
+        last_content_change_at=None,
+        robots_policy_checked_at=c.robots_policy_checked_at.isoformat()
+        if c.robots_policy_checked_at
+        else None,
+        terms_review_note=c.terms_review_note,
+    )

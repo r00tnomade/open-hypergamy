@@ -12,7 +12,7 @@ import sqlite3
 import uuid
 from dataclasses import dataclass, field
 
-from opportunity_radar.clock import Clock, iso_z
+from opportunity_radar.clock import Clock, iso_z, local_today
 from opportunity_radar.config import LoadedConfig
 from opportunity_radar.domain.enums import EligibilityStatus
 from opportunity_radar.persistence.db import transaction
@@ -170,7 +170,7 @@ def rescore_edition(
     assert prog is not None
     claims, deadlines = repo.claims_for_edition(edition_id), repo.deadlines_for(edition_id)
     now_dt = clock.now_utc()
-    today, now = now_dt.date(), iso_z(now_dt)
+    today, now = local_today(now_dt), iso_z(now_dt)
 
     elig = assess(_requirements(claims), profile)
     urg = compute_urgency(ed, deadlines, today, now_dt)

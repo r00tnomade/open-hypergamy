@@ -13,6 +13,7 @@ CRITICAL_TYPES = frozenset(
         "deadline_stale",
         "deadline_changed",
         "source_health",
+        "monitoring_gap",
     }
 )
 # Types that may be folded into the weekly digest when a run exceeds its message cap.

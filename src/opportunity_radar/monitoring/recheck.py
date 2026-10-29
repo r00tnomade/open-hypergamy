@@ -13,7 +13,7 @@ import sqlite3
 from dataclasses import dataclass, field
 from datetime import date
 
-from opportunity_radar.clock import Clock, iso_z
+from opportunity_radar.clock import Clock, iso_z, local_today
 from opportunity_radar.config import LoadedConfig
 from opportunity_radar.discovery.pipeline import PipelineStats, process_observations
 from opportunity_radar.discovery.promotion import refresh_edition
@@ -43,7 +43,7 @@ class RecheckReport:
 def renew_freshness(conn: sqlite3.Connection, clock: Clock, edition_id: str) -> None:
     """The evidence page was read again and says the same thing: facts are fresh again."""
     now_dt = clock.now_utc()
-    today, now = now_dt.date(), iso_z(now_dt)
+    today, now = local_today(now_dt), iso_z(now_dt)
     close = conn.execute(
         "SELECT due_date_local FROM deadlines WHERE edition_id=? AND deadline_type='application_close' "
         "AND fact_status IN ('confirmed_official','stale') LIMIT 1",

@@ -19,6 +19,11 @@
       "version": 4,
       "name": "scoring_notifications",
       "sha256": "b1a8f1b1dd433b2952dcf42ea8612ad8f74460b9b6d7f2ad4dbcf67ddbe02081"
+    },
+    {
+      "version": 5,
+      "name": "source_portfolio",
+      "sha256": "f6f213a6c20fdabc503b6ef71bd3b5094460cb54a2a8064ebe9b1115979288a9"
     }
   ]
 }

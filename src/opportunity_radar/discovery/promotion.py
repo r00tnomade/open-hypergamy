@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 from urllib.parse import urlsplit
 
-from opportunity_radar.clock import Clock, iso_z
+from opportunity_radar.clock import Clock, iso_z, local_today
 from opportunity_radar.discovery.normalize import (
     edition_year,
     normalize_title,
@@ -93,7 +93,7 @@ def promote_candidate(
 ) -> PromotionOutcome:
     repo = OpportunityRepository(conn, clock)
     now_dt = clock.now_utc()
-    today = now_dt.date()
+    today = local_today(now_dt)
     out = PromotionOutcome()
     cid = inp.candidate_id
 
