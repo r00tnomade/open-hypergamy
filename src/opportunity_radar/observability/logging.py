@@ -33,3 +33,6 @@ def setup_logging(level: str = "INFO") -> None:
     root = logging.getLogger()
     root.handlers[:] = [handler]
     root.setLevel(level.upper())
+    # httpx logs every request URL at INFO (query strings can carry secrets); keep it quiet.
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("httpcore").setLevel(logging.WARNING)

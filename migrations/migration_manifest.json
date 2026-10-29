@@ -4,6 +4,11 @@
       "version": 1,
       "name": "initial",
       "sha256": "05f6cf7fd505a37030508a68d0c34dcf6ca38f9ec911aeb863f6d0c09a9e6199"
+    },
+    {
+      "version": 2,
+      "name": "source_policy_fields",
+      "sha256": "2a5945e797c23de3b91bcbf9461d101833754c0bd6b028b0bb119b5c51bfc23d"
     }
   ]
 }

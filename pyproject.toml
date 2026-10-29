@@ -8,6 +8,11 @@ dependencies = [
     "rich>=13.7",
     "pydantic>=2.7",
     "pyyaml>=6.0",
+    "httpx>=0.27",
+    "feedparser>=6.0",
+    "beautifulsoup4>=4.12",
+    "trafilatura>=1.12",
+    "defusedxml>=0.7",
 ]
 
 [dependency-groups]
@@ -16,6 +21,7 @@ dev = [
     "ruff>=0.5",
     "mypy>=1.10",
     "types-PyYAML",
+    "types-defusedxml",
 ]
 
 [project.scripts]
@@ -31,6 +37,7 @@ packages = ["src/opportunity_radar"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+pythonpath = ["."]
 
 [tool.ruff]
 line-length = 100
@@ -46,3 +53,10 @@ python_version = "3.12"
 strict = true
 files = ["src"]
 plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = ["feedparser.*", "trafilatura.*"]
+ignore_missing_imports = true
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["E501"]

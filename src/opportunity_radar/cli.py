@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import json
+import re
 import sys
 from collections.abc import Iterator
 from contextlib import contextmanager
+from datetime import timedelta
 from pathlib import Path
 from typing import Annotated, Any
 
@@ -14,13 +16,16 @@ from rich.console import Console
 from rich.table import Table
 
 from opportunity_radar import __version__
-from opportunity_radar.clock import SystemClock, iso_compact
+from opportunity_radar.clock import SystemClock, iso_compact, iso_z
 from opportunity_radar.config import LoadedConfig, load_config
+from opportunity_radar.discovery.orchestrator import ADAPTERS, run_discovery
 from opportunity_radar.errors import (
     EXIT_DATABASE,
     EXIT_DEPENDENCY,
     EXIT_FAILURE,
     EXIT_OK,
+    EXIT_PARTIAL,
+    ConfigurationError,
     DatabaseInitializationError,
     RadarError,
 )
@@ -28,12 +33,20 @@ from opportunity_radar.observability.health import collect_status, run_doctor
 from opportunity_radar.observability.logging import redact, setup_logging
 from opportunity_radar.persistence import db as dbm
 from opportunity_radar.persistence import migrations as mig
+from opportunity_radar.persistence.repositories.sources import SourceRepository
+from opportunity_radar.sources.base import FetchContext, SourceRecord
+from opportunity_radar.sources.fetch import BodyCache, build_fetcher
+from opportunity_radar.sources.registry import load_source_files
 
 app = typer.Typer(
     help="Opportunity Radar: local opportunity-intelligence CLI.", no_args_is_help=True
 )
 db_app = typer.Typer(help="Database maintenance.", no_args_is_help=True)
+sources_app = typer.Typer(help="Source registry.", no_args_is_help=True)
+run_app = typer.Typer(help="Run jobs.", no_args_is_help=True)
 app.add_typer(db_app, name="db")
+app.add_typer(sources_app, name="sources")
+app.add_typer(run_app, name="run")
 
 out = Console()
 err = Console(stderr=True)
@@ -268,6 +281,351 @@ def db_restore(
             err.print("[red]backup is corrupt[/red]:\n" + "\n".join(problems))
             raise typer.Exit(EXIT_DATABASE)
         out.print(f"Backup OK: schema v{version} (latest known v{migrations[-1].version}).")
+
+
+def _duration(text: str) -> timedelta:
+    m = re.fullmatch(r"(\d+)([dh])", text.strip())
+    if not m:
+        raise ConfigurationError(f"invalid duration {text!r}; use e.g. 30d or 12h")
+    n = int(m[1])
+    return timedelta(days=n) if m[2] == "d" else timedelta(hours=n)
+
+
+def _source_row(s: SourceRecord) -> dict[str, object]:
+    return {
+        "key": s.source_key,
+        "id": s.id,
+        "name": s.name,
+        "url": s.canonical_url,
+        "adapter": s.adapter_type,
+        "trust_tier": s.trust_tier,
+        "state": s.state,
+        "enabled": s.enabled,
+        "discovery_only": s.discovery_only,
+        "priority": s.priority,
+        "failure_streak": s.failure_streak,
+        "last_success_at": s.last_success_at,
+        "next_due_at": s.next_due_at,
+    }
+
+
+@sources_app.command("list")
+def sources_list(
+    enabled: Annotated[bool | None, typer.Option("--enabled/--disabled")] = None,
+    trust_tier: Annotated[str | None, typer.Option("--trust-tier")] = None,
+    json_out: JsonOpt = False,
+    home: HomeOpt = None,
+    config: ConfigOpt = None,
+) -> None:
+    """List registered sources."""
+    with guard():
+        cfg = _load(home, config)
+        conn = _open(cfg)
+        try:
+            rows = [
+                _source_row(s)
+                for s in SourceRepository(conn, SystemClock()).list_sources(
+                    enabled=enabled, trust_tier=trust_tier
+                )
+            ]
+        finally:
+            conn.close()
+        if json_out:
+            sys.stdout.write(json.dumps(rows, indent=2) + "\n")
+            return
+        table = Table("key", "tier", "adapter", "state", "streak", "last ok", "url")
+        for r in rows:
+            table.add_row(
+                str(r["key"]),
+                str(r["trust_tier"]).split("_")[0],
+                str(r["adapter"]),
+                str(r["state"]) + (" (discovery-only)" if r["discovery_only"] else ""),
+                str(r["failure_streak"]),
+                str(r["last_success_at"] or "never"),
+                str(r["url"]),
+            )
+        out.print(table)
+        out.print(f"{len(rows)} source(s).")
+
+
+@sources_app.command("add")
+def sources_add(
+    url: str,
+    trust_tier: Annotated[str, typer.Option("--trust-tier")] = "t4_aggregator",
+    discovery_only: Annotated[bool, typer.Option("--discovery-only")] = False,
+    home: HomeOpt = None,
+    config: ConfigOpt = None,
+) -> None:
+    """Register a URL as a review-required, disabled source."""
+    with guard():
+        from opportunity_radar.domain.enums import TrustTier
+
+        try:
+            tier = TrustTier(trust_tier)
+        except ValueError:
+            raise ConfigurationError(
+                f"unknown trust tier {trust_tier!r}; use one of {[t.value for t in TrustTier]}"
+            ) from None
+        cfg = _load(home, config)
+        conn = _open(cfg)
+        try:
+            repo = SourceRepository(conn, SystemClock())
+            key = repo.add_manual(
+                url,
+                trust_tier=tier.value,
+                name=None,
+                discovery_only=discovery_only
+                or tier in (TrustTier.T4_AGGREGATOR, TrustTier.T5_COMMUNITY),
+            )
+        finally:
+            conn.close()
+        out.print(
+            f"Added {key} (review_required, disabled). Complete policy review in a YAML "
+            "entry and re-import, then `radar sources enable`."
+        )
+
+
+@sources_app.command("import")
+def sources_import(
+    files: Annotated[list[Path], typer.Argument(help="Source YAML files.")],
+    dry_run: Annotated[bool, typer.Option("--dry-run")] = False,
+    override_policy_review: Annotated[bool, typer.Option("--override-policy-review")] = False,
+    home: HomeOpt = None,
+    config: ConfigOpt = None,
+) -> None:
+    """Idempotently import source YAML (health state is never reset)."""
+    with guard():
+        cfg = _load(home, config)
+        configs = load_source_files(
+            files, playwright_allowed=cfg.settings.browser.playwright_allowed_source_ids
+        )
+        conn = _open(cfg)
+        try:
+            rep = SourceRepository(conn, SystemClock()).import_configs(
+                configs, override_policy_review=override_policy_review, dry_run=dry_run
+            )
+        finally:
+            conn.close()
+        out.print(
+            f"{'[dry run] ' if dry_run else ''}created {len(rep.created)}, "
+            f"updated {len(rep.updated)}, awaiting policy review {len(rep.review_required)}"
+        )
+        for key in rep.review_required:
+            out.print(f"  review required: {key}")
+        for key in rep.overridden:
+            err.print(f"[yellow]policy review overridden (audited)[/yellow]: {key}")
+
+
+@sources_app.command("show")
+def sources_show(
+    ref: str, json_out: JsonOpt = False, home: HomeOpt = None, config: ConfigOpt = None
+) -> None:
+    """Show one source by id or key."""
+    with guard():
+        cfg = _load(home, config)
+        conn = _open(cfg)
+        try:
+            src = SourceRepository(conn, SystemClock()).get(ref)
+        finally:
+            conn.close()
+        if src is None:
+            raise ConfigurationError(f"unknown source: {ref}")
+        data = {
+            **_source_row(src),
+            "allowed_domains": list(src.allowed_domains),
+            "allow_paths": list(src.allow_paths),
+            "deny_paths": list(src.deny_paths),
+            "fetch_interval_hours": src.fetch_interval_hours,
+            "robots_policy_checked_at": src.robots_policy_checked_at,
+            "terms_review_note": src.terms_review_note,
+            "discovery_policy": src.discovery_policy,
+        }
+        if json_out:
+            sys.stdout.write(json.dumps(data, indent=2, default=str) + "\n")
+            return
+        table = Table("field", "value", show_header=False)
+        for k, v in data.items():
+            table.add_row(k, str(v))
+        out.print(table)
+
+
+@sources_app.command("test")
+def sources_test(ref: str, home: HomeOpt = None, config: ConfigOpt = None) -> None:
+    """Fetch a source once for inspection. Nothing is persisted; policy checks still apply."""
+    with guard():
+        cfg = _load(home, config)
+        conn = _open(cfg)
+        try:
+            src = SourceRepository(conn, SystemClock()).get(ref)
+        finally:
+            conn.close()
+        if src is None:
+            raise ConfigurationError(f"unknown source: {ref}")
+        adapter = ADAPTERS.get(src.adapter_type)
+        if adapter is None:
+            raise ConfigurationError(f"adapter {src.adapter_type!r} is not implemented")
+        fetcher = build_fetcher(cfg)
+        ctx = FetchContext(
+            fetcher=fetcher,
+            settings=cfg.settings.app,
+            cache=None if not cfg.settings.cache.enabled else BodyCache(cfg.paths.cache),
+        )
+        try:
+            # Inspection never sends validators, so a 304 can't hide the content.
+            obs = adapter.fetch(
+                src.__class__(**{**src.__dict__, "etag": None, "last_modified": None}), ctx
+            )
+        finally:
+            fetcher.close()
+        table = Table("url", "status", "title", "chars", "links", "entries")
+        for o in obs:
+            table.add_row(
+                o.final_url,
+                str(o.http_status),
+                (o.title or "")[:50],
+                str(len(o.text)),
+                str(len(o.links)),
+                str(len(o.entries)),
+            )
+        out.print(table)
+        for f in ctx.failures:
+            err.print(f"[yellow]child page failed[/yellow] {f.url}: {f.error_code}")
+
+
+@sources_app.command("enable")
+def sources_enable(
+    ref: str,
+    override_policy_review: Annotated[bool, typer.Option("--override-policy-review")] = False,
+    home: HomeOpt = None,
+    config: ConfigOpt = None,
+) -> None:
+    """Enable a source (review-required sources need --override-policy-review)."""
+    with guard():
+        cfg = _load(home, config)
+        conn = _open(cfg)
+        try:
+            src = SourceRepository(conn, SystemClock()).set_enabled(
+                ref, True, override_policy_review=override_policy_review
+            )
+        finally:
+            conn.close()
+        out.print(f"Enabled {src.source_key}.")
+
+
+@sources_app.command("disable")
+def sources_disable(
+    ref: str,
+    reason: Annotated[str, typer.Option("--reason")],
+    home: HomeOpt = None,
+    config: ConfigOpt = None,
+) -> None:
+    """Disable (pause) a source."""
+    with guard():
+        cfg = _load(home, config)
+        conn = _open(cfg)
+        try:
+            src = SourceRepository(conn, SystemClock()).set_enabled(ref, False)
+        finally:
+            conn.close()
+        out.print(f"Disabled {src.source_key}: {reason}")
+
+
+@sources_app.command("failures")
+def sources_failures(
+    since: Annotated[str, typer.Option("--since")] = "30d",
+    home: HomeOpt = None,
+    config: ConfigOpt = None,
+) -> None:
+    """Show failed or policy-blocked checks."""
+    with guard():
+        cfg = _load(home, config)
+        conn = _open(cfg)
+        try:
+            clock = SystemClock()
+            rows = SourceRepository(conn, clock).failures(iso_z(clock.now_utc() - _duration(since)))
+        finally:
+            conn.close()
+        table = Table("source", "when", "status", "code", "http", "streak", "last ok")
+        for r in rows:
+            table.add_row(
+                r["source_key"] or r["name"],
+                r["started_at"],
+                r["status"],
+                r["error_code"] or "",
+                str(r["http_status"] or ""),
+                str(r["failure_streak"]),
+                r["last_success_at"] or "never",
+            )
+        out.print(table)
+        out.print(f"{len(rows)} failed check(s) in the last {since}.")
+
+
+@sources_app.command("coverage")
+def sources_coverage(
+    json_out: JsonOpt = False, home: HomeOpt = None, config: ConfigOpt = None
+) -> None:
+    """Real source counts. The 200-source figure is a target, never a reported value."""
+    with guard():
+        cfg = _load(home, config)
+        conn = _open(cfg)
+        try:
+            data = SourceRepository(conn, SystemClock()).coverage()
+        finally:
+            conn.close()
+        if json_out:
+            sys.stdout.write(json.dumps(data, indent=2, sort_keys=True) + "\n")
+            return
+        table = Table("metric", "count", show_header=False)
+        for k, v in data.items():
+            table.add_row(k, str(v))
+        out.print(table)
+        out.print("Target: ~200 curated sources; activate in batches after policy review.")
+
+
+@run_app.command("discovery")
+def run_discovery_cmd(
+    limit_sources: Annotated[int | None, typer.Option("--limit-sources")] = None,
+    source_id: Annotated[str | None, typer.Option("--source-id")] = None,
+    dry_run: Annotated[bool, typer.Option("--dry-run")] = False,
+    home: HomeOpt = None,
+    config: ConfigOpt = None,
+) -> None:
+    """Poll due sources and store observations (candidate extraction arrives in M3)."""
+    with guard():
+        cfg = _load(home, config)
+        conn = _open(cfg)
+        clock = SystemClock()
+        fetcher = build_fetcher(cfg, clock)
+        try:
+            summary = run_discovery(
+                conn,
+                cfg,
+                fetcher,
+                clock,
+                source_ref=source_id,
+                limit=limit_sources,
+                dry_run=dry_run,
+            )
+        finally:
+            fetcher.close()
+            conn.close()
+        table = Table("source", "status", "pages", "code")
+        for r in summary.results:
+            table.add_row(
+                str(r["source"]),
+                str(r["status"]),
+                str(r.get("pages", "")),
+                str(r.get("error_code") or ""),
+            )
+        out.print(table)
+        out.print(
+            f"{'[dry run] ' if dry_run else ''}{summary.considered} source(s) considered; "
+            f"run status: {summary.status if not dry_run else 'n/a'}"
+        )
+        if not dry_run and summary.status == "partial":
+            raise typer.Exit(EXIT_PARTIAL)
+        if not dry_run and summary.status == "failed":
+            raise typer.Exit(EXIT_FAILURE)
 
 
 if __name__ == "__main__":

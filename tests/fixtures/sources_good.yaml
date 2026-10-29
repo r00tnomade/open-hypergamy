@@ -1,0 +1,15 @@
+version: 1
+sources:
+  - source_key: example-student-programmes
+    name: Example Institute Student Programmes
+    organization: {name: Example Institute, canonical_domain: example.edu, country_code: DE}
+    canonical_url: https://example.edu/students/opportunities?utm_source=x
+    domain: example.edu
+    source_type: official_programme_index
+    adapter_type: html
+    trust_tier: t2_official_org
+    allow_paths: [/students]
+    deny_paths: [/login]
+    robots_policy_checked_at: 2026-10-01
+    terms_review_note: "Reviewed 2026-10-01: public pages, no crawl restrictions beyond robots."
+    discovery_policy: {follow_internal_links: true, max_depth: 1, max_pages_per_run: 20}

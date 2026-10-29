@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"><channel><title>Example Institute News</title>
+<item><title>Summer School 2027 announced</title><link>https://example.edu/news/summer-school-2027?utm_source=rss#top</link>
+<guid>ss-2027</guid><pubDate>Mon, 26 Oct 2026 09:00:00 GMT</pubDate><description>Applications open in January.</description></item>
+<item><title>Robotics internship</title><link>/news/robotics-internship</link><guid>rob-1</guid></item>
+</channel></rss>

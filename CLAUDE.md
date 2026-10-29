@@ -81,6 +81,12 @@ Build order follows LLD §22. Each milestone ends at an exit gate (LLD §19) bef
 
 Testing is built alongside each milestone, not after: unit tests plus HTTP/LLM/Telegram fakes and saved public-page fixtures under `tests/fixtures/`. Nothing may hit the live network. Live smoke tests are opt-in.
 
-## Implemented so far (M1)
+## Implemented so far (M1 + M2)
 
-`config.py` (Pydantic settings, precedence defaults → YAML → env → CLI, unknown keys warn), `persistence/db.py` (FK on, WAL, `transaction()` = `BEGIN IMMEDIATE`, backup API), `persistence/migrations.py` (contiguous versions, DB checksum + `migration_manifest.json` check; **after editing/adding a migration, update the manifest**), `observability/health.py` (doctor/status), `cli.py`. `db restore` supports only `--check`; backup retention and launchd come in M6.
+Milestones 1 and 2 are done; M3 (candidates, claims, evidence) is next. Decisions are in `docs/adr/` (ADR-002 config/doc fixes, ADR-003 fetch pipeline).
+
+- **Config/DB (M1):** `config.py` (precedence defaults → YAML → env → CLI; unknown keys warn), `persistence/db.py` (FK on, WAL, `transaction()` = `BEGIN IMMEDIATE`, backup API), `persistence/migrations.py` (contiguous versions, DB checksum + `migration_manifest.json`). **After adding a migration run `python3 scripts/update_manifest.py`.** Applied migrations are immutable (current head: 0002).
+- **Sources (M2):** `sources/urls.py` (canonicalization, SSRF checks incl. DNS), `policy.py` (domain/path `Scope`, robots), `fetch.py` (`Fetcher`: scope → robots → throttle → conditional GET → manual redirects → size/type caps → bounded retries; `BodyCache`), adapters `html.py` (bounded same-scope crawl), `rss_atom.py`, `sitemap.py` (defusedxml), `registry.py` (YAML schema/validation), repositories in `persistence/repositories/`, and `discovery/orchestrator.py` (per-source error isolation; job status success/partial/failed → exit 0/4/1).
+- **CLI:** `radar sources list|add|import|show|test|enable|disable|failures|coverage`, `radar run discovery`, plus the M1 commands. `db restore` supports only `--check`.
+- **Test doubles:** `tests/helpers.py` has `FakeWeb` (httpx `MockTransport` that records requests) and `make_fetcher` (fake DNS, fake clock/sleep). Tests must never reach the network; to assert a denied URL was never fetched, check `web.urls`. CLI tests monkeypatch `cli.build_fetcher`.
+- **Not done:** iCal and Playwright adapters (sources using them are `skipped`), candidate extraction, LLM, scoring, Telegram, launchd.
