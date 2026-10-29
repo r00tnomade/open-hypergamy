@@ -9,6 +9,11 @@
       "version": 2,
       "name": "source_policy_fields",
       "sha256": "2a5945e797c23de3b91bcbf9461d101833754c0bd6b028b0bb119b5c51bfc23d"
+    },
+    {
+      "version": 3,
+      "name": "candidate_links",
+      "sha256": "9a43c2bca6e0174b9912b9b3f6b19eec986f290ea6a557046442f722cd2b783a"
     }
   ]
 }

@@ -12,10 +12,16 @@ from dataclasses import dataclass, field
 
 from opportunity_radar.clock import Clock, iso_z
 from opportunity_radar.config import LoadedConfig
+from opportunity_radar.discovery.pipeline import PipelineStats, process_observations
 from opportunity_radar.errors import FetchError, ParseError, RadarError, SourcePolicyDenied
 from opportunity_radar.persistence.repositories.jobs import JobRepository
 from opportunity_radar.persistence.repositories.sources import CheckOutcome, SourceRepository
-from opportunity_radar.sources.base import FetchContext, SourceAdapter, SourceRecord
+from opportunity_radar.sources.base import (
+    FetchContext,
+    PageObservation,
+    SourceAdapter,
+    SourceRecord,
+)
 from opportunity_radar.sources.fetch import BodyCache, Fetcher
 from opportunity_radar.sources.html import HtmlAdapter
 from opportunity_radar.sources.rss_atom import RssAtomAdapter
@@ -33,6 +39,7 @@ class RunSummary:
     job_id: str | None = None
     considered: int = 0
     results: list[dict[str, object]] = field(default_factory=list)
+    pipeline: PipelineStats = field(default_factory=PipelineStats)
 
     def count(self, *statuses: str) -> int:
         return sum(1 for r in self.results if r["status"] in statuses)
@@ -53,17 +60,28 @@ def check_source(
     cfg: LoadedConfig,
     clock: Clock,
     job_id: str | None,
+    new_observations: list[tuple[str, PageObservation]] | None = None,
 ) -> dict[str, object]:
     started = iso_z(clock.now_utc())
     adapter = ADAPTERS.get(source.adapter_type)
 
     def finish(status: str, **kw: object) -> dict[str, object]:
-        outcome = CheckOutcome(status=status, started_at=started,
-                               finished_at=iso_z(clock.now_utc()), **kw)  # type: ignore[arg-type]  # fmt: skip
-        repo.record_check(source, outcome, job_id)
-        return {"source": source.source_key or source.id, "status": status,
-                "pages": len(outcome.observations), "error_code": outcome.error_code,
-                "error": outcome.error_detail}  # fmt: skip
+        outcome = CheckOutcome(
+            status=status,
+            started_at=started,
+            finished_at=iso_z(clock.now_utc()),
+            **kw,  # type: ignore[arg-type]
+        )
+        stored = repo.record_check(source, outcome, job_id)
+        if new_observations is not None:
+            new_observations.extend(stored)
+        return {
+            "source": source.source_key or source.id,
+            "status": status,
+            "pages": len(outcome.observations),
+            "error_code": outcome.error_code,
+            "error": outcome.error_detail,
+        }
 
     if adapter is None:
         return finish(
@@ -73,10 +91,11 @@ def check_source(
         )
 
     ctx = FetchContext(
-        fetcher=fetcher, settings=cfg.settings.app,
+        fetcher=fetcher,
+        settings=cfg.settings.app,
         cache=BodyCache(cfg.paths.cache) if cfg.settings.cache.enabled else None,
         validators=repo.latest_validators,
-    )  # fmt: skip
+    )
     try:
         observations = adapter.fetch(source, ctx)
     except SourcePolicyDenied as e:
@@ -103,11 +122,17 @@ def check_source(
     else:
         status = "success"
     return finish(
-        status, http_status=seed.http_status, final_url=seed.final_url,
-        content_hash=seed.content_sha256 or None, text_hash=seed.text_sha256,
-        etag=seed.etag, last_modified=seed.last_modified, observations=tuple(observations),
-        error_code="child_pages_failed" if detail else None, error_detail=detail,
-    )  # fmt: skip
+        status,
+        http_status=seed.http_status,
+        final_url=seed.final_url,
+        content_hash=seed.content_sha256 or None,
+        text_hash=seed.text_sha256,
+        etag=seed.etag,
+        last_modified=seed.last_modified,
+        observations=tuple(observations),
+        error_code="child_pages_failed" if detail else None,
+        error_detail=detail,
+    )
 
 
 def run_discovery(
@@ -140,19 +165,35 @@ def run_discovery(
     summary.job_id = job_id = jobs.start("discovery", trigger)
     try:
         for source in due:
-            summary.results.append(
-                check_source(
-                    source, fetcher=fetcher, repo=repo, cfg=cfg, clock=clock, job_id=job_id
-                )
+            fresh: list[tuple[str, PageObservation]] = []
+            result = check_source(
+                source,
+                fetcher=fetcher,
+                repo=repo,
+                cfg=cfg,
+                clock=clock,
+                job_id=job_id,
+                new_observations=fresh,
             )
+            summary.results.append(result)
+            if fresh:
+                before = summary.pipeline.errors
+                process_observations(conn, cfg, fetcher, clock, source, fresh, summary.pipeline)
+                if summary.pipeline.errors > before and result["status"] == "success":
+                    result["status"] = "partial"  # candidate processing failed for this source
     except BaseException as e:
         jobs.finish(job_id, "failed", error_code=type(e).__name__, error_summary=str(e)[:300])
         raise
     ok = summary.count("success", "not_modified")
     jobs.finish(
-        job_id, summary.status,
-        counters={"considered": summary.considered, "succeeded": ok,
-                  "failed": summary.count("failed", "blocked_policy")},
-        summary={"results": summary.results},
-    )  # fmt: skip
+        job_id,
+        summary.status,
+        counters={
+            "considered": summary.considered,
+            "succeeded": ok,
+            "candidates": summary.pipeline.created,
+            "failed": summary.count("failed", "blocked_policy"),
+        },
+        summary={"results": summary.results, "candidates": vars(summary.pipeline)},
+    )
     return summary

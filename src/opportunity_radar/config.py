@@ -69,6 +69,7 @@ class LocalLLMSettings(_Section):
     base_url: str = "http://127.0.0.1:3000/v1"
     model: str = "REPLACE_WITH_LOADED_LOCAL_MODEL_ID"
     manual_mode_only: bool = True
+    max_input_chars: int = 12_000
 
 
 class LLMSettings(_Section):
@@ -80,6 +81,8 @@ class LLMSettings(_Section):
     max_output_tokens: int = 4000
     allow_remote_public_content: bool = True
     extraction_cache: bool = True
+    max_calls_per_run: int = 20
+    max_retries: int = 2  # malformed-output retries; bounded (LLD §17)
     freellmapi: FreeLLMAPISettings = FreeLLMAPISettings()
     local: LocalLLMSettings = LocalLLMSettings()
 

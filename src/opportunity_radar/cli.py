@@ -18,7 +18,10 @@ from rich.table import Table
 from opportunity_radar import __version__
 from opportunity_radar.clock import SystemClock, iso_compact, iso_z
 from opportunity_radar.config import LoadedConfig, load_config
+from opportunity_radar.discovery import review as review_svc
+from opportunity_radar.discovery.normalize import clean_title
 from opportunity_radar.discovery.orchestrator import ADAPTERS, run_discovery
+from opportunity_radar.discovery.pipeline import promote_from_db
 from opportunity_radar.errors import (
     EXIT_DATABASE,
     EXIT_DEPENDENCY,
@@ -33,9 +36,14 @@ from opportunity_radar.observability.health import collect_status, run_doctor
 from opportunity_radar.observability.logging import redact, setup_logging
 from opportunity_radar.persistence import db as dbm
 from opportunity_radar.persistence import migrations as mig
+from opportunity_radar.persistence.repositories.observations import insert_observation
+from opportunity_radar.persistence.repositories.opportunities import OpportunityRepository
 from opportunity_radar.persistence.repositories.sources import SourceRepository
 from opportunity_radar.sources.base import FetchContext, SourceRecord
+from opportunity_radar.sources.common import build_observation, decode_body
 from opportunity_radar.sources.fetch import BodyCache, build_fetcher
+from opportunity_radar.sources.html import parse_html
+from opportunity_radar.sources.policy import Scope
 from opportunity_radar.sources.registry import load_source_files
 
 app = typer.Typer(
@@ -46,7 +54,13 @@ sources_app = typer.Typer(help="Source registry.", no_args_is_help=True)
 run_app = typer.Typer(help="Run jobs.", no_args_is_help=True)
 app.add_typer(db_app, name="db")
 app.add_typer(sources_app, name="sources")
+candidates_app = typer.Typer(help="Opportunity candidates.", no_args_is_help=True)
+review_app = typer.Typer(help="Manual review queue.", no_args_is_help=True)
+opps_app = typer.Typer(help="Verified opportunities.", no_args_is_help=True)
 app.add_typer(run_app, name="run")
+app.add_typer(candidates_app, name="candidates")
+app.add_typer(review_app, name="review")
+app.add_typer(opps_app, name="opportunities")
 
 out = Console()
 err = Console(stderr=True)
@@ -618,6 +632,12 @@ def run_discovery_cmd(
                 str(r.get("error_code") or ""),
             )
         out.print(table)
+        p = summary.pipeline
+        if p.created or p.duplicates or p.errors:
+            out.print(
+                f"candidates: {p.created} new, {p.promoted} promoted, {p.needs_review} held for "
+                f"review, {p.leads} leads, {p.duplicates} duplicates, {p.errors} errors"
+            )
         out.print(
             f"{'[dry run] ' if dry_run else ''}{summary.considered} source(s) considered; "
             f"run status: {summary.status if not dry_run else 'n/a'}"
@@ -626,6 +646,509 @@ def run_discovery_cmd(
             raise typer.Exit(EXIT_PARTIAL)
         if not dry_run and summary.status == "failed":
             raise typer.Exit(EXIT_FAILURE)
+
+
+STATUS_LABELS = {
+    "confirmed_official": "confirmed",
+    "estimated_recurring": "estimated",
+    "conflicting_sources": "conflict",
+    "stale": "stale",
+    "unverified": "unverified",
+    "announced_not_open": "announced",
+    "cancelled_official": "cancelled",
+    "unknown": "unknown",
+}
+
+
+def _label(status: str) -> str:
+    return STATUS_LABELS.get(status, status)
+
+
+@candidates_app.command("list")
+def candidates_list(
+    status: Annotated[str | None, typer.Option("--status")] = None,
+    limit: Annotated[int, typer.Option("--limit")] = 50,
+    home: HomeOpt = None,
+    config: ConfigOpt = None,
+) -> None:
+    """List candidates (new = lead, needs_review, promoted, duplicate, rejected)."""
+    with guard():
+        cfg = _load(home, config)
+        conn = _open(cfg)
+        try:
+            rows = OpportunityRepository(conn, SystemClock()).list_candidates(status, limit)
+        finally:
+            conn.close()
+        table = Table("id", "status", "type", "edition", "title", "url")
+        for r in rows:
+            meta = json.loads(r["metadata_json"])
+            table.add_row(
+                r["id"][:8],
+                r["status"],
+                r["candidate_type"] or "",
+                r["edition_key"] or "?",
+                meta.get("title", "")[:48],
+                r["canonical_url"],
+            )
+        out.print(table)
+        out.print(f"{len(rows)} candidate(s).")
+
+
+@candidates_app.command("show")
+def candidates_show(cid: str, home: HomeOpt = None, config: ConfigOpt = None) -> None:
+    """Show a candidate with the observation that introduced it."""
+    with guard():
+        cfg = _load(home, config)
+        conn = _open(cfg)
+        try:
+            repo = OpportunityRepository(conn, SystemClock())
+            c = repo.get_candidate(cid)
+            if c is None:
+                raise ConfigurationError(f"unknown or ambiguous candidate id: {cid}")
+            obs = conn.execute(
+                "SELECT canonical_url, retrieved_at, content_hash FROM source_observations "
+                "WHERE id=?",
+                (c["discovered_from_observation_id"],),
+            ).fetchone()
+        finally:
+            conn.close()
+        table = Table("field", "value", show_header=False)
+        for k in (
+            "id",
+            "status",
+            "canonical_url",
+            "candidate_type",
+            "edition_key",
+            "organizer_domain",
+            "normalized_fingerprint",
+            "duplicate_of_candidate_id",
+            "promoted_edition_id",
+            "rejection_reason",
+            "first_seen_at",
+            "last_seen_at",
+        ):
+            table.add_row(k, str(c[k]))
+        table.add_row(
+            "introduced by", f"{obs['canonical_url']} @ {obs['retrieved_at']}" if obs else "?"
+        )
+        table.add_row("metadata", c["metadata_json"])
+        out.print(table)
+
+
+@candidates_app.command("promote")
+def candidates_promote(
+    cid: str,
+    edition_key: Annotated[str | None, typer.Option("--edition-key")] = None,
+    program: Annotated[
+        str | None, typer.Option("--program", help="Merge into this programme id.")
+    ] = None,
+    new_program: Annotated[bool, typer.Option("--new-program")] = False,
+    home: HomeOpt = None,
+    config: ConfigOpt = None,
+) -> None:
+    """Promote a candidate. Claims from non-official sources stay unverified."""
+    with guard():
+        cfg = _load(home, config)
+        conn = _open(cfg)
+        try:
+            res = promote_from_db(
+                conn,
+                cfg,
+                SystemClock(),
+                cid,
+                edition_key=edition_key,
+                program_id=program,
+                new_program=new_program,
+            )
+        finally:
+            conn.close()
+        if res.status == "promoted":
+            out.print(
+                f"Promoted: edition {res.edition_id}, {res.claims_added} claim(s), "
+                f"{res.reviews_added} review item(s)."
+            )
+        else:
+            err.print(
+                f"[yellow]Held for review[/yellow]: {', '.join(res.reasons)} "
+                "(see `radar review list`)"
+            )
+            raise typer.Exit(EXIT_PARTIAL)
+
+
+@candidates_app.command("reject")
+def candidates_reject(
+    cid: str,
+    reason: Annotated[str, typer.Option("--reason")],
+    home: HomeOpt = None,
+    config: ConfigOpt = None,
+) -> None:
+    """Reject a candidate (kept for dedupe; never deleted)."""
+    with guard():
+        cfg = _load(home, config)
+        conn = _open(cfg)
+        try:
+            repo = OpportunityRepository(conn, SystemClock())
+            c = repo.get_candidate(cid)
+            if c is None:
+                raise ConfigurationError(f"unknown or ambiguous candidate id: {cid}")
+            repo.set_candidate_status(c["id"], "rejected", reason=reason)
+        finally:
+            conn.close()
+        out.print(f"Rejected {c['id'][:8]}: {reason}")
+
+
+@candidates_app.command("add")
+def candidates_add(url: str, home: HomeOpt = None, config: ConfigOpt = None) -> None:
+    """Add a manual URL as a lead (fetched once; manual leads can never be auto-verified)."""
+    with guard():
+        cfg = _load(home, config)
+        clock = SystemClock()
+        conn = _open(cfg)
+        fetcher = build_fetcher(cfg, clock)
+        try:
+            host = (url.split("//", 1)[-1].split("/", 1)[0]).split(":")[0].lower()
+            resp = fetcher.fetch(url, Scope((host,)))
+            title, text, links, meta = parse_html(
+                decode_body(resp.body, resp.mime_type), resp.final_url
+            )
+            ctx = FetchContext(
+                fetcher=fetcher,
+                settings=cfg.settings.app,
+                cache=BodyCache(cfg.paths.cache) if cfg.settings.cache.enabled else None,
+            )
+            obs = build_observation(
+                None, resp, ctx, title=title, text=text, links=links, meta=meta, depth=1
+            )
+            repo = OpportunityRepository(conn, clock)
+            with_tx = dbm.transaction(conn)
+            with with_tx:
+                obs_id, _ = insert_observation(
+                    conn, obs, source_id=None, check_run_id=None, now_iso=iso_z(clock.now_utc())
+                )
+            from opportunity_radar.discovery.pipeline import _identity
+            from opportunity_radar.extraction.deterministic import extract_date_facts
+
+            page_title = clean_title(title or resp.final_url)
+            facts = extract_date_facts(
+                text, source_url=resp.final_url, method="rule", observation_id=obs_id
+            )
+            norm, domain, key, fp, category = _identity(page_title, resp.final_url, facts)
+            cand_id, outcome = repo.upsert_candidate(
+                source_id=None,
+                observation_id=obs_id,
+                url=resp.final_url,
+                title=page_title,
+                normalized_title=norm,
+                organizer_domain=domain,
+                category=category,
+                edition_key=key,
+                fingerprint=fp,
+                metadata={
+                    "kind": "manual",
+                    "method": "rule",
+                    "followed": True,
+                    "evidence_url": resp.final_url,
+                    "page_observation_id": obs_id,
+                },
+            )
+        finally:
+            fetcher.close()
+            conn.close()
+        out.print(
+            f"Candidate {cand_id[:8]} ({outcome}); manual leads stay unverified until "
+            "official sources confirm them."
+        )
+
+
+@review_app.command("list")
+def review_list(
+    priority: Annotated[str | None, typer.Option("--priority")] = None,
+    state: Annotated[str, typer.Option("--state")] = "pending",
+    home: HomeOpt = None,
+    config: ConfigOpt = None,
+) -> None:
+    """List review items, most urgent first."""
+    with guard():
+        cfg = _load(home, config)
+        conn = _open(cfg)
+        try:
+            rows = OpportunityRepository(conn, SystemClock()).list_reviews(state, priority)
+        finally:
+            conn.close()
+        table = Table("id", "priority", "reason", "title")
+        for r in rows:
+            table.add_row(r["id"][:8], r["priority"], r["reason_code"], r["title"][:70])
+        out.print(table)
+        out.print(f"{len(rows)} {state} item(s).")
+
+
+@review_app.command("show")
+def review_show(rid: str, home: HomeOpt = None, config: ConfigOpt = None) -> None:
+    """Show a review item with its claim and evidence."""
+    with guard():
+        cfg = _load(home, config)
+        conn = _open(cfg)
+        try:
+            repo = OpportunityRepository(conn, SystemClock())
+            r = repo.get_review(rid)
+            if r is None:
+                raise ConfigurationError(f"unknown or ambiguous review id: {rid}")
+            claim = (
+                conn.execute("SELECT * FROM claims WHERE id=?", (r["claim_id"],)).fetchone()
+                if r["claim_id"]
+                else None
+            )
+            others = (
+                conn.execute(
+                    "SELECT c.id, c.fact_status, c.proposed_value_json, c.source_url FROM claims c "
+                    "WHERE c.deadline_id = ? OR (c.edition_id = ? AND c.field_name = ?)",
+                    (
+                        claim["deadline_id"] if claim else None,
+                        r["edition_id"],
+                        claim["field_name"] if claim else None,
+                    ),
+                ).fetchall()
+                if claim
+                else []
+            )
+        finally:
+            conn.close()
+        table = Table("field", "value", show_header=False)
+        for k in ("id", "state", "priority", "reason_code", "title", "details", "reviewer_notes"):
+            table.add_row(k, str(r[k]))
+        if claim:
+            table.add_row(
+                "claim", f"{claim['id']} [{_label(claim['fact_status'])}] {claim['field_name']}"
+            )
+            table.add_row("excerpt", claim["excerpt"])
+            table.add_row("source", claim["source_url"])
+        for o in others:
+            table.add_row(
+                "related claim",
+                f"{o['id']} [{_label(o['fact_status'])}] "
+                f"{o['proposed_value_json']} <- {o['source_url']}",
+            )
+        out.print(table)
+
+
+def _decide(rid: str, note: str, accept: bool, home: Path | None, config: Path | None) -> None:
+    with guard():
+        cfg = _load(home, config)
+        conn = _open(cfg)
+        try:
+            row = review_svc.decide(conn, SystemClock(), rid, accept=accept, note=note)
+        finally:
+            conn.close()
+        out.print(
+            f"Review {row['id'][:8]} {row['state']}. "
+            "(Recorded as a human decision; fact verification status is unchanged.)"
+        )
+
+
+@review_app.command("accept")
+def review_accept(
+    rid: str,
+    note: Annotated[str, typer.Option("--note")],
+    home: HomeOpt = None,
+    config: ConfigOpt = None,
+) -> None:
+    """Mark an item as reviewed. Never marks a fact officially confirmed."""
+    _decide(rid, note, True, home, config)
+
+
+@review_app.command("reject")
+def review_reject(
+    rid: str,
+    note: Annotated[str, typer.Option("--note")],
+    home: HomeOpt = None,
+    config: ConfigOpt = None,
+) -> None:
+    """Dismiss a review item."""
+    _decide(rid, note, False, home, config)
+
+
+@review_app.command("resolve")
+def review_resolve(
+    rid: str,
+    claim: Annotated[str, typer.Option("--claim")],
+    note: Annotated[str, typer.Option("--note")],
+    home: HomeOpt = None,
+    config: ConfigOpt = None,
+) -> None:
+    """Settle a conflict by choosing one of the official claims."""
+    with guard():
+        cfg = _load(home, config)
+        conn = _open(cfg)
+        try:
+            review_svc.resolve_conflict(conn, SystemClock(), rid, claim_id=claim, note=note)
+        finally:
+            conn.close()
+        out.print("Conflict resolved with the chosen official claim.")
+
+
+@opps_app.command("list")
+def opps_list(
+    json_out: JsonOpt = False,
+    limit: Annotated[int, typer.Option("--limit")] = 100,
+    home: HomeOpt = None,
+    config: ConfigOpt = None,
+) -> None:
+    """List editions with verification and application status."""
+    with guard():
+        cfg = _load(home, config)
+        conn = _open(cfg)
+        try:
+            repo = OpportunityRepository(conn, SystemClock())
+            data = []
+            for e in repo.list_editions(limit):
+                close = repo.deadlines_for(e["id"])
+                close_row = next(
+                    (d for d in close if d["deadline_type"] == "application_close"), None
+                )
+                data.append(
+                    {
+                        "id": e["id"],
+                        "name": e["display_name"],
+                        "edition": e["edition_key"],
+                        "fact_status": e["fact_status"],
+                        "application_status": e["application_status"],
+                        "event_start_date": e["event_start_date"],
+                        "event_end_date": e["event_end_date"],
+                        "application_close": close_row["due_date_local"] if close_row else None,
+                        "application_close_status": _label(close_row["fact_status"])
+                        if close_row
+                        else None,
+                        "url": e["official_url"],
+                    }
+                )
+        finally:
+            conn.close()
+        if json_out:
+            sys.stdout.write(json.dumps(data, indent=2) + "\n")
+            return
+        table = Table("id", "name", "ed.", "facts", "applications", "closes", "event")
+        for d in data:
+            closes = (
+                f"{d['application_close']} ({d['application_close_status']})"
+                if d["application_close"]
+                else "unknown"
+            )
+            event = (
+                f"{d['event_start_date']}..{d['event_end_date']}"
+                if d["event_start_date"]
+                else "unknown"
+            )
+            table.add_row(
+                d["id"][:8],
+                d["name"][:40],
+                d["edition"],
+                _label(d["fact_status"]),
+                d["application_status"],
+                closes,
+                event,
+            )
+        out.print(table)
+
+
+@opps_app.command("show")
+def opps_show(
+    eid: str,
+    evidence: Annotated[bool, typer.Option("--evidence")] = False,
+    home: HomeOpt = None,
+    config: ConfigOpt = None,
+) -> None:
+    """Show an edition; --evidence lists every claim with its excerpt and source."""
+    with guard():
+        cfg = _load(home, config)
+        conn = _open(cfg)
+        try:
+            repo = OpportunityRepository(conn, SystemClock())
+            e = repo.get_edition(eid)
+            if e is None:
+                raise ConfigurationError(f"unknown or ambiguous edition id: {eid}")
+            dls, claims = repo.deadlines_for(e["id"]), repo.claims_for_edition(e["id"])
+        finally:
+            conn.close()
+        table = Table("field", "value", show_header=False)
+        for k in (
+            "id",
+            "display_name",
+            "edition_key",
+            "official_url",
+            "fact_status",
+            "application_status",
+            "lifecycle_status",
+            "event_start_date",
+            "event_end_date",
+            "last_verified_at",
+            "source_fresh_until",
+            "last_material_change_at",
+        ):
+            table.add_row(k, str(e[k]))
+        out.print(table)
+        dtable = Table("deadline", "date", "status", "as written")
+        for d in dls:
+            dtable.add_row(
+                d["deadline_type"],
+                d["due_date_local"] or "",
+                _label(d["fact_status"]),
+                d["raw_date_text"],
+            )
+        out.print(dtable)
+        if evidence:
+            ctable = Table("field", "status", "method", "tier", "excerpt", "source")
+            for c in claims:
+                ctable.add_row(
+                    c["deadline_type"] and f"deadline:{c['deadline_type']}" or c["field_name"],
+                    _label(c["fact_status"]),
+                    c["extraction_method"],
+                    c["source_trust_tier"].split("_")[0],
+                    c["excerpt"][:90],
+                    c["source_url"],
+                )
+            out.print(ctable)
+
+
+@app.command()
+def deadlines(
+    within: Annotated[str, typer.Option("--within")] = "90d",
+    status: Annotated[str | None, typer.Option("--status")] = None,
+    json_out: JsonOpt = False,
+    home: HomeOpt = None,
+    config: ConfigOpt = None,
+) -> None:
+    """Upcoming deadlines, each with its verification label."""
+    with guard():
+        cfg = _load(home, config)
+        conn = _open(cfg)
+        clock = SystemClock()
+        try:
+            now = clock.now_utc()
+            rows = OpportunityRepository(conn, clock).deadlines_between(
+                now.date().isoformat(), (now + _duration(within)).date().isoformat()
+            )
+        finally:
+            conn.close()
+        if status:
+            rows = [r for r in rows if r["fact_status"] == status]
+        data = [
+            {
+                "date": r["due_date_local"],
+                "type": r["deadline_type"],
+                "status": _label(r["fact_status"]),
+                "raw": r["raw_date_text"],
+                "title": r["display_name"],
+                "url": r["official_url"],
+            }
+            for r in rows
+        ]
+        if json_out:
+            sys.stdout.write(json.dumps(data, indent=2) + "\n")
+            return
+        table = Table("date", "status", "type", "as written", "programme")
+        for d in data:
+            table.add_row(d["date"], d["status"], d["type"], d["raw"], d["title"][:50])
+        out.print(table)
 
 
 if __name__ == "__main__":

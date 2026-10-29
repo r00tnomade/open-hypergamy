@@ -12,9 +12,19 @@ from opportunity_radar.errors import SourcePolicyDenied
 Resolver = Callable[[str], list[str]]
 
 _TRACKING_PARAMS = {
-    "fbclid", "gclid", "dclid", "msclkid", "mc_cid", "mc_eid", "igshid", "yclid",
-    "_hsenc", "_hsmi", "mkt_tok", "ref_src",
-}  # fmt: skip
+    "fbclid",
+    "gclid",
+    "dclid",
+    "msclkid",
+    "mc_cid",
+    "mc_eid",
+    "igshid",
+    "yclid",
+    "_hsenc",
+    "_hsmi",
+    "mkt_tok",
+    "ref_src",
+}
 _DEFAULT_PORTS = {"http": 80, "https": 443}
 _LOCAL_SUFFIXES = (".local", ".localhost", ".internal", ".lan", ".home.arpa")
 
@@ -59,8 +69,9 @@ def canonicalize_url(url: str, base: str | None = None) -> str:
     netloc = f"[{host}]" if ":" in host else host
     if port and port != _DEFAULT_PORTS[scheme]:
         netloc += f":{port}"
-    query = urlencode([(k, v) for k, v in parse_qsl(parts.query, keep_blank_values=True)
-                       if not _is_tracking(k)])  # fmt: skip
+    query = urlencode(
+        [(k, v) for k, v in parse_qsl(parts.query, keep_blank_values=True) if not _is_tracking(k)]
+    )
     return urlunsplit((scheme, netloc, parts.path or "/", query, ""))
 
 

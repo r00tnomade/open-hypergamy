@@ -67,8 +67,9 @@ class SitemapAdapter:
             urls: list[tuple[str, str | None]] = []
             for loc, _ in items[:MAX_CHILD_SITEMAPS]:
                 try:
-                    child = ctx.fetcher.fetch(canonicalize_url(loc, resp.final_url), source.scope,
-                                              accept=SITEMAP_TYPES)  # fmt: skip
+                    child = ctx.fetcher.fetch(
+                        canonicalize_url(loc, resp.final_url), source.scope, accept=SITEMAP_TYPES
+                    )
                     ckind, citems = parse_sitemap(child.body)
                     if ckind == "urlset":
                         urls += citems
@@ -89,7 +90,14 @@ class SitemapAdapter:
                 entries.append(FeedEntry(link=url, published=lastmod))
         entries.sort(key=lambda e: e.published or "", reverse=True)
         entries = entries[:MAX_URLS]
-        return [build_observation(
-            source, resp, ctx, links=[e.link for e in entries if e.link], entries=entries,
-            meta={"sitemap_urls": str(len(entries))}, suffix="xml",
-        )]  # fmt: skip
+        return [
+            build_observation(
+                source,
+                resp,
+                ctx,
+                links=[e.link for e in entries if e.link],
+                entries=entries,
+                meta={"sitemap_urls": str(len(entries))},
+                suffix="xml",
+            )
+        ]

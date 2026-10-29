@@ -35,10 +35,19 @@ from opportunity_radar.sources.urls import Resolver, default_resolver, host_of, 
 
 log = logging.getLogger(__name__)
 
-DEFAULT_ACCEPT = frozenset({
-    "text/html", "application/xhtml+xml", "text/plain", "text/xml", "application/xml",
-    "application/rss+xml", "application/atom+xml", "application/rdf+xml", "text/calendar",
-})  # fmt: skip
+DEFAULT_ACCEPT = frozenset(
+    {
+        "text/html",
+        "application/xhtml+xml",
+        "text/plain",
+        "text/xml",
+        "application/xml",
+        "application/rss+xml",
+        "application/atom+xml",
+        "application/rdf+xml",
+        "text/calendar",
+    }
+)
 _REDIRECTS = {301, 302, 303, 307, 308}
 _RETRYABLE_STATUS = {408, 429, 500, 502, 503, 504}
 MAX_RETRY_AFTER_SECONDS = 30.0
@@ -222,8 +231,12 @@ class Fetcher:
                 )
                 if status in _RETRYABLE_STATUS:
                     ra = _retry_after(h.get("retry-after"))
-                    raise FetchHTTPError(f"HTTP {status} from {final}", http_status=status,
-                                         retry_after=ra, retryable=True)  # fmt: skip
+                    raise FetchHTTPError(
+                        f"HTTP {status} from {final}",
+                        http_status=status,
+                        retry_after=ra,
+                        retryable=True,
+                    )
                 if status not in (200, 304):
                     raise FetchHTTPError(f"HTTP {status} from {final}", http_status=status)
                 break
@@ -237,12 +250,18 @@ class Fetcher:
                 self._sleep(delay)
                 retries += 1
         return FetchResponse(
-            requested_url=canonical, final_url=final, status=status,
+            requested_url=canonical,
+            final_url=final,
+            status=status,
             mime_type=h.get("content-type", "").split(";")[0].strip().lower() or None,
-            etag=h.get("etag"), last_modified=h.get("last-modified"), body=body,
-            not_modified=status == 304, elapsed_ms=int((self._mono() - started) * 1000),
-            retry_count=retries, fetched_at=self.clock.now_utc(),
-        )  # fmt: skip
+            etag=h.get("etag"),
+            last_modified=h.get("last-modified"),
+            body=body,
+            not_modified=status == 304,
+            elapsed_ms=int((self._mono() - started) * 1000),
+            retry_count=retries,
+            fetched_at=self.clock.now_utc(),
+        )
 
 
 def _retry_after(value: str | None) -> float | None:

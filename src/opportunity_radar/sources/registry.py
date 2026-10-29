@@ -154,8 +154,10 @@ def load_source_files(
                 ]
                 continue
             if cfg.adapter_type is AdapterType.PLAYWRIGHT and cfg.source_key not in allowed:
-                problems.append(f"{label}: playwright requires the source_key in "
-                                "browser.playwright_allowed_source_ids")  # fmt: skip
+                problems.append(
+                    f"{label}: playwright requires the source_key in "
+                    "browser.playwright_allowed_source_ids"
+                )
                 continue
             configs.append(cfg)
     seen_keys: dict[str, int] = {}
@@ -165,8 +167,10 @@ def load_source_files(
         if seen_keys[c.source_key] == 2:
             problems.append(f"duplicate source_key: {c.source_key}")
         if c.canonical_url in seen_urls and seen_urls[c.canonical_url] != c.source_key:
-            problems.append(f"duplicate canonical_url {c.canonical_url} "
-                            f"({seen_urls[c.canonical_url]} and {c.source_key})")  # fmt: skip
+            problems.append(
+                f"duplicate canonical_url {c.canonical_url} "
+                f"({seen_urls[c.canonical_url]} and {c.source_key})"
+            )
         seen_urls.setdefault(c.canonical_url, c.source_key)
     if problems:
         raise ConfigurationError("source registry validation failed:\n  " + "\n  ".join(problems))

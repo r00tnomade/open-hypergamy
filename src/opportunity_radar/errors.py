@@ -75,3 +75,14 @@ class UnsupportedContentType(FetchError):
 
 class ParseError(RadarError):
     code = "parse_error"
+
+
+class LLMUnavailable(RadarError):
+    """Gateway down, quota exhausted, acknowledgement missing or LLM disabled. Work is queued;
+    deterministic processing continues and no other provider is ever tried."""
+
+    code = "llm_unavailable"
+
+
+class LLMInvalidResponse(RadarError):
+    code = "llm_invalid_response"

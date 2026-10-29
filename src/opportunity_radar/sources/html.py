@@ -71,12 +71,14 @@ class HtmlAdapter:
         title, text, links, meta = parse_html(
             decode_body(resp.body, resp.mime_type), resp.final_url
         )
-        return build_observation(source, resp, ctx, title=title, text=text, links=links,
-                                 meta=meta, depth=depth)  # fmt: skip
+        return build_observation(
+            source, resp, ctx, title=title, text=text, links=links, meta=meta, depth=depth
+        )
 
     def fetch(self, source: SourceRecord, ctx: FetchContext) -> list[PageObservation]:
-        resp = ctx.fetcher.fetch(source.canonical_url, source.scope, etag=source.etag,
-                                 last_modified=source.last_modified)  # fmt: skip
+        resp = ctx.fetcher.fetch(
+            source.canonical_url, source.scope, etag=source.etag, last_modified=source.last_modified
+        )
         seed = self._observe(source, resp, ctx, 0)
         policy = source.discovery_policy
         if seed.not_modified or not policy.get("follow_internal_links"):

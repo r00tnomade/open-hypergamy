@@ -42,9 +42,15 @@ class JobRepository:
                 "sources_succeeded=?, sources_failed=?, candidates_found=?, summary_json=?, "
                 "error_code=?, error_summary=? WHERE id=?",
                 (
-                    iso_z(self.clock.now_utc()), status, c.get("considered", 0),
-                    c.get("succeeded", 0), c.get("failed", 0), c.get("candidates", 0),
+                    iso_z(self.clock.now_utc()),
+                    status,
+                    c.get("considered", 0),
+                    c.get("succeeded", 0),
+                    c.get("failed", 0),
+                    c.get("candidates", 0),
                     json.dumps(summary or {}, sort_keys=True, separators=(",", ":")),
-                    error_code, error_summary, job_id,
+                    error_code,
+                    error_summary,
+                    job_id,
                 ),
-            )  # fmt: skip
+            )

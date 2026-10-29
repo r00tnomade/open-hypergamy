@@ -4,14 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-Opportunity Radar is a single-user, local CLI (`radar`) that discovers, verifies, scores, and monitors research/education opportunities (internships, summer schools, fellowships, CFPs, hackathons) and alerts via Telegram. **Milestone 1 (foundation) is implemented**: config, errors, clock, SQLite + checksummed migrations, `radar init|doctor|status|db …`. Milestones 2–6 are not started. Design docs:
+Opportunity Radar is a single-user, local CLI (`radar`) that discovers, verifies, scores, and monitors research/education opportunities (internships, summer schools, fellowships, CFPs, hackathons) and alerts via Telegram. **Milestones 1–3 are implemented** (see "Implemented so far" below); later milestones are in the execution plan. Design docs:
 
 - `opportunity_radar_lld_v1_2.md` — **the implementation contract.** Exact SQL schema (§4), Pydantic contracts and module interfaces (§5), source YAML schema (§6), fetch rules (§7), LLM request/response schema (§9), Telegram templates and idempotency keys (§13), CLI surface and exit codes (§14), test matrix (§18), milestones (§19), task order (§22).
 - `opportunity_radar_hld_v1_2.md` — rationale, goals/non-goals, trust tiers, risks.
 
 Where the two differ (repo layout, module names, table set), **the LLD wins**. Deviations from the LLD must be recorded as an ADR (`docs/adr/`, ADR-001 lives in LLD §19.1).
 
-Git: this directory is its own repo (`git init` was run here; the parent home-directory repo is unrelated). No commits yet. Resolutions of LLD inconsistencies are in `docs/adr/ADR-002-m1-config-and-doc-resolutions.md`.
+Git: this directory is its own repo (the parent home-directory repo is unrelated). Decisions that deviate from or clarify the LLD live in `docs/adr/`.
 
 ## Commands
 
@@ -81,12 +81,14 @@ Build order follows LLD §22. Each milestone ends at an exit gate (LLD §19) bef
 
 Testing is built alongside each milestone, not after: unit tests plus HTTP/LLM/Telegram fakes and saved public-page fixtures under `tests/fixtures/`. Nothing may hit the live network. Live smoke tests are opt-in.
 
-## Implemented so far (M1 + M2)
+## Implemented so far (M1–M3)
 
-Milestones 1 and 2 are done; M3 (candidates, claims, evidence) is next. Decisions are in `docs/adr/` (ADR-002 config/doc fixes, ADR-003 fetch pipeline).
+Milestones 1–3 are done; **M4 (LLM extraction) is next**. Decisions are in `docs/adr/` (ADR-002 config/doc fixes, ADR-003 fetch pipeline, ADR-004 candidates/evidence). Read ADR-004 before touching verification or promotion.
 
-- **Config/DB (M1):** `config.py` (precedence defaults → YAML → env → CLI; unknown keys warn), `persistence/db.py` (FK on, WAL, `transaction()` = `BEGIN IMMEDIATE`, backup API), `persistence/migrations.py` (contiguous versions, DB checksum + `migration_manifest.json`). **After adding a migration run `python3 scripts/update_manifest.py`.** Applied migrations are immutable (current head: 0002).
-- **Sources (M2):** `sources/urls.py` (canonicalization, SSRF checks incl. DNS), `policy.py` (domain/path `Scope`, robots), `fetch.py` (`Fetcher`: scope → robots → throttle → conditional GET → manual redirects → size/type caps → bounded retries; `BodyCache`), adapters `html.py` (bounded same-scope crawl), `rss_atom.py`, `sitemap.py` (defusedxml), `registry.py` (YAML schema/validation), repositories in `persistence/repositories/`, and `discovery/orchestrator.py` (per-source error isolation; job status success/partial/failed → exit 0/4/1).
-- **CLI:** `radar sources list|add|import|show|test|enable|disable|failures|coverage`, `radar run discovery`, plus the M1 commands. `db restore` supports only `--check`.
-- **Test doubles:** `tests/helpers.py` has `FakeWeb` (httpx `MockTransport` that records requests) and `make_fetcher` (fake DNS, fake clock/sleep). Tests must never reach the network; to assert a denied URL was never fetched, check `web.urls`. CLI tests monkeypatch `cli.build_fetcher`.
-- **Not done:** iCal and Playwright adapters (sources using them are `skipped`), candidate extraction, LLM, scoring, Telegram, launchd.
+- **Config/DB (M1):** `config.py` (precedence defaults → YAML → env → CLI; unknown keys warn), `persistence/db.py` (FK on, WAL, `transaction()` = `BEGIN IMMEDIATE`, backup API), `persistence/migrations.py` (contiguous versions, DB checksum + `migration_manifest.json`). **After adding a migration run `python3 scripts/update_manifest.py`.** Applied migrations are immutable (head: 0003).
+- **Sources (M2):** `sources/urls.py` (canonicalization, SSRF incl. DNS), `policy.py`, `fetch.py` (`Fetcher`; `BodyCache`), adapters `html.py` / `rss_atom.py` / `sitemap.py`, `registry.py` (YAML schema), `discovery/orchestrator.py` (per-source isolation; job status success/partial/failed → exit 0/4/1).
+- **Candidates/evidence (M3):** `extraction/dates.py` (strict date parser + context classifier), `extraction/deterministic.py` (`extract_date_facts`), `discovery/candidates.py` (observation → drafts), `discovery/pipeline.py` (drafts → candidate rows → follow official page → promotion), `discovery/promotion.py` (single-transaction promotion, deadline/event conflict handling, chronology, edition state), `discovery/review.py`, `verification/evidence.py` (`ground_facts`: the only place `grounded` is set), `verification/rules.py` (`verify_fact`: **the only code that may return `confirmed_official`**), `verification/chronology.py`, `persistence/repositories/opportunities.py`.
+- **CLI:** `radar sources …`, `radar run discovery`, `radar candidates list|show|promote|reject|add`, `radar review list|show|accept|reject|resolve`, `radar opportunities list|show [--evidence]`, `radar deadlines`, plus M1 commands. `db restore` supports only `--check`.
+- **Test doubles:** `tests/helpers.py` has `FakeWeb` (httpx `MockTransport` that records requests) and `make_fetcher` (fake DNS/clock/sleep). Tests must never reach the network; assert denied URLs were never fetched via `web.urls`. CLI tests monkeypatch `cli.build_fetcher`. Page fixtures live in `tests/fixtures/` (`programme.html`, `index.html`, `feed.xml`, `sitemap.xml`, `sources_good.yaml`).
+- **Lint config:** ruff ignores `*.md` (never remove) and E501 in `repositories/*.py` (long SQL literals).
+- **Not done:** iCal and Playwright adapters (sources using them are `skipped`), LLM (M4), scoring/eligibility/actions (M5), Telegram (M5), launchd/reports/`.ics` (M6).

@@ -100,22 +100,36 @@ class SourceRecord:
             return tuple(json.loads(r[col]))
 
         return cls(
-            id=r["id"], source_key=r["source_key"], name=r["name"],
-            canonical_url=r["canonical_url"], domain=r["domain"],
-            source_type=r["source_type"], adapter_type=r["adapter_type"],
-            trust_tier=r["trust_tier"], authority_scope=r["authority_scope"],
-            allowed_domains=lst("allowed_domains_json"), allow_paths=lst("allow_paths_json"),
-            deny_paths=lst("deny_paths_json"), fetch_interval_hours=r["fetch_interval_hours"],
-            priority=r["priority"], enabled=bool(r["enabled"]), state=r["state"],
+            id=r["id"],
+            source_key=r["source_key"],
+            name=r["name"],
+            canonical_url=r["canonical_url"],
+            domain=r["domain"],
+            source_type=r["source_type"],
+            adapter_type=r["adapter_type"],
+            trust_tier=r["trust_tier"],
+            authority_scope=r["authority_scope"],
+            allowed_domains=lst("allowed_domains_json"),
+            allow_paths=lst("allow_paths_json"),
+            deny_paths=lst("deny_paths_json"),
+            fetch_interval_hours=r["fetch_interval_hours"],
+            priority=r["priority"],
+            enabled=bool(r["enabled"]),
+            state=r["state"],
             discovery_only=bool(r["discovery_only"]),
             discovery_policy=json.loads(r["discovery_policy_json"]),
-            failure_streak=r["failure_streak"], etag=r["etag"], last_modified=r["last_modified"],
-            last_content_hash=r["last_content_hash"], next_due_at=r["next_due_at"],
-            last_success_at=r["last_success_at"], last_attempt_at=r["last_attempt_at"],
+            failure_streak=r["failure_streak"],
+            etag=r["etag"],
+            last_modified=r["last_modified"],
+            last_content_hash=r["last_content_hash"],
+            next_due_at=r["next_due_at"],
+            last_success_at=r["last_success_at"],
+            last_attempt_at=r["last_attempt_at"],
             last_content_change_at=r["last_content_change_at"],
             robots_policy_checked_at=r["robots_policy_checked_at"],
-            terms_review_note=r["terms_review_note"], organization_id=r["organization_id"],
-        )  # fmt: skip
+            terms_review_note=r["terms_review_note"],
+            organization_id=r["organization_id"],
+        )
 
 
 Validators = Callable[[str], tuple[str | None, str | None]]

@@ -12,6 +12,7 @@ from opportunity_radar.clock import Clock, iso_z
 from opportunity_radar.errors import ConfigurationError
 from opportunity_radar.observability.logging import redact
 from opportunity_radar.persistence.db import transaction
+from opportunity_radar.persistence.repositories.observations import insert_observation
 from opportunity_radar.sources.base import PageObservation, SourceRecord
 from opportunity_radar.sources.registry import SourceConfig
 
@@ -117,16 +118,19 @@ class SourceRepository:
             "t1_t2": n(
                 "SELECT COUNT(*) FROM sources WHERE trust_tier IN "
                 "('t1_official_program','t2_official_org')"
-            ),  # fmt: skip
+            ),
             "discovery_only": n("SELECT COUNT(*) FROM sources WHERE discovery_only=1"),
             "failing_2plus": n("SELECT COUNT(*) FROM sources WHERE failure_streak >= 2"),
         }
 
     # -- registry import ------------------------------------------------------------------
     def import_configs(
-        self, configs: list[SourceConfig], *, override_policy_review: bool = False,
+        self,
+        configs: list[SourceConfig],
+        *,
+        override_policy_review: bool = False,
         dry_run: bool = False,
-    ) -> ImportReport:  # fmt: skip
+    ) -> ImportReport:
         report = ImportReport()
         now = iso_z(self.clock.now_utc())
         self.conn.execute("BEGIN IMMEDIATE")
@@ -153,9 +157,17 @@ class SourceRepository:
         self.conn.execute(
             "INSERT INTO organizations(id,name,canonical_domain,country_code,organization_type,"
             "homepage_url,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?)",
-            (oid, o.name, o.canonical_domain, o.country_code, o.organization_type,
-             f"https://{o.canonical_domain}/" if o.canonical_domain else None, now, now),
-        )  # fmt: skip
+            (
+                oid,
+                o.name,
+                o.canonical_domain,
+                o.country_code,
+                o.organization_type,
+                f"https://{o.canonical_domain}/" if o.canonical_domain else None,
+                now,
+                now,
+            ),
+        )
         return oid
 
     def _import_one(self, c: SourceConfig, now: str, override: bool, report: ImportReport) -> None:
@@ -168,25 +180,40 @@ class SourceRepository:
         activate = satisfied or override
         robots = c.robots_policy_checked_at.isoformat() if c.robots_policy_checked_at else None
         fields = {
-            "source_key": c.source_key, "organization_id": self._org_id(c, now), "name": c.name,
-            "canonical_url": c.canonical_url, "domain": c.domain, "source_type": c.source_type,
-            "adapter_type": c.adapter_type.value, "trust_tier": c.trust_tier.value,
-            "authority_scope": c.authority_scope, "topic_tags_json": _j(c.topic_tags),
+            "source_key": c.source_key,
+            "organization_id": self._org_id(c, now),
+            "name": c.name,
+            "canonical_url": c.canonical_url,
+            "domain": c.domain,
+            "source_type": c.source_type,
+            "adapter_type": c.adapter_type.value,
+            "trust_tier": c.trust_tier.value,
+            "authority_scope": c.authority_scope,
+            "topic_tags_json": _j(c.topic_tags),
             "geographic_scope_json": _j(c.geographic_scope),
             "language_codes_json": _j(c.language_codes),
-            "allowed_domains_json": _j(c.allowed_domains), "allow_paths_json": _j(c.allow_paths),
-            "deny_paths_json": _j(c.deny_paths), "terms_review_note": c.terms_review_note,
-            "robots_policy_checked_at": robots, "fetch_interval_hours": c.fetch_interval_hours,
-            "priority": c.priority, "discovery_policy_json": _j(c.discovery_policy.model_dump()),
+            "allowed_domains_json": _j(c.allowed_domains),
+            "allow_paths_json": _j(c.allow_paths),
+            "deny_paths_json": _j(c.deny_paths),
+            "terms_review_note": c.terms_review_note,
+            "robots_policy_checked_at": robots,
+            "fetch_interval_hours": c.fetch_interval_hours,
+            "priority": c.priority,
+            "discovery_policy_json": _j(c.discovery_policy.model_dump()),
             "extraction_hints_json": _j(c.extraction_hints),
-            "discovery_only": int(c.discovery_only), "updated_at": now,
-        }  # fmt: skip
+            "discovery_only": int(c.discovery_only),
+            "updated_at": now,
+        }
         if existing is None:
             enabled = int(c.enabled and activate)
             state = "active" if activate else "review_required"
-            fields |= {"id": str(uuid.uuid4()), "enabled": enabled, "state": state,
-                       "created_at": now,
-                       "policy_override_at": now if overridden else None}  # fmt: skip
+            fields |= {
+                "id": str(uuid.uuid4()),
+                "enabled": enabled,
+                "state": state,
+                "created_at": now,
+                "policy_override_at": now if overridden else None,
+            }
             cols = ", ".join(fields)
             self.conn.execute(
                 f"INSERT INTO sources({cols}) VALUES ({', '.join('?' * len(fields))})",
@@ -200,8 +227,9 @@ class SourceRepository:
                 if overridden:
                     fields["policy_override_at"] = now
             sets = ", ".join(f"{k} = ?" for k in fields)
-            self.conn.execute(f"UPDATE sources SET {sets} WHERE id = ?",
-                              [*fields.values(), existing["id"]])  # fmt: skip
+            self.conn.execute(
+                f"UPDATE sources SET {sets} WHERE id = ?", [*fields.values(), existing["id"]]
+            )
             report.updated.append(c.source_key)
         if not activate:
             report.review_required.append(c.source_key)
@@ -230,9 +258,19 @@ class SourceRepository:
                 "adapter_type, trust_tier, allowed_domains_json, enabled, state, discovery_only, "
                 "created_at, updated_at) VALUES (?,?,?,?,?,'manual_url','html',?,?,0,"
                 "'review_required',?,?,?)",
-                (sid, key, name or host, canonical, host, trust_tier, _j([host]),
-                 int(discovery_only), now, now),
-            )  # fmt: skip
+                (
+                    sid,
+                    key,
+                    name or host,
+                    canonical,
+                    host,
+                    trust_tier,
+                    _j([host]),
+                    int(discovery_only),
+                    now,
+                    now,
+                ),
+            )
         return key
 
     # -- state changes --------------------------------------------------------------------
@@ -252,8 +290,9 @@ class SourceRepository:
                             "robots/terms review in its YAML and re-import, or pass "
                             "--override-policy-review (audited)"
                         )
-                    self.conn.execute("UPDATE sources SET policy_override_at=? WHERE id=?",
-                                      (now, src.id))  # fmt: skip
+                    self.conn.execute(
+                        "UPDATE sources SET policy_override_at=? WHERE id=?", (now, src.id)
+                    )
                 self.conn.execute(
                     "UPDATE sources SET enabled=1, state='active', updated_at=? WHERE id=?",
                     (now, src.id),
@@ -270,8 +309,8 @@ class SourceRepository:
     # -- health recording -----------------------------------------------------------------
     def record_check(
         self, source: SourceRecord, outcome: CheckOutcome, job_run_id: str | None
-    ) -> None:
-        """Persist one check atomically. A failure never touches facts or last-known content."""
+    ) -> list[tuple[str, PageObservation]]:
+        """Persist one check atomically; returns the newly stored (id, observation) pairs. A failure never touches facts or last-known content."""
         ok = outcome.status in ("success", "not_modified", "partial")
         blocked = outcome.status == "blocked_policy"
         now = self.clock.now_utc()
@@ -291,30 +330,42 @@ class SourceRepository:
                 "status, http_status, final_url, elapsed_ms, bytes_received, retry_count, "
                 "content_hash, extracted_text_hash, error_code, error_detail_redacted) "
                 "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                (run_id, source.id, job_run_id, outcome.started_at, outcome.finished_at,
-                 outcome.status, outcome.http_status, outcome.final_url, outcome.elapsed_ms,
-                 outcome.bytes_received, outcome.retry_count, outcome.content_hash,
-                 outcome.text_hash, outcome.error_code,
-                 redact(outcome.error_detail)[:500] if outcome.error_detail else None),
-            )  # fmt: skip
+                (
+                    run_id,
+                    source.id,
+                    job_run_id,
+                    outcome.started_at,
+                    outcome.finished_at,
+                    outcome.status,
+                    outcome.http_status,
+                    outcome.final_url,
+                    outcome.elapsed_ms,
+                    outcome.bytes_received,
+                    outcome.retry_count,
+                    outcome.content_hash,
+                    outcome.text_hash,
+                    outcome.error_code,
+                    redact(outcome.error_detail)[:500] if outcome.error_detail else None,
+                ),
+            )
             changed = False
+            inserted: list[tuple[str, PageObservation]] = []
             for obs in outcome.observations:
                 if obs.not_modified:
                     continue
-                cur = self.conn.execute(
-                    "INSERT OR IGNORE INTO source_observations(id, source_id, source_check_run_id, "
-                    "canonical_url, retrieved_at, http_status, mime_type, etag, last_modified, "
-                    "content_hash, extracted_text_hash, body_cache_relpath, text_cache_relpath, "
-                    "title, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                    (str(uuid.uuid4()), source.id, run_id, obs.final_url, iso_z(obs.fetched_at),
-                     obs.http_status, obs.mime_type, obs.etag, obs.last_modified,
-                     obs.content_sha256, obs.text_sha256, obs.body_cache_relpath,
-                     obs.text_cache_relpath, obs.title, iso_z(now)),
-                )  # fmt: skip
-                if cur.rowcount and obs.depth == 0:
-                    changed = True
-            sets = ["last_attempt_at = ?", "failure_streak = ?", "next_due_at = ?",
-                    "last_http_status = ?", "updated_at = ?"]  # fmt: skip
+                obs_id, was_new = insert_observation(
+                    self.conn, obs, source_id=source.id, check_run_id=run_id, now_iso=iso_z(now)
+                )
+                if was_new:
+                    inserted.append((obs_id, obs))
+                    changed = changed or obs.depth == 0
+            sets = [
+                "last_attempt_at = ?",
+                "failure_streak = ?",
+                "next_due_at = ?",
+                "last_http_status = ?",
+                "updated_at = ?",
+            ]
             args: list[object] = [
                 iso_z(now),
                 streak,
@@ -334,3 +385,4 @@ class SourceRepository:
             self.conn.execute(
                 f"UPDATE sources SET {', '.join(sets)} WHERE id = ?", [*args, source.id]
             )
+        return inserted

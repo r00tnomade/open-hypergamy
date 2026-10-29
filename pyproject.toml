@@ -59,4 +59,7 @@ module = ["feedparser.*", "trafilatura.*"]
 ignore_missing_imports = true
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["E501"]
+"tests/**" = ["E501", "UP031"]
+"src/opportunity_radar/persistence/repositories/*.py" = ["E501"]  # long SQL literals
+"src/opportunity_radar/discovery/review.py" = ["E501"]
+"src/opportunity_radar/discovery/promotion.py" = ["E501"]
