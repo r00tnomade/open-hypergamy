@@ -1,0 +1,111 @@
+# RESEARCH CANDIDATES - NOT ACTIVATED. No robots_policy_checked_at / terms_review_note is recorded on purpose,
+# so `ohg sources import` would load these disabled (review_required). Review policy per source first.
+version: 1
+sources:
+  - source_key: s01-eurobotics-news-calls-feed
+    name: "euRobotics news & calls feed"
+    canonical_url: https://eu-robotics.net/feed/
+    domain: eu-robotics.net
+    source_type: feed
+    portfolio: europe_research
+    adapter_type: rss_atom
+    trust_tier: t2_official_org
+    topic_tags: ["robotics", "europe", "events", "calls"]
+    fetch_interval_hours: 24
+    enabled: false   # CANDIDATE - not reviewed, not activated
+
+  - source_key: s02-robotics-institute-germany-news-feed
+    name: "Robotics Institute Germany news feed"
+    canonical_url: https://robotics-institute-germany.de/feed/
+    domain: robotics-institute-germany.de
+    source_type: feed
+    portfolio: europe_research
+    adapter_type: rss_atom
+    trust_tier: t2_official_org
+    topic_tags: ["robotics", "germany", "internships", "lectures"]
+    fetch_interval_hours: 24
+    enabled: false   # CANDIDATE - not reviewed, not activated
+
+  - source_key: s03-lablab-ai-ai-hackathons
+    name: "lablab.ai AI hackathons"
+    canonical_url: https://lablab.ai/ai-hackathons
+    domain: lablab.ai
+    source_type: listing_page
+    portfolio: hackathons_challenges
+    adapter_type: html
+    trust_tier: t1_official_program
+    topic_tags: ["ai", "hackathon", "online"]
+    fetch_interval_hours: 24
+    enabled: false   # CANDIDATE - not reviewed, not activated
+
+  - source_key: s04-mlh-season-events
+    name: "MLH season events"
+    canonical_url: https://www.mlh.com/seasons/2027/events
+    domain: www.mlh.com
+    source_type: listing_page
+    portfolio: hackathons_challenges
+    adapter_type: html
+    trust_tier: t1_official_program
+    topic_tags: ["hackathon", "students", "europe"]
+    fetch_interval_hours: 24
+    enabled: false   # CANDIDATE - not reviewed, not activated
+
+  - source_key: s05-cern-openlab-summer-student-programme
+    name: "CERN openlab summer student programme"
+    canonical_url: https://openlab.cern/cern-openlab-summer-student-programme/
+    domain: openlab.cern
+    source_type: listing_page
+    portfolio: de_research
+    adapter_type: html
+    trust_tier: t2_official_org
+    topic_tags: ["ai", "computing", "summer-internship", "cern"]
+    fetch_interval_hours: 72
+    enabled: false   # CANDIDATE - not reviewed, not activated
+
+  - source_key: s06-desy-summer-student-programme
+    name: "DESY Summer Student Programme"
+    canonical_url: https://summerstudents.desy.de/
+    domain: summerstudents.desy.de
+    source_type: listing_page
+    portfolio: de_research
+    adapter_type: html
+    trust_tier: t2_official_org
+    topic_tags: ["research", "germany", "summer-internship"]
+    fetch_interval_hours: 72
+    enabled: false   # CANDIDATE - not reviewed, not activated
+
+  - source_key: s07-nlnet-grants-calls-news-atom
+    name: "NLnet grants (calls + news Atom)"
+    canonical_url: https://nlnet.nl/propose/
+    domain: nlnet.nl
+    source_type: listing_page
+    portfolio: funding_fellowships
+    adapter_type: html
+    trust_tier: t2_official_org
+    topic_tags: ["open-source", "grants", "europe"]
+    fetch_interval_hours: 24
+    enabled: false   # CANDIDATE - not reviewed, not activated
+
+  - source_key: s09-wikicfp-rss-machine-learning-robotics
+    name: "WikiCFP RSS (machine learning, robotics)"
+    canonical_url: http://www.wikicfp.com/cfp/rss?cat=machine%20learning
+    domain: www.wikicfp.com
+    source_type: feed
+    portfolio: conferences_societies
+    adapter_type: rss_atom
+    trust_tier: t5_community
+    topic_tags: ["conferences", "cfp", "aggregator"]
+    fetch_interval_hours: 24
+    enabled: false   # CANDIDATE - not reviewed, not activated
+
+  - source_key: s10-ctftime-upcoming-events-rss-api
+    name: "CTFtime upcoming events (RSS + API)"
+    canonical_url: https://ctftime.org/event/list/upcoming/rss/
+    domain: ctftime.org
+    source_type: feed
+    portfolio: hackathons_challenges
+    adapter_type: rss_atom
+    trust_tier: t5_community
+    topic_tags: ["cybersecurity", "ctf", "competitions"]
+    fetch_interval_hours: 24
+    enabled: false   # CANDIDATE - not reviewed, not activated

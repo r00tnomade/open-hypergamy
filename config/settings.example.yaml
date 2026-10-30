@@ -62,7 +62,6 @@ telegram:
   retry_limit: 3
 
 crawling:
-  obey_robots_txt: true
   require_source_policy_review: true
   discover_outbound_sources_as_unverified: true
   allow_login_pages: false

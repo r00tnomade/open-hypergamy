@@ -31,7 +31,7 @@ class MigrationIntegrityError(OhgError):
 
 
 class SourcePolicyDenied(OhgError):
-    """URL, redirect, robots or scope rule forbids fetching. Not counted as a source failure."""
+    """URL, redirect or source-scope rule forbids fetching. Not counted as a source failure."""
 
     code = "source_policy_denied"
 

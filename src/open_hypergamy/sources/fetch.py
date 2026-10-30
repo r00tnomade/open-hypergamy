@@ -1,6 +1,6 @@
 """Policy-aware HTTP fetcher (LLD §7.1, §7.2).
 
-Order: canonicalize/validate -> scope -> robots -> throttle -> conditional request ->
+Order: canonicalize/validate -> scope -> throttle -> conditional request ->
 manual redirects (re-validated each hop) -> size/type caps -> bounded retries.
 SSRF note: addresses are validated just before each request; a hostile resolver could still
 rebind between validation and connect. Pinning the connection IP is a future hardening step.
@@ -27,10 +27,10 @@ from open_hypergamy.errors import (
     FetchHTTPError,
     FetchNetworkError,
     FetchTimeout,
-    SourcePolicyDenied,
+    OhgError,
     UnsupportedContentType,
 )
-from open_hypergamy.sources.policy import RobotsRules, Scope, robots_agent_token
+from open_hypergamy.sources.policy import RobotsInfo, Scope
 from open_hypergamy.sources.urls import Resolver, default_resolver, host_of, validate_public_url
 
 log = logging.getLogger(__name__)
@@ -106,7 +106,7 @@ class Fetcher:
         self._mono = monotonic
         self._sleep = sleep
         self._last_hit: dict[str, float] = {}
-        self._robots: dict[str, RobotsRules] = {}
+        self._robots: dict[str, RobotsInfo | None] = {}
         self._client = httpx.Client(
             transport=transport,
             follow_redirects=False,
@@ -131,22 +131,24 @@ class Fetcher:
             self._sleep(wait)
         self._last_hit[host] = self._mono()
 
-    def _robots_for(self, url: str) -> RobotsRules:
+    def robots_info(self, url: str) -> RobotsInfo | None:
+        """Informational robots.txt snapshot for the URL's origin; cached per origin.
+
+        ADR-008: this never gates a request. Any failure (network, status, SSRF) yields None.
+        """
         parts = urlsplit(url)
         origin = f"{parts.scheme}://{parts.netloc}"
         if origin not in self._robots:
-            robots_url = self._validate(origin + "/robots.txt")
+            info: RobotsInfo | None = None
             try:
-                status, _, body, _ = self._send_chain(robots_url, {}, scope=None)
-            except FetchError as e:
-                raise SourcePolicyDenied(f"robots.txt unavailable for {origin}: {e}") from e
-            if status == 200:
-                rules = RobotsRules(body.decode("utf-8", "replace").splitlines())
-            elif 400 <= status < 500:
-                rules = RobotsRules(None)  # RFC 9309: unavailable (4xx) => no restrictions
-            else:
-                raise SourcePolicyDenied(f"robots.txt returned {status} for {origin}; not crawling")
-            self._robots[origin] = rules
+                status, _, body, _ = self._send_chain(
+                    self._validate(origin + "/robots.txt"), {}, scope=None
+                )
+                if status == 200:
+                    info = RobotsInfo(body.decode("utf-8", "replace").splitlines())
+            except (FetchError, OhgError):
+                info = None
+            self._robots[origin] = info
         return self._robots[origin]
 
     # -- transport ------------------------------------------------------------------------
@@ -211,10 +213,6 @@ class Fetcher:
     ) -> FetchResponse:
         canonical = self._validate(url)
         scope.check_fetchable(canonical)
-        if self.crawling.obey_robots_txt and not self._robots_for(canonical).allowed(
-            robots_agent_token(self.app.user_agent), canonical
-        ):
-            raise SourcePolicyDenied(f"robots.txt disallows {canonical}")
 
         headers: dict[str, str] = {}
         if etag:

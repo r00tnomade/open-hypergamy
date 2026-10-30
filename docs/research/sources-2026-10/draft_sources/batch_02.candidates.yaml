@@ -1,0 +1,75 @@
+# RESEARCH CANDIDATES - NOT ACTIVATED. No robots_policy_checked_at / terms_review_note is recorded on purpose,
+# so `ohg sources import` would load these disabled (review_required). Review policy per source first.
+version: 1
+sources:
+  - source_key: s12-tum-mirmi-news-events-rss
+    name: "TUM MIRMI news & events RSS"
+    canonical_url: https://www.mirmi.tum.de/mirmi/rss.xml
+    domain: www.mirmi.tum.de
+    source_type: feed
+    portfolio: europe_research
+    adapter_type: rss_atom
+    trust_tier: t2_official_org
+    topic_tags: ["robotics", "germany", "tum"]
+    fetch_interval_hours: 24
+    enabled: false   # CANDIDATE - not reviewed, not activated
+
+  - source_key: s14-european-hackathon-league
+    name: "European Hackathon League"
+    canonical_url: https://ehl.gg/
+    domain: ehl.gg
+    source_type: listing_page
+    portfolio: hackathons_challenges
+    adapter_type: html
+    trust_tier: t1_official_program
+    topic_tags: ["hackathon", "europe", "league"]
+    fetch_interval_hours: 72
+    enabled: false   # CANDIDATE - not reviewed, not activated
+
+  - source_key: s16-sovereign-tech-fellowship
+    name: "Sovereign Tech Fellowship"
+    canonical_url: https://www.sovereign.tech/programs/fellowship
+    domain: www.sovereign.tech
+    source_type: listing_page
+    portfolio: funding_fellowships
+    adapter_type: html
+    trust_tier: t2_official_org
+    topic_tags: ["open-source", "fellowship", "germany"]
+    fetch_interval_hours: 72
+    enabled: false   # CANDIDATE - not reviewed, not activated
+
+  - source_key: s17-erasmus-opportunities-for-students
+    name: "Erasmus+ opportunities for students"
+    canonical_url: https://erasmus-plus.ec.europa.eu/opportunities/individuals/students
+    domain: erasmus-plus.ec.europa.eu
+    source_type: listing_page
+    portfolio: funding_fellowships
+    adapter_type: html
+    trust_tier: t2_official_org
+    topic_tags: ["erasmus", "mobility", "scholarship"]
+    fetch_interval_hours: 168
+    enabled: false   # CANDIDATE - not reviewed, not activated
+
+  - source_key: s18-neurips-dates-and-deadlines
+    name: "NeurIPS dates and deadlines"
+    canonical_url: https://neurips.cc/Conferences/2026/Dates
+    domain: neurips.cc
+    source_type: listing_page
+    portfolio: conferences_societies
+    adapter_type: html
+    trust_tier: t2_official_org
+    topic_tags: ["ai", "conference", "deadlines"]
+    fetch_interval_hours: 72
+    enabled: false   # CANDIDATE - not reviewed, not activated
+
+  - source_key: s20-google-summer-of-code-timeline
+    name: "Google Summer of Code timeline"
+    canonical_url: https://developers.google.com/open-source/gsoc/timeline
+    domain: developers.google.com
+    source_type: listing_page
+    portfolio: hackathons_challenges
+    adapter_type: html
+    trust_tier: t1_official_program
+    topic_tags: ["open-source", "internship", "remote"]
+    fetch_interval_hours: 168
+    enabled: false   # CANDIDATE - not reviewed, not activated

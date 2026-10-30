@@ -140,7 +140,6 @@ class ScheduleSettings(_Section):
 
 
 class CrawlingSettings(_Section):
-    obey_robots_txt: bool = True
     require_source_policy_review: bool = True
     discover_outbound_sources_as_unverified: bool = True
     allow_login_pages: bool = False

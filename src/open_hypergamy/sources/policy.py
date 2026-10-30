@@ -1,4 +1,4 @@
-"""Crawl scope and robots.txt policy (LLD §7.3, §7.5)."""
+"""Crawl scope policy (LLD §7.3) and informational robots.txt parsing (ADR-008)."""
 
 from __future__ import annotations
 
@@ -40,17 +40,23 @@ class Scope:
         return self.domain_ok(url) and not self.path_denied(url) and self.path_allowed(url)
 
 
-class RobotsRules:
-    """Parsed robots.txt for one origin; `None` rules means allow-all (4xx robots)."""
+class RobotsInfo:
+    """Parsed robots.txt for one origin, kept as informational metadata only (ADR-008).
 
-    def __init__(self, lines: list[str] | None) -> None:
-        self._parser: RobotFileParser | None = None
-        if lines is not None:
-            self._parser = RobotFileParser()
-            self._parser.parse(lines)
+    Nothing in the fetch path consults this: it is neither an authorization nor a prohibition.
+    """
 
-    def allowed(self, user_agent: str, url: str) -> bool:
-        return True if self._parser is None else self._parser.can_fetch(user_agent, url)
+    def __init__(self, lines: list[str]) -> None:
+        self.lines = lines
+        self._parser = RobotFileParser()
+        self._parser.parse(lines)
+
+    def disallows(self, user_agent: str, url: str) -> bool:
+        return not self._parser.can_fetch(user_agent, url)
+
+    def crawl_delay(self, user_agent: str) -> float | None:
+        delay = self._parser.crawl_delay(user_agent)
+        return None if delay is None else float(delay)
 
 
 def robots_agent_token(user_agent: str) -> str:

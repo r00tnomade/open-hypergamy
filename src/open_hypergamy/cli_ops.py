@@ -321,10 +321,11 @@ def register(cli: ModuleType) -> None:
         home: HomeOpt = None,
         config: ConfigOpt = None,
     ) -> None:
-        """Live-check the entries of a YAML batch (robots, fetch, parse). Writes nothing."""
+        """Live-check the entries of a YAML batch (fetch, parse; robots.txt is informational). Writes nothing."""
         from open_hypergamy.discovery.orchestrator import ADAPTERS
         from open_hypergamy.errors import FetchError, SourcePolicyDenied
         from open_hypergamy.sources.base import FetchContext
+        from open_hypergamy.sources.policy import robots_agent_token
         from open_hypergamy.sources.registry import load_source_files, record_from_config
 
         with guard():
@@ -349,11 +350,12 @@ def register(cli: ModuleType) -> None:
                     try:
                         obs = adapter.fetch(record_from_config(c), ctx)
                         o = obs[0]
-                        table.add_row(
-                            c.source_key,
-                            "ok",
-                            f"{o.http_status}, {len(o.text)} chars, {len(o.links)} links, {len(o.entries)} entries",
-                        )
+                        detail = f"{o.http_status}, {len(o.text)} chars, {len(o.links)} links, {len(o.entries)} entries"
+                        info = fetcher.robots_info(c.canonical_url)
+                        token = robots_agent_token(cfg.settings.app.user_agent)
+                        if info is not None and info.disallows(token, c.canonical_url):
+                            detail += "; note: robots.txt disallows this URL (informational only)"
+                        table.add_row(c.source_key, "ok", detail)
                     except SourcePolicyDenied as e:
                         problems += 1
                         table.add_row(c.source_key, "blocked", str(e)[:90])

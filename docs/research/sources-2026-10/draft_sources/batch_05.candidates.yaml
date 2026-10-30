@@ -1,0 +1,51 @@
+# RESEARCH CANDIDATES - NOT ACTIVATED. No robots_policy_checked_at / terms_review_note is recorded on purpose,
+# so `ohg sources import` would load these disabled (review_required). Review policy per source first.
+version: 1
+sources:
+  - source_key: s41-open-robotics-discourse-jobs-category
+    name: "Open Robotics Discourse \u2013 Jobs category"
+    canonical_url: https://discourse.openrobotics.org/c/jobs/15
+    domain: discourse.openrobotics.org
+    source_type: listing_page
+    portfolio: europe_research
+    adapter_type: html
+    trust_tier: t5_community
+    topic_tags: ["robotics", "ros", "jobs", "internships"]
+    fetch_interval_hours: 24
+    enabled: false   # CANDIDATE - not reviewed, not activated
+
+  - source_key: s47-fulbright-germany
+    name: "Fulbright Germany"
+    canonical_url: https://www.fulbright.de/
+    domain: www.fulbright.de
+    source_type: listing_page
+    portfolio: funding_fellowships
+    adapter_type: html
+    trust_tier: t2_official_org
+    topic_tags: ["scholarship", "usa", "exchange"]
+    fetch_interval_hours: 168
+    enabled: false   # CANDIDATE - not reviewed, not activated
+
+  - source_key: s48-rss-robotics-science-and-systems-2027
+    name: "RSS: Robotics Science and Systems 2027"
+    canonical_url: https://roboticsconference.org/
+    domain: roboticsconference.org
+    source_type: listing_page
+    portfolio: conferences_societies
+    adapter_type: html
+    trust_tier: t2_official_org
+    topic_tags: ["robotics", "conference", "deadlines"]
+    fetch_interval_hours: 168
+    enabled: false   # CANDIDATE - not reviewed, not activated
+
+  - source_key: s49-eastern-european-machine-learning-eeml-s
+    name: "Eastern European Machine Learning (EEML) Summer School"
+    canonical_url: https://www.eeml.eu/
+    domain: www.eeml.eu
+    source_type: listing_page
+    portfolio: conferences_societies
+    adapter_type: html
+    trust_tier: t2_official_org
+    topic_tags: ["ml", "summer-school", "europe"]
+    fetch_interval_hours: 720
+    enabled: false   # CANDIDATE - not reviewed, not activated

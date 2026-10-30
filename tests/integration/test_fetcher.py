@@ -187,35 +187,69 @@ def test_out_of_scope_and_denied_paths_never_requested():
     assert web.requests == []
 
 
-def test_robots_disallow_blocks_without_fetching_page():
-    robots = httpx.Response(200, text="User-agent: *\nDisallow: /private/\n")
-    web = FakeWeb({"https://example.edu/robots.txt": robots, "https://example.edu/private/x": html(b"secret"),
-                   URL: html(b"ok")})  # fmt: skip
+ROBOTS = "https://example.edu/robots.txt"
+
+
+def test_robots_disallow_does_not_block_and_robots_is_not_requested():
+    robots = httpx.Response(200, text="User-agent: *\nDisallow: /\n")
+    web = FakeWeb({ROBOTS: robots, URL: html(b"ok")})
     f, _ = make_fetcher(web)
-    with pytest.raises(SourcePolicyDenied, match="robots"):
-        f.fetch("https://example.edu/private/x", SCOPE)
-    assert "https://example.edu/private/x" not in web.urls
     assert f.fetch(URL, SCOPE).body == b"ok"
-    assert web.urls.count("https://example.edu/robots.txt") == 1  # cached per origin
+    assert ROBOTS not in web.urls  # ADR-008: robots.txt is not part of the fetch path
 
 
-def test_robots_agent_specific_rule():
+def test_agent_specific_disallow_does_not_block():
     robots = httpx.Response(200, text="User-agent: OpenHypergamy\nDisallow: /\n")
-    f, _ = make_fetcher(FakeWeb({"https://example.edu/robots.txt": robots, URL: html(b"ok")}))
+    f, _ = make_fetcher(FakeWeb({ROBOTS: robots, URL: html(b"ok")}))
+    assert f.fetch(URL, SCOPE).body == b"ok"
+
+
+def test_robots_unavailable_or_failing_does_not_block():
+    for status in (403, 404, 503):
+        f, _ = make_fetcher(FakeWeb({ROBOTS: httpx.Response(status), URL: html(b"ok")}))
+        assert f.fetch(URL, SCOPE).body == b"ok"
+
+
+def test_crawl_delay_is_not_enforced_but_configured_throttle_is():
+    robots = httpx.Response(200, text="User-agent: *\nCrawl-delay: 60\n")
+    web = FakeWeb({ROBOTS: robots, URL: html(b"a"), "https://example.edu/two": html(b"b")})
+    f, sleeps = make_fetcher(web)
+    f.fetch(URL, SCOPE)
+    f.fetch("https://example.edu/two", SCOPE)
+    assert sleeps and all(abs(s - 3.0) < 1e-6 for s in sleeps)  # per_host_min_interval only
+    custom, sleeps2 = make_fetcher(web, app=AppSettings(per_host_min_interval_seconds=7.0))
+    custom.fetch(URL, SCOPE)
+    custom.fetch("https://example.edu/two", SCOPE)
+    assert sleeps2 and all(abs(s - 7.0) < 1e-6 for s in sleeps2)  # configurable throttle kept
+
+
+def test_robots_info_is_informational_and_cached():
+    robots = httpx.Response(200, text="User-agent: *\nDisallow: /private/\nCrawl-delay: 10\n")
+    web = FakeWeb({ROBOTS: robots})
+    f, _ = make_fetcher(web)
+    info = f.robots_info(URL)
+    assert info is not None and info.crawl_delay("OpenHypergamy") == 10.0
+    assert info.disallows("OpenHypergamy", "https://example.edu/private/x")
+    assert not info.disallows("OpenHypergamy", URL)
+    f.robots_info("https://example.edu/other")
+    assert web.urls.count(ROBOTS) == 1
+    missing, _ = make_fetcher(FakeWeb({ROBOTS: httpx.Response(500)}))
+    assert missing.robots_info(URL) is None  # failures never raise
+
+
+def test_403_is_not_retried_or_evaded_and_reports_http_status():
+    web = FakeWeb({URL: httpx.Response(403, text="forbidden")})
+    f, sleeps = make_fetcher(web)
+    with pytest.raises(FetchHTTPError) as e:
+        f.fetch(URL, SCOPE)
+    assert e.value.http_status == 403 and not e.value.retryable
+    assert web.urls.count(URL) == 1 and not sleeps  # one request, no retry, no alternate route
+
+
+def test_ssrf_and_scope_checks_still_apply_when_robots_ignored():
+    f, _ = make_fetcher(FakeWeb({}))
     with pytest.raises(SourcePolicyDenied):
-        f.fetch(URL, SCOPE)
-
-
-def test_robots_5xx_means_do_not_crawl_but_4xx_means_allowed():
-    f, _ = make_fetcher(
-        FakeWeb({"https://example.edu/robots.txt": httpx.Response(503), URL: html(b"ok")})
-    )
-    with pytest.raises(SourcePolicyDenied, match="robots"):
-        f.fetch(URL, SCOPE)
-    f2, _ = make_fetcher(
-        FakeWeb({"https://example.edu/robots.txt": httpx.Response(403), URL: html(b"ok")})
-    )
-    assert f2.fetch(URL, SCOPE).body == b"ok"
+        f.fetch("https://example.edu/login", SCOPE)  # source deny_paths remain enforced
 
 
 def test_per_host_throttle_waits_between_requests():

@@ -1,0 +1,4944 @@
+{
+ "meta": {
+  "title": "OpenHypergamy: 50 opportunity sources, research evaluation",
+  "generated_berlin": "2026-10-30T01:17:45+01:00",
+  "verification_pass_started": "2026-10-30T01:17:32+01:00",
+  "timezone": "Europe/Berlin",
+  "counts": {
+   "total": 50,
+   "by_category": {
+    "A": 10,
+    "B": 10,
+    "C": 8,
+    "D": 7,
+    "E": 8,
+    "F": 7
+   },
+   "by_batch": {
+    "1": 10,
+    "2": 10,
+    "3": 10,
+    "4": 10,
+    "5": 10
+   },
+   "by_status": {
+    "RESEARCH_VERIFIED": 1,
+    "PROBE_PASSED": 35,
+    "MANUAL_REVIEW": 14,
+    "REJECTED": 0
+   }
+  },
+  "activated_sources": 0,
+  "note": "No source is activated, approved or ingested. PROBE_PASSED = robots-checked GET of the exact endpoint returned HTTP 200 during the verification pass; it is not policy approval."
+ },
+ "categories": {
+  "A": "AI/ML hackathons and competitions",
+  "B": "Robotics and research opportunities",
+  "C": "Research internships and student technical opportunities",
+  "D": "Scholarships, fellowships and grants",
+  "E": "AI/ML conferences, workshops and summer schools",
+  "F": "Open-source programmes, technical challenges and cybersecurity"
+ },
+ "sources": [
+  {
+   "id": "S01",
+   "batch": 1,
+   "cat": "B",
+   "name": "euRobotics news & calls feed",
+   "publisher": "euRobotics aisbl",
+   "canonical": "https://eu-robotics.net/",
+   "endpoint": "https://eu-robotics.net/feed/",
+   "method": "RSS 2.0 feed (WordPress)",
+   "adapter": "rss_atom",
+   "adapter_fit": "existing",
+   "official": "first-party",
+   "auth": "none",
+   "registration": "none",
+   "types": [
+    "calls for papers (ERF)",
+    "events",
+    "news releases",
+    "working-group announcements"
+   ],
+   "geo": "Europe",
+   "remote": "n/a",
+   "audience": "Robotics researchers, students and companies in Europe; eligibility varies per item.",
+   "tags": [
+    "robotics",
+    "europe",
+    "events",
+    "calls"
+   ],
+   "why": "Official European robotics association; its feed carried the ERF2027 scientific-track call (deadline extended) and event news within the last 3 weeks.",
+   "stable_ids": "RSS <guid>/<link> per post",
+   "dates": "Publication dates yes; deadlines only inside post text",
+   "difficulty": "Low: feed parses with the existing RSS adapter; deadlines must be mined from article text.",
+   "terms_url": "https://eu-robotics.net/",
+   "terms_finding": "Terms page not located in this run; no automated-access language read.",
+   "rate": "No published limit found",
+   "polling": "none published; estimate 24 h",
+   "poll_hours": 24,
+   "policy": "unclear",
+   "policy_note": "robots.txt allows the feed path; terms not reviewed.",
+   "stability": "Medium-low: WordPress feed, stable for years but content is mostly news.",
+   "evidence": [
+    {
+     "claim": "Feed returns valid RSS 2.0, 10 items, newest 22 Oct 2026, incl. 'Deadline extended – CALL FOR PAPERS – Scientific Track ERF2027'",
+     "url": "https://eu-robotics.net/feed/"
+    },
+    {
+     "claim": "Homepage advertises the feed via <link rel=alternate type=application/rss+xml>",
+     "url": "https://eu-robotics.net/"
+    }
+   ],
+   "scores": {
+    "R": 4,
+    "A": 4,
+    "Q": 3,
+    "F": 5,
+    "I": 5
+   },
+   "why_s": {
+    "R": "Robotics-focused, Europe-wide; mostly industry/research news, few student offers.",
+    "A": "Official trade association, first-party announcements.",
+    "Q": "Dates are in article text; eligibility inconsistent.",
+    "F": "10 items in ~3 weeks; newest 22 Oct 2026.",
+    "I": "Existing rss_atom adapter; stable feed URL."
+   },
+   "priority": "P0",
+   "status": "PROBE_PASSED",
+   "confidence": "high",
+   "unknown": [
+    "Whether feed items are tagged by opportunity type",
+    "Terms of use"
+   ],
+   "next": "Review site terms, then enable with a 24 h interval.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://eu-robotics.net/feed/",
+    "robots_allowed": true,
+    "robots_status": 200,
+    "http_status": 200,
+    "content_type": "text/xml",
+    "bytes": 36094,
+    "final_url": "https://eu-robotics.net/feed/",
+    "note": null
+   },
+   "total": 21,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": true,
+    "C_config_draft": true,
+    "D_live_probe_passed": true,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": {
+    "result": "ok",
+    "detail": "200, 5009 chars, 10 links, 10 entries",
+    "timestamp_berlin": "2026-10-30T01:18:56+0100"
+   }
+  },
+  {
+   "id": "S02",
+   "batch": 1,
+   "cat": "B",
+   "name": "Robotics Institute Germany news feed",
+   "publisher": "Robotics Institute Germany (RIG)",
+   "canonical": "https://robotics-institute-germany.de/",
+   "endpoint": "https://robotics-institute-germany.de/feed/",
+   "method": "RSS 2.0 feed (WordPress)",
+   "adapter": "rss_atom",
+   "adapter_fit": "existing",
+   "official": "first-party",
+   "auth": "none",
+   "registration": "none",
+   "types": [
+    "internship programme announcements",
+    "lecture series",
+    "events",
+    "funding news"
+   ],
+   "geo": "Germany",
+   "remote": "Online lectures",
+   "audience": "Robotics students and researchers in Germany.",
+   "tags": [
+    "robotics",
+    "germany",
+    "internships",
+    "lectures"
+   ],
+   "why": "National robotics initiative; its feed announced 'RIG Internship Program 2027: Applications Opening Soon!' on 27 Oct 2026.",
+   "stable_ids": "RSS <guid>/<link>",
+   "dates": "Post dates yes; application dates inside posts",
+   "difficulty": "Low: existing adapter; internship dates need text extraction.",
+   "terms_url": "https://robotics-institute-germany.de/legal-notice/",
+   "terms_finding": "Legal notice page located; automated-access rules not read.",
+   "rate": "None published",
+   "polling": "none; estimate 24 h",
+   "poll_hours": 24,
+   "policy": "unclear",
+   "policy_note": "robots.txt allows the feed; legal notice not reviewed for reuse terms.",
+   "stability": "Medium: young initiative (WordPress); may restructure.",
+   "evidence": [
+    {
+     "claim": "Valid RSS 2.0, 10 items; item 'RIG Internship Program 2027: Applications Opening Soon!' (27 Oct 2026)",
+     "url": "https://robotics-institute-germany.de/feed/"
+    },
+    {
+     "claim": "Feed autodiscovered from homepage",
+     "url": "https://robotics-institute-germany.de/"
+    }
+   ],
+   "scores": {
+    "R": 5,
+    "A": 4,
+    "Q": 3,
+    "F": 5,
+    "I": 5
+   },
+   "why_s": {
+    "R": "German robotics internships and lectures match the primary profile directly.",
+    "A": "Official national robotics institute.",
+    "Q": "Internship details sit in linked posts, not in feed fields.",
+    "F": "Posts on 21-27 Oct 2026.",
+    "I": "Existing rss_atom adapter, simple feed."
+   },
+   "priority": "P0",
+   "status": "PROBE_PASSED",
+   "confidence": "high",
+   "unknown": [
+    "Reuse terms",
+    "Internship eligibility (bachelor?)"
+   ],
+   "next": "Read the 2027 internship post; review terms; enable.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://robotics-institute-germany.de/feed/",
+    "robots_allowed": true,
+    "robots_status": 200,
+    "http_status": 200,
+    "content_type": "application/rss+xml",
+    "bytes": 103804,
+    "final_url": "https://robotics-institute-germany.de/feed/",
+    "note": null
+   },
+   "total": 22,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": true,
+    "C_config_draft": true,
+    "D_live_probe_passed": true,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": {
+    "result": "ok",
+    "detail": "200, 7833 chars, 10 links, 10 entries",
+    "timestamp_berlin": "2026-10-30T01:18:56+0100"
+   }
+  },
+  {
+   "id": "S03",
+   "batch": 1,
+   "cat": "A",
+   "name": "lablab.ai AI hackathons",
+   "publisher": "lablab.ai",
+   "canonical": "https://lablab.ai/",
+   "endpoint": "https://lablab.ai/ai-hackathons",
+   "method": "Structured listing page (HTML, JSON-LD CollectionPage present)",
+   "adapter": "html",
+   "adapter_fit": "existing",
+   "official": "platform (hosts and lists sponsor hackathons)",
+   "auth": "none",
+   "registration": "none for browsing",
+   "types": [
+    "online and hybrid AI hackathons",
+    "sponsor challenges"
+   ],
+   "geo": "Global (online-first)",
+   "remote": "Yes",
+   "audience": "Developers worldwide; per-event rules vary.",
+   "tags": [
+    "ai",
+    "hackathon",
+    "online"
+   ],
+   "why": "Dense, dated AI hackathon listing with status (Live/Finished), format, date range and participant counts.",
+   "stable_ids": "Event slug in URL (e.g. /ai-hackathons/<slug>)",
+   "dates": "Date ranges yes (e.g. 'NOV 3 - 8', '3–8 November 2026')",
+   "difficulty": "Medium: listing is large (~930 KB) and mixes finished events; dates partly yearless.",
+   "terms_url": "https://lablab.ai/terms-of-use",
+   "terms_finding": "Terms read: no automated-access or scraping clause found by keyword scan; this is not permission.",
+   "rate": "None published",
+   "polling": "none; estimate 24 h",
+   "poll_hours": 24,
+   "policy": "unclear",
+   "policy_note": "robots.txt allows /ai-hackathons; terms silent on automation.",
+   "stability": "Medium: commercial platform; markup changes likely.",
+   "evidence": [
+    {
+     "claim": "Listing shows event cards with dates, e.g. 'Vultr: Agent Rush Hackathon', 3-8 November 2026 (hybrid)",
+     "url": "https://lablab.ai/ai-hackathons"
+    },
+    {
+     "claim": "Terms of use scanned for scraping/robot/automated clauses: none found",
+     "url": "https://lablab.ai/terms-of-use"
+    }
+   ],
+   "scores": {
+    "R": 4,
+    "A": 3,
+    "Q": 4,
+    "F": 5,
+    "I": 3
+   },
+   "why_s": {
+    "R": "AI-specific hackathons, mostly online so accessible from Germany.",
+    "A": "Platform listing sponsor events; not the legal organiser of each.",
+    "Q": "Dates and format shown; eligibility and prizes per event page.",
+    "F": "Live and upcoming events in Oct-Nov 2026.",
+    "I": "HTML adapter works but page is heavy and noisy."
+   },
+   "priority": "P1",
+   "status": "PROBE_PASSED",
+   "confidence": "medium",
+   "unknown": [
+    "Per-event eligibility",
+    "Whether JSON-LD can be used instead of text"
+   ],
+   "next": "Probe with ohg; decide max_pages and filter finished events.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://lablab.ai/ai-hackathons",
+    "robots_allowed": true,
+    "robots_status": 200,
+    "http_status": 200,
+    "content_type": "text/html",
+    "bytes": 932052,
+    "final_url": "https://lablab.ai/ai-hackathons",
+    "note": null
+   },
+   "total": 19,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": true,
+    "C_config_draft": true,
+    "D_live_probe_passed": true,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": {
+    "result": "ok",
+    "detail": "200, 326 chars, 38 links, 0 entries",
+    "timestamp_berlin": "2026-10-30T01:18:56+0100"
+   }
+  },
+  {
+   "id": "S04",
+   "batch": 1,
+   "cat": "A",
+   "name": "MLH season events",
+   "publisher": "Major League Hacking (MLH)",
+   "canonical": "https://www.mlh.com/",
+   "endpoint": "https://www.mlh.com/seasons/2027/events",
+   "method": "Structured listing page (HTML)",
+   "adapter": "html",
+   "adapter_fit": "existing",
+   "official": "first-party (league of student hackathons)",
+   "auth": "none",
+   "registration": "none for browsing",
+   "types": [
+    "student hackathons (in-person and digital)"
+   ],
+   "geo": "Global incl. Europe",
+   "remote": "Some digital events",
+   "audience": "Students (13+/18+ rules vary per event).",
+   "tags": [
+    "hackathon",
+    "students",
+    "europe"
+   ],
+   "why": "Largest student hackathon league; the 2027 season page lists upcoming events with dates, city and format.",
+   "stable_ids": "Event page slug",
+   "dates": "Dates without year inside a season page (e.g. 'OCT 31 - NOV 01')",
+   "difficulty": "Medium: yearless dates must be interpreted from the season header; strict parser will flag them for review.",
+   "terms_url": "https://www.mlh.com/terms",
+   "terms_finding": "Terms read: no automated-access clause found by keyword scan; this is not permission.",
+   "rate": "None published",
+   "polling": "none; estimate 24 h",
+   "poll_hours": 24,
+   "policy": "unclear",
+   "policy_note": "robots.txt allows; terms silent on automation.",
+   "stability": "Medium: season URL changes each year (/seasons/2027/events).",
+   "evidence": [
+    {
+     "claim": "2027 season page lists events such as 'Since AI Hackathon' (Turku, FI, NOV 06-08)",
+     "url": "https://www.mlh.com/seasons/2027/events"
+    },
+    {
+     "claim": "mlh.io/seasons/2026/events redirects (302) to mlh.com",
+     "url": "https://mlh.io/seasons/2026/events"
+    }
+   ],
+   "scores": {
+    "R": 4,
+    "A": 5,
+    "Q": 3,
+    "F": 5,
+    "I": 3
+   },
+   "why_s": {
+    "R": "Student-focused hackathons including European cities.",
+    "A": "First-party league with long track record.",
+    "Q": "Dates, city, mode shown; no year per date; eligibility on event pages.",
+    "F": "Events from 31 Oct 2026 onwards listed.",
+    "I": "HTML adapter feasible; yearly URL change needs a config update."
+   },
+   "priority": "P1",
+   "status": "PROBE_PASSED",
+   "confidence": "medium",
+   "unknown": [
+    "Per-event age/eligibility rules",
+    "Year-rollover handling"
+   ],
+   "next": "Probe with ohg; add both 2026 and 2027 season URLs.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://www.mlh.com/seasons/2027/events",
+    "robots_allowed": true,
+    "robots_status": 200,
+    "http_status": 200,
+    "content_type": "text/html",
+    "bytes": 612490,
+    "final_url": "https://www.mlh.com/seasons/2027/events",
+    "note": null
+   },
+   "total": 20,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": true,
+    "C_config_draft": true,
+    "D_live_probe_passed": true,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": {
+    "result": "ok",
+    "detail": "200, 7772 chars, 111 links, 0 entries",
+    "timestamp_berlin": "2026-10-30T01:18:56+0100"
+   }
+  },
+  {
+   "id": "S05",
+   "batch": 1,
+   "cat": "C",
+   "name": "CERN openlab summer student programme",
+   "publisher": "CERN openlab",
+   "canonical": "https://openlab.cern/",
+   "endpoint": "https://openlab.cern/cern-openlab-summer-student-programme/",
+   "method": "Programme page (HTML)",
+   "adapter": "html",
+   "adapter_fit": "existing",
+   "official": "first-party",
+   "auth": "none",
+   "registration": "Application portal at CERN careers (not accessed)",
+   "types": [
+    "9-week summer placement in computing/AI for bachelor and master students"
+   ],
+   "geo": "Switzerland (CERN)",
+   "remote": "No (on-site, estimate)",
+   "audience": "Bachelor's and master's students in computer science and related subjects (programme text).",
+   "tags": [
+    "ai",
+    "computing",
+    "summer-internship",
+    "cern"
+   ],
+   "why": "Prestigious, recurring research placement; page states the 2027 call opens in November 2026.",
+   "stable_ids": "Stable page URL; no per-edition IDs",
+   "dates": "Call opening month stated; exact deadline not yet published",
+   "difficulty": "Low: static page; the facts change once a year.",
+   "terms_url": "https://openlab.cern/",
+   "terms_finding": "Site terms not located in this run.",
+   "rate": "None published",
+   "polling": "estimate 24-72 h",
+   "poll_hours": 72,
+   "policy": "unclear",
+   "policy_note": "robots.txt allows; terms not reviewed.",
+   "stability": "High: long-lived programme page.",
+   "evidence": [
+    {
+     "claim": "Page text: 'The call for applications for the 2027 CERN openlab summer student programme will open in november 2026'",
+     "url": "https://openlab.cern/cern-openlab-summer-student-programme/"
+    },
+    {
+     "claim": "Page text: nine-week programme for bachelor's and master's students specialising in computer science",
+     "url": "https://openlab.cern/cern-openlab-summer-student-programme/"
+    },
+    {
+     "claim": "Homepage links the programme page (the earlier guessed URL /summer-student-programme returned 404)",
+     "url": "https://openlab.cern/"
+    }
+   ],
+   "scores": {
+    "R": 4,
+    "A": 5,
+    "Q": 3,
+    "F": 4,
+    "I": 4
+   },
+   "why_s": {
+    "R": "Computing/AI research placement open to bachelor students; Europe.",
+    "A": "CERN-run programme, first-party.",
+    "Q": "Eligibility stated; deadline not yet published.",
+    "F": "2027 call imminent per the page.",
+    "I": "Static HTML; existing adapter; low maintenance."
+   },
+   "priority": "P0",
+   "status": "PROBE_PASSED",
+   "confidence": "high",
+   "unknown": [
+    "2027 deadline",
+    "Exact nationality/residency rules"
+   ],
+   "next": "Enable weekly polling once the 2027 call opens; confirm deadline from the official call.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://openlab.cern/cern-openlab-summer-student-programme/",
+    "robots_allowed": true,
+    "robots_status": 200,
+    "http_status": 200,
+    "content_type": "text/html",
+    "bytes": 266442,
+    "final_url": "https://openlab.cern/cern-openlab-summer-student-programme/",
+    "note": null
+   },
+   "total": 20,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": true,
+    "C_config_draft": true,
+    "D_live_probe_passed": true,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": {
+    "result": "ok",
+    "detail": "200, 4888 chars, 42 links, 0 entries",
+    "timestamp_berlin": "2026-10-30T01:18:56+0100"
+   }
+  },
+  {
+   "id": "S06",
+   "batch": 1,
+   "cat": "C",
+   "name": "DESY Summer Student Programme",
+   "publisher": "Deutsches Elektronen-Synchrotron DESY",
+   "canonical": "https://summerstudents.desy.de/",
+   "endpoint": "https://summerstudents.desy.de/",
+   "method": "Programme page (HTML)",
+   "adapter": "html",
+   "adapter_fit": "existing",
+   "official": "first-party",
+   "auth": "none",
+   "registration": "Application portal (not accessed)",
+   "types": [
+    "summer research programme for undergraduate students (physics and related)"
+   ],
+   "geo": "Germany (Hamburg/Zeuthen)",
+   "remote": "No",
+   "audience": "Undergraduate students in physics or related disciplines (page text).",
+   "tags": [
+    "research",
+    "germany",
+    "summer-internship"
+   ],
+   "why": "Helmholtz research centre programme in Germany; page title 'Summer Student Programme 2027' and says it is in preparation.",
+   "stable_ids": "Stable page URL",
+   "dates": "None yet: 'The 2027 Programme is currently in preparation'",
+   "difficulty": "Low: static page.",
+   "terms_url": "https://www.desy.de/data_privacy_policy/",
+   "terms_finding": "Privacy policy only; no automated-access rules read.",
+   "rate": "None published",
+   "polling": "estimate 72 h",
+   "poll_hours": 72,
+   "policy": "unclear",
+   "policy_note": "robots.txt allows; terms not reviewed.",
+   "stability": "High.",
+   "evidence": [
+    {
+     "claim": "Page title 'Summer Student Programme 2027'; text 'The 2027 Programme is currently in preparation'",
+     "url": "https://summerstudents.desy.de/"
+    },
+    {
+     "claim": "Audience statement: undergraduate students in physics or related disciplines",
+     "url": "https://summerstudents.desy.de/"
+    }
+   ],
+   "scores": {
+    "R": 3,
+    "A": 5,
+    "Q": 2,
+    "F": 3,
+    "I": 4
+   },
+   "why_s": {
+    "R": "Physics-oriented; relevant to CS students only via computing projects.",
+    "A": "DESY is the organiser.",
+    "Q": "No dates yet; eligibility general.",
+    "F": "Annual refresh; nothing published yet for 2027.",
+    "I": "Static HTML with existing adapter."
+   },
+   "priority": "P2",
+   "status": "PROBE_PASSED",
+   "confidence": "high",
+   "unknown": [
+    "Whether computing/AI projects are offered",
+    "2027 dates"
+   ],
+   "next": "Poll weekly; review relevance when the call opens.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://summerstudents.desy.de/",
+    "robots_allowed": true,
+    "robots_status": 200,
+    "http_status": 200,
+    "content_type": "text/html",
+    "bytes": 19781,
+    "final_url": "https://summerstudents.desy.de/",
+    "note": null
+   },
+   "total": 17,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": false,
+    "C_config_draft": true,
+    "D_live_probe_passed": true,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": {
+    "result": "ok",
+    "detail": "200, 2084 chars, 30 links, 0 entries",
+    "timestamp_berlin": "2026-10-30T01:18:56+0100"
+   }
+  },
+  {
+   "id": "S07",
+   "batch": 1,
+   "cat": "D",
+   "name": "NLnet grants (calls + news Atom)",
+   "publisher": "NLnet Foundation",
+   "canonical": "https://nlnet.nl/",
+   "endpoint": "https://nlnet.nl/propose/",
+   "method": "Programme page (HTML) with Atom news feed https://nlnet.nl/feed.atom",
+   "adapter": "html+rss_atom",
+   "adapter_fit": "existing",
+   "official": "first-party",
+   "auth": "none",
+   "registration": "Proposal form (not used)",
+   "types": [
+    "grants for open-source/open-internet projects (NGI Zero etc.)"
+   ],
+   "geo": "EU/Europe-centred, applicants worldwide (per page, not verified in detail)",
+   "remote": "Yes",
+   "audience": "Individuals and organisations proposing open-source work.",
+   "tags": [
+    "open-source",
+    "grants",
+    "europe"
+   ],
+   "why": "Recurring bimonthly-style calls with a published next deadline; individual developers can apply.",
+   "stable_ids": "Atom <id>/<link>",
+   "dates": "Yes: 'Next deadline: November 3rd 2026 12:00 CET (noon)'",
+   "difficulty": "Low: deadline sits in page text; Atom feed is 2.8 MB (352 entries since 1999), so use conditional requests.",
+   "terms_url": "https://nlnet.nl/",
+   "terms_finding": "No terms page read; robots.txt allows both paths.",
+   "rate": "None published",
+   "polling": "estimate 24 h for /propose, 24 h for the feed with conditional GET",
+   "poll_hours": 24,
+   "policy": "unclear",
+   "policy_note": "robots.txt allows; terms not reviewed.",
+   "stability": "High.",
+   "evidence": [
+    {
+     "claim": "Propose page: 'Next deadline: November 3rd 2026 12:00 CET (noon)'",
+     "url": "https://nlnet.nl/propose/"
+    },
+    {
+     "claim": "Atom feed parses: 352 entries, newest 2026-10-29, items about grants and policy",
+     "url": "https://nlnet.nl/feed.atom"
+    }
+   ],
+   "scores": {
+    "R": 3,
+    "A": 5,
+    "Q": 5,
+    "F": 5,
+    "I": 5
+   },
+   "why_s": {
+    "R": "Open-source funding; fits independent developers, less so AI/robotics specifically.",
+    "A": "Foundation publishes its own calls.",
+    "Q": "Explicit deadline and time zone on the page.",
+    "F": "Feed updated 29 Oct 2026.",
+    "I": "Both endpoints use existing adapters."
+   },
+   "priority": "P0",
+   "status": "PROBE_PASSED",
+   "confidence": "high",
+   "unknown": [
+    "Individual-eligibility details per fund",
+    "Size cost of the 2.8 MB feed on slow links"
+   ],
+   "next": "Probe with ohg; enable page + feed with conditional requests.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://nlnet.nl/propose/",
+    "robots_allowed": true,
+    "robots_status": 200,
+    "http_status": 200,
+    "content_type": "text/html",
+    "bytes": 43246,
+    "final_url": "https://nlnet.nl/propose/",
+    "note": null
+   },
+   "total": 23,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": false,
+    "C_config_draft": true,
+    "D_live_probe_passed": true,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": {
+    "result": "ok",
+    "detail": "200, 1011 chars, 52 links, 0 entries",
+    "timestamp_berlin": "2026-10-30T01:18:56+0100"
+   }
+  },
+  {
+   "id": "S08",
+   "batch": 1,
+   "cat": "E",
+   "name": "CCF-Deadlines conference data (GitHub)",
+   "publisher": "ccfddl community (GitHub)",
+   "canonical": "https://github.com/ccfddl/ccf-deadlines",
+   "endpoint": "https://raw.githubusercontent.com/ccfddl/ccf-deadlines/main/conference/AI/nips.yml",
+   "method": "Versioned YAML data files in a public MIT-licensed repository (61 files under conference/AI)",
+   "adapter": "yaml/json data adapter (missing)",
+   "adapter_fit": "gap",
+   "official": "community aggregator",
+   "auth": "none",
+   "registration": "none",
+   "types": [
+    "conference submission deadlines (AI, CV, NLP, robotics categories)"
+   ],
+   "geo": "Global",
+   "remote": "n/a",
+   "audience": "Researchers and students tracking venues.",
+   "tags": [
+    "conferences",
+    "deadlines",
+    "structured-data"
+   ],
+   "why": "Machine-readable, regularly updated deadline data; avoids scraping many conference sites.",
+   "stable_ids": "File name per conference + year/edition keys inside YAML",
+   "dates": "Yes (structured)",
+   "difficulty": "Medium: needs a data adapter; per-file requests or GitHub contents API (60 unauthenticated requests/hour observed).",
+   "terms_url": "https://docs.github.com/site-policy/github-terms/github-terms-of-service",
+   "terms_finding": "Repository licence: MIT (GitHub API). GitHub ToS has access clauses for automated collection of public content; not analysed in depth.",
+   "rate": "GitHub REST API unauthenticated: 60 requests/hour (x-ratelimit-limit header observed)",
+   "polling": "estimate 24 h via ETag/conditional GET on raw files",
+   "poll_hours": 24,
+   "policy": "no_restriction_observed",
+   "policy_note": "MIT licence observed; raw.githubusercontent.com robots.txt returned 404 (treated as no restrictions per RFC 9309).",
+   "stability": "Medium: community-maintained; repo pushed 2026-10-29 (active).",
+   "evidence": [
+    {
+     "claim": "GitHub API: license MIT, pushed_at 2026-10-29T15:46:27Z, archived=false",
+     "url": "https://api.github.com/repos/ccfddl/ccf-deadlines"
+    },
+    {
+     "claim": "conference/AI directory lists 61 files (e.g. aaai.yml, acl.yml)",
+     "url": "https://api.github.com/repos/ccfddl/ccf-deadlines/contents/conference/AI"
+    },
+    {
+     "claim": "Raw file nips.yml fetched successfully (2,021 bytes)",
+     "url": "https://raw.githubusercontent.com/ccfddl/ccf-deadlines/main/conference/AI/nips.yml"
+    }
+   ],
+   "scores": {
+    "R": 4,
+    "A": 3,
+    "Q": 5,
+    "F": 5,
+    "I": 3
+   },
+   "why_s": {
+    "R": "Covers the AI/CV/ML venues the user cares about.",
+    "A": "Community-curated; correctness not guaranteed (must verify on official sites).",
+    "Q": "Structured deadlines and timezones.",
+    "F": "Active repo (push on 29 Oct 2026).",
+    "I": "Requires a new YAML/JSON adapter; otherwise simple."
+   },
+   "priority": "P1",
+   "status": "PROBE_PASSED",
+   "confidence": "medium",
+   "unknown": [
+    "Accuracy of individual deadlines",
+    "Complete list of robotics conferences in the dataset"
+   ],
+   "next": "Plan a small data adapter; treat values as T4 leads confirmed on official conference pages.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://raw.githubusercontent.com/ccfddl/ccf-deadlines/main/conference/AI/nips.yml",
+    "robots_allowed": true,
+    "robots_status": 404,
+    "http_status": 200,
+    "content_type": "text/plain",
+    "bytes": 2021,
+    "final_url": "https://raw.githubusercontent.com/ccfddl/ccf-deadlines/main/conference/AI/nips.yml",
+    "note": null
+   },
+   "total": 20,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": true,
+    "C_config_draft": false,
+    "D_live_probe_passed": true,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": null
+  },
+  {
+   "id": "S09",
+   "batch": 1,
+   "cat": "E",
+   "name": "WikiCFP RSS (machine learning, robotics)",
+   "publisher": "WikiCFP",
+   "canonical": "http://www.wikicfp.com/cfp/",
+   "endpoint": "http://www.wikicfp.com/cfp/rss?cat=machine%20learning",
+   "method": "RSS 2.0 feeds per category",
+   "adapter": "rss_atom",
+   "adapter_fit": "existing",
+   "official": "community aggregator",
+   "auth": "none",
+   "registration": "none",
+   "types": [
+    "calls for papers for conferences/workshops/journals"
+   ],
+   "geo": "Global",
+   "remote": "n/a",
+   "audience": "Researchers.",
+   "tags": [
+    "conferences",
+    "cfp",
+    "aggregator"
+   ],
+   "why": "Long-running CFP index with per-category RSS (verified for machine learning and robotics); good lead source.",
+   "stable_ids": "eventid in item link",
+   "dates": "Deadlines are in the linked event page; feed fields are title/link/summary only",
+   "difficulty": "Medium: feed items lack dates; follow-up fetch required. Site runs over plain HTTP.",
+   "terms_url": "http://www.wikicfp.com/cfp/terms.jsp",
+   "terms_finding": "Terms page read: general disclaimer; the wiki content is stated as CC BY-SA 3.0; no automated-access clause found.",
+   "rate": "None published",
+   "polling": "estimate 24 h",
+   "poll_hours": 24,
+   "policy": "unclear",
+   "policy_note": "robots.txt allows; content licence CC BY-SA 3.0 stated on the terms page; reuse terms for feeds not otherwise specified.",
+   "stability": "Medium: dated site, but feeds returned fresh items.",
+   "evidence": [
+    {
+     "claim": "RSS feed for category 'machine learning' returned 20 items",
+     "url": "http://www.wikicfp.com/cfp/rss?cat=machine%20learning"
+    },
+    {
+     "claim": "RSS feed for category 'robotics' returned 20 items (e.g. 'ICCRT 2027')",
+     "url": "http://www.wikicfp.com/cfp/rss?cat=robotics"
+    },
+    {
+     "claim": "Terms page states CC BY-SA 3.0 licence",
+     "url": "http://www.wikicfp.com/cfp/terms.jsp"
+    }
+   ],
+   "scores": {
+    "R": 3,
+    "A": 2,
+    "Q": 2,
+    "F": 4,
+    "I": 4
+   },
+   "why_s": {
+    "R": "Many CFPs, but a lot of low-quality conferences.",
+    "A": "User-submitted listings, unverified.",
+    "Q": "Feed lacks deadlines; requires per-event fetch.",
+    "F": "Fresh items present.",
+    "I": "Existing RSS adapter; HTTP only."
+   },
+   "priority": "P2",
+   "status": "PROBE_PASSED",
+   "confidence": "medium",
+   "unknown": [
+    "Spam/low-quality rate",
+    "Page structure for deadlines"
+   ],
+   "next": "Use as lead-only (T4/T5); pair with S08 and official conference pages.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "http://www.wikicfp.com/cfp/rss?cat=machine%20learning",
+    "robots_allowed": true,
+    "robots_status": 200,
+    "http_status": 200,
+    "content_type": "application/xml",
+    "bytes": 9787,
+    "final_url": "http://www.wikicfp.com/cfp/rss?cat=machine%20learning",
+    "note": null
+   },
+   "total": 15,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": true,
+    "C_config_draft": true,
+    "D_live_probe_passed": true,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": {
+    "result": "ok",
+    "detail": "200, 6084 chars, 20 links, 20 entries",
+    "timestamp_berlin": "2026-10-30T01:18:56+0100"
+   }
+  },
+  {
+   "id": "S10",
+   "batch": 1,
+   "cat": "F",
+   "name": "CTFtime upcoming events (RSS + API)",
+   "publisher": "CTFtime.org",
+   "canonical": "https://ctftime.org/",
+   "endpoint": "https://ctftime.org/event/list/upcoming/rss/",
+   "method": "RSS feed; documented JSON API at https://ctftime.org/api/v1/events/",
+   "adapter": "rss_atom",
+   "adapter_fit": "existing",
+   "official": "community platform (event directory)",
+   "auth": "none",
+   "registration": "none",
+   "types": [
+    "capture-the-flag competitions (online and on-site)"
+   ],
+   "geo": "Global",
+   "remote": "Mostly online",
+   "audience": "Individuals and teams; event rules vary.",
+   "tags": [
+    "cybersecurity",
+    "ctf",
+    "competitions"
+   ],
+   "why": "Authoritative CTF calendar with structured JSON (start, duration, format, weight, location, url).",
+   "stable_ids": "CTFtime event id",
+   "dates": "Yes (start time and duration in API)",
+   "difficulty": "Low via RSS (38 items); richer via JSON API (needs a JSON adapter).",
+   "terms_url": "https://ctftime.org/api/",
+   "terms_finding": "API page: 'provided for data analysis and mobile applications only. You can not use this API to run CTFtime clones'. robots.txt: Crawl-delay: 10.",
+   "rate": "No numeric API limit published; robots.txt Crawl-delay: 10 (seconds)",
+   "polling": "honour Crawl-delay 10 s; estimate 12-24 h",
+   "poll_hours": 24,
+   "policy": "unclear",
+   "policy_note": "Public documented API with a purpose restriction (no clones); our personal alerting is not a clone but this needs a human reading. Our fetcher does not yet honour Crawl-delay.",
+   "stability": "High: long-running service.",
+   "evidence": [
+    {
+     "claim": "RSS feed 'CTFtime.org: upcoming CTF events' with 38 items",
+     "url": "https://ctftime.org/event/list/upcoming/rss/"
+    },
+    {
+     "claim": "JSON API returns events with start, duration, location, weight, ctftime_url",
+     "url": "https://ctftime.org/api/v1/events/?limit=3"
+    },
+    {
+     "claim": "API page states purpose restriction",
+     "url": "https://ctftime.org/api/"
+    },
+    {
+     "claim": "robots.txt contains 'Crawl-delay: 10'",
+     "url": "https://ctftime.org/robots.txt"
+    }
+   ],
+   "scores": {
+    "R": 3,
+    "A": 4,
+    "Q": 4,
+    "F": 5,
+    "I": 4
+   },
+   "why_s": {
+    "R": "Cybersecurity competitions; secondary to AI/robotics goals.",
+    "A": "Community standard directory; organisers are third parties.",
+    "Q": "Structured dates, format, weight.",
+    "F": "Events next day onward.",
+    "I": "RSS works with existing adapter; JSON adapter would be better; crawl-delay gap."
+   },
+   "priority": "P1",
+   "status": "PROBE_PASSED",
+   "confidence": "high",
+   "unknown": [
+    "Whether personal alerting fits the 'no clones' clause (manual reading)"
+   ],
+   "next": "Review API terms; use RSS with >= 10 s spacing; consider a JSON adapter later.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://ctftime.org/event/list/upcoming/rss/",
+    "robots_allowed": true,
+    "robots_status": 200,
+    "http_status": 200,
+    "content_type": "application/rss+xml",
+    "bytes": 50450,
+    "final_url": "https://ctftime.org/event/list/upcoming/rss/",
+    "note": null
+   },
+   "total": 20,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": true,
+    "C_config_draft": true,
+    "D_live_probe_passed": true,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": {
+    "result": "ok",
+    "detail": "200, 20529 chars, 38 links, 38 entries",
+    "timestamp_berlin": "2026-10-30T01:18:56+0100"
+   }
+  },
+  {
+   "id": "S11",
+   "batch": 2,
+   "cat": "B",
+   "name": "IEEE RAS events calendar (iCal) + news feed",
+   "publisher": "IEEE Robotics and Automation Society",
+   "canonical": "https://www.ieee-ras.org/",
+   "endpoint": "https://www.ieee-ras.org/events/?ical=1",
+   "method": "iCalendar feed (30 VEVENTs observed); RSS at https://www.ieee-ras.org/feed/",
+   "adapter": "ical (missing)",
+   "adapter_fit": "gap",
+   "official": "first-party society",
+   "auth": "none",
+   "registration": "none",
+   "types": [
+    "robotics conferences and workshops",
+    "calls",
+    "competitions (via news)"
+   ],
+   "geo": "Global",
+   "remote": "Some virtual events",
+   "audience": "Robotics researchers and students.",
+   "tags": [
+    "robotics",
+    "conferences",
+    "ical"
+   ],
+   "why": "Society calendar with structured dates for 30 upcoming events; strongest robotics conference lead source found.",
+   "stable_ids": "iCal UID per event",
+   "dates": "Yes (DTSTART)",
+   "difficulty": "Medium: needs the iCal adapter (not implemented); RSS works today.",
+   "terms_url": "https://www.ieee-ras.org/",
+   "terms_finding": "Terms not located in this run.",
+   "rate": "None published",
+   "polling": "estimate 24 h with conditional GET",
+   "poll_hours": 24,
+   "policy": "unclear",
+   "policy_note": "robots.txt allows /events/ and /feed/; terms not reviewed.",
+   "stability": "Medium: WordPress events plugin export.",
+   "evidence": [
+    {
+     "claim": "iCal export returns 30 VEVENTs, first 'International Conference on Control, Automation and Systems' 2026-10-27",
+     "url": "https://www.ieee-ras.org/events/?ical=1"
+    },
+    {
+     "claim": "RSS feed valid, newest 29 Oct 2026",
+     "url": "https://www.ieee-ras.org/feed/"
+    },
+    {
+     "claim": "Homepage advertises both feeds via <link rel=alternate>",
+     "url": "https://www.ieee-ras.org/conferences-workshops"
+    }
+   ],
+   "scores": {
+    "R": 4,
+    "A": 5,
+    "Q": 4,
+    "F": 5,
+    "I": 3
+   },
+   "why_s": {
+    "R": "Core robotics venues and workshops.",
+    "A": "Society is the publisher.",
+    "Q": "Structured start dates; deadlines need linking.",
+    "F": "Events from the current week.",
+    "I": "iCal adapter missing; RSS fallback works."
+   },
+   "priority": "P1",
+   "status": "PROBE_PASSED",
+   "confidence": "high",
+   "unknown": [
+    "Event deadline fields (CFPs) not in iCal"
+   ],
+   "next": "Onboard the RSS feed now; implement the iCal adapter for the calendar.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://www.ieee-ras.org/events/?ical=1",
+    "robots_allowed": true,
+    "robots_status": 200,
+    "http_status": 200,
+    "content_type": "text/calendar",
+    "bytes": 32774,
+    "final_url": "https://www.ieee-ras.org/events/?ical=1",
+    "note": null
+   },
+   "total": 21,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": false,
+    "C_config_draft": false,
+    "D_live_probe_passed": true,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": null
+  },
+  {
+   "id": "S12",
+   "batch": 2,
+   "cat": "B",
+   "name": "TUM MIRMI news & events RSS",
+   "publisher": "Munich Institute of Robotics and Machine Intelligence (TUM)",
+   "canonical": "https://www.mirmi.tum.de/mirmi/startseite/",
+   "endpoint": "https://www.mirmi.tum.de/mirmi/rss.xml",
+   "method": "Atom/RSS feed (news; events on homepage)",
+   "adapter": "rss_atom",
+   "adapter_fit": "existing",
+   "official": "first-party",
+   "auth": "none",
+   "registration": "none",
+   "types": [
+    "news",
+    "events",
+    "research group announcements"
+   ],
+   "geo": "Germany (Munich)",
+   "remote": "n/a",
+   "audience": "Robotics/AI community at TUM and visitors.",
+   "tags": [
+    "robotics",
+    "germany",
+    "tum"
+   ],
+   "why": "Top German robotics institute; feed updated 28 Oct 2026; local events and groups.",
+   "stable_ids": "Atom entry id (news-NNNN.atom)",
+   "dates": "Publication dates yes; event dates in text",
+   "difficulty": "Low: existing adapter; mixed German/English content.",
+   "terms_url": "https://www.mirmi.tum.de/mirmi/startseite/",
+   "terms_finding": "Not reviewed.",
+   "rate": "None published",
+   "polling": "estimate 24 h",
+   "poll_hours": 24,
+   "policy": "unclear",
+   "policy_note": "robots.txt allows; terms not reviewed.",
+   "stability": "High: university web platform.",
+   "evidence": [
+    {
+     "claim": "Feed 'RSS des Munich Institute of Robotics and Machine Intelligence' returned entries, latest 2026-10-28",
+     "url": "https://www.mirmi.tum.de/mirmi/rss.xml"
+    },
+    {
+     "claim": "Homepage shows 'Events' and 'News' sections with dated items",
+     "url": "https://www.mirmi.tum.de/mirmi/startseite/"
+    }
+   ],
+   "scores": {
+    "R": 4,
+    "A": 5,
+    "Q": 2,
+    "F": 5,
+    "I": 4
+   },
+   "why_s": {
+    "R": "German robotics institute; mostly research news.",
+    "A": "University institute, first-party.",
+    "Q": "Few explicit application opportunities.",
+    "F": "Updated 28 Oct 2026.",
+    "I": "Existing adapter; German text."
+   },
+   "priority": "P1",
+   "status": "PROBE_PASSED",
+   "confidence": "medium",
+   "unknown": [
+    "How often feed carries student/job opportunities"
+   ],
+   "next": "Probe with ohg; review for relevance after 4 weeks.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://www.mirmi.tum.de/mirmi/rss.xml",
+    "robots_allowed": true,
+    "robots_status": 200,
+    "http_status": 200,
+    "content_type": "text/xml",
+    "bytes": 62128,
+    "final_url": "https://www.mirmi.tum.de/mirmi/startseite/rss.xml",
+    "note": null
+   },
+   "total": 20,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": false,
+    "C_config_draft": true,
+    "D_live_probe_passed": true,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": {
+    "result": "ok",
+    "detail": "200, 7882 chars, 15 links, 15 entries",
+    "timestamp_berlin": "2026-10-30T01:19:28+0100"
+   }
+  },
+  {
+   "id": "S13",
+   "batch": 2,
+   "cat": "A",
+   "name": "Kaggle competitions (official API)",
+   "publisher": "Kaggle (Google)",
+   "canonical": "https://www.kaggle.com/competitions",
+   "endpoint": "https://github.com/Kaggle/kaggle-api",
+   "method": "Authenticated official API/CLI (the listing page is a JavaScript app); endpoint field points at the official client repository that documents it",
+   "adapter": "authenticated JSON API (missing)",
+   "adapter_fit": "gap",
+   "official": "first-party platform",
+   "auth": "API credentials required",
+   "registration": "Kaggle account + API token",
+   "types": [
+    "ML competitions",
+    "hackathons",
+    "prize challenges"
+   ],
+   "geo": "Global",
+   "remote": "Yes",
+   "audience": "Anyone with an account; competition rules apply.",
+   "tags": [
+    "ml",
+    "competitions",
+    "api"
+   ],
+   "why": "Primary venue for ML competitions; official API client lists competitions.",
+   "stable_ids": "Competition slug/id",
+   "dates": "Deadlines via API (not called)",
+   "difficulty": "High: credentials, JSON adapter and secret handling needed.",
+   "terms_url": "https://www.kaggle.com/terms",
+   "terms_finding": "Terms page is JavaScript-rendered; not readable by this run.",
+   "rate": "Not verified",
+   "polling": "estimate 24 h",
+   "poll_hours": 24,
+   "policy": "unclear",
+   "policy_note": "Listing page is an app shell (0 visible characters); API requires credentials; no call was made.",
+   "stability": "High.",
+   "evidence": [
+    {
+     "claim": "Official README: 'List competitions, download competition data, submit to a competition'; credentials required",
+     "url": "https://raw.githubusercontent.com/Kaggle/kaggle-api/main/README.md"
+    },
+    {
+     "claim": "Listing page responds 200 but is a JS app (title 'AI Competitions and Hackathons | Kaggle')",
+     "url": "https://www.kaggle.com/competitions"
+    }
+   ],
+   "scores": {
+    "R": 5,
+    "A": 5,
+    "Q": 4,
+    "F": 5,
+    "I": 1
+   },
+   "why_s": {
+    "R": "Directly on target for applied AI.",
+    "A": "First-party platform.",
+    "Q": "API exposes deadlines (not verified).",
+    "F": "Continuous flow.",
+    "I": "Needs auth + new adapter; no live probe."
+   },
+   "priority": "P1",
+   "status": "RESEARCH_VERIFIED",
+   "confidence": "medium",
+   "unknown": [
+    "Exact API endpoint behaviour/quotas",
+    "Terms on automated use"
+   ],
+   "next": "Decide whether to store an API token; design adapter before activation.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://github.com/Kaggle/kaggle-api",
+    "robots_allowed": true,
+    "robots_status": 200,
+    "http_status": 404,
+    "content_type": "text/html",
+    "bytes": 231812,
+    "final_url": "https://github.com/Kaggle/kaggle-api%20(official%20client;%20'List%20competitions'%20documented%20in%20README)",
+    "note": null
+   },
+   "total": 20,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": true,
+    "C_config_draft": false,
+    "D_live_probe_passed": false,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": null
+  },
+  {
+   "id": "S14",
+   "batch": 2,
+   "cat": "A",
+   "name": "European Hackathon League",
+   "publisher": "European Hackathon League (founded by TUM.ai)",
+   "canonical": "https://ehl.gg/",
+   "endpoint": "https://ehl.gg/",
+   "method": "Static site with dated matches (HTML)",
+   "adapter": "html",
+   "adapter_fit": "existing",
+   "official": "first-party",
+   "auth": "none",
+   "registration": "none for browsing",
+   "types": [
+    "competitive hackathon league (5 matches in Munich, Paris, Zurich)"
+   ],
+   "geo": "Europe",
+   "remote": "No (on-site)",
+   "audience": "Students/teams (details on site).",
+   "tags": [
+    "hackathon",
+    "europe",
+    "league"
+   ],
+   "why": "Europe-focused AI/tech hackathon league with 10 dated entries on the home page.",
+   "stable_ids": "None",
+   "dates": "Yes (e.g. 19 April 2026, 23 August 2026)",
+   "difficulty": "Low: tiny static page; yearly refresh.",
+   "terms_url": "https://ehl.gg/",
+   "terms_finding": "No terms page read.",
+   "rate": "None published",
+   "polling": "estimate 72 h",
+   "poll_hours": 72,
+   "policy": "unclear",
+   "policy_note": "robots.txt allows; terms not reviewed.",
+   "stability": "Medium: new league, annual structure.",
+   "evidence": [
+    {
+     "claim": "Home page: 'Europe's first competitive hackathon league · 5 matches. 3 cities. One champion.' with dates",
+     "url": "https://ehl.gg/"
+    }
+   ],
+   "scores": {
+    "R": 4,
+    "A": 3,
+    "Q": 3,
+    "F": 3,
+    "I": 4
+   },
+   "why_s": {
+    "R": "European hackathons relevant to AI students.",
+    "A": "Organiser site; young.",
+    "Q": "Dates present; eligibility not captured.",
+    "F": "2026 dates shown; 2027 unknown.",
+    "I": "Static HTML, existing adapter."
+   },
+   "priority": "P2",
+   "status": "PROBE_PASSED",
+   "confidence": "medium",
+   "unknown": [
+    "2027 season timing",
+    "Eligibility"
+   ],
+   "next": "Probe with ohg; low interval.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://ehl.gg/",
+    "robots_allowed": true,
+    "robots_status": 200,
+    "http_status": 200,
+    "content_type": "text/html",
+    "bytes": 267339,
+    "final_url": "https://ehl.gg/",
+    "note": null
+   },
+   "total": 17,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": false,
+    "C_config_draft": true,
+    "D_live_probe_passed": true,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": {
+    "result": "ok",
+    "detail": "200, 697 chars, 42 links, 0 entries",
+    "timestamp_berlin": "2026-10-30T01:19:28+0100"
+   }
+  },
+  {
+   "id": "S15",
+   "batch": 2,
+   "cat": "C",
+   "name": "FZI Karlsruhe careers (internships, theses, student jobs)",
+   "publisher": "FZI Forschungszentrum Informatik",
+   "canonical": "https://www.fzi.de/en/career/",
+   "endpoint": "https://www.fzi.de/en/career/",
+   "method": "Career landing page (HTML) linking to job and thesis listings",
+   "adapter": "html",
+   "adapter_fit": "existing",
+   "official": "first-party",
+   "auth": "none",
+   "registration": "none",
+   "types": [
+    "internships",
+    "student assistant jobs",
+    "bachelor/master theses",
+    "full-time jobs"
+   ],
+   "geo": "Germany (Karlsruhe, Berlin)",
+   "remote": "Mostly on-site",
+   "audience": "Students and graduates; positions say per listing.",
+   "tags": [
+    "robotics",
+    "ai",
+    "germany",
+    "internship"
+   ],
+   "why": "Applied-research institute close to Mannheim; page states it offers internships, student assistant jobs and theses.",
+   "stable_ids": "Job posting URLs (not enumerated)",
+   "dates": "Landing page has few dates; listings not enumerated in this run",
+   "difficulty": "Medium: listings live on a sub-page not located in this run (guessed /career/jobs-talents/ returned 404).",
+   "terms_url": "https://www.fzi.de/en/career/",
+   "terms_finding": "Not reviewed.",
+   "rate": "None published",
+   "polling": "estimate 24 h",
+   "poll_hours": 24,
+   "policy": "unclear",
+   "policy_note": "robots.txt allows the landing page; listing page not yet identified. The final pass requested /en/career/ and was redirected to an event page (career fair), so the landing page itself was not confirmed.",
+   "stability": "Medium.",
+   "evidence": [
+    {
+     "claim": "Page text: offers for employee positions, theses (Master's/Bachelor's), internships and student assistant jobs",
+     "url": "https://www.fzi.de/en/career/"
+    }
+   ],
+   "scores": {
+    "R": 4,
+    "A": 5,
+    "Q": 2,
+    "F": 3,
+    "I": 3
+   },
+   "why_s": {
+    "R": "Applied AI/robotics research near the user (Karlsruhe).",
+    "A": "Institute is the employer/publisher.",
+    "Q": "Landing page lacks listings; details unknown.",
+    "F": "Listings not verified.",
+    "I": "Listing sub-page must be found first."
+   },
+   "priority": "P2",
+   "status": "MANUAL_REVIEW",
+   "confidence": "medium",
+   "unknown": [
+    "Exact job-listing URL and format"
+   ],
+   "next": "Locate the actual job/thesis listing URL before drafting an entry.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://www.fzi.de/en/career/",
+    "robots_allowed": true,
+    "robots_status": 200,
+    "http_status": 200,
+    "content_type": "text/html",
+    "bytes": 135141,
+    "final_url": "https://www.fzi.de/en/veranstaltungen/career-fair-jobwunder-berlin/",
+    "note": null
+   },
+   "total": 17,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": false,
+    "C_config_draft": false,
+    "D_live_probe_passed": false,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": null
+  },
+  {
+   "id": "S16",
+   "batch": 2,
+   "cat": "D",
+   "name": "Sovereign Tech Fellowship",
+   "publisher": "Sovereign Tech Agency",
+   "canonical": "https://www.sovereign.tech/",
+   "endpoint": "https://www.sovereign.tech/programs/fellowship",
+   "method": "Programme page (HTML); RSS news feed https://www.sovereign.tech/feed.rss",
+   "adapter": "html+rss_atom",
+   "adapter_fit": "existing",
+   "official": "first-party (German federal agency)",
+   "auth": "none",
+   "registration": "Application form (not used)",
+   "types": [
+    "fellowships for open-source maintainers, community managers, technical writers"
+   ],
+   "geo": "Germany-funded; applicants international (verify)",
+   "remote": "Yes",
+   "audience": "Maintainers of critical open-source components (not a student scholarship).",
+   "tags": [
+    "open-source",
+    "fellowship",
+    "germany"
+   ],
+   "why": "Funded roles for people maintaining critical open source; relevant to engineers with maintainer experience.",
+   "stable_ids": "RSS <guid>",
+   "dates": "Page lists dates (e.g. 6 April 2026 appears several times)",
+   "difficulty": "Low: static page + feed; check eligibility carefully.",
+   "terms_url": "https://www.sovereign.tech/legal",
+   "terms_finding": "Legal page read (1,457 chars): no automated-access clause found.",
+   "rate": "None published",
+   "polling": "estimate 72 h",
+   "poll_hours": 72,
+   "policy": "unclear",
+   "policy_note": "robots.txt allows; legal page silent on automation.",
+   "stability": "High.",
+   "evidence": [
+    {
+     "claim": "Fellowship page: 'invests directly in the people behind the code, supporting maintainers, community managers, and technical writers'",
+     "url": "https://www.sovereign.tech/programs/fellowship"
+    },
+    {
+     "claim": "RSS feed returned 10 items, newest 23 Oct 2026",
+     "url": "https://www.sovereign.tech/feed.rss"
+    }
+   ],
+   "scores": {
+    "R": 2,
+    "A": 5,
+    "Q": 3,
+    "F": 4,
+    "I": 4
+   },
+   "why_s": {
+    "R": "Targets established maintainers, not early students.",
+    "A": "Public agency, first-party.",
+    "Q": "Programme dates visible; eligibility needs reading.",
+    "F": "Feed active.",
+    "I": "Existing adapters."
+   },
+   "priority": "P2",
+   "status": "PROBE_PASSED",
+   "confidence": "medium",
+   "unknown": [
+    "Whether bachelor-level contributors qualify"
+   ],
+   "next": "Read eligibility; keep as long-term lead.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://www.sovereign.tech/programs/fellowship",
+    "robots_allowed": true,
+    "robots_status": 200,
+    "http_status": 200,
+    "content_type": "text/html",
+    "bytes": 116839,
+    "final_url": "https://www.sovereign.tech/programs/fellowship",
+    "note": null
+   },
+   "total": 18,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": true,
+    "C_config_draft": true,
+    "D_live_probe_passed": true,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": {
+    "result": "ok",
+    "detail": "200, 7662 chars, 27 links, 0 entries",
+    "timestamp_berlin": "2026-10-30T01:19:28+0100"
+   }
+  },
+  {
+   "id": "S17",
+   "batch": 2,
+   "cat": "D",
+   "name": "Erasmus+ opportunities for students",
+   "publisher": "European Commission (Erasmus+)",
+   "canonical": "https://erasmus-plus.ec.europa.eu/",
+   "endpoint": "https://erasmus-plus.ec.europa.eu/opportunities/individuals/students",
+   "method": "Official programme pages (HTML)",
+   "adapter": "html",
+   "adapter_fit": "existing",
+   "official": "first-party",
+   "auth": "none",
+   "registration": "Applications go through home institutions",
+   "types": [
+    "student mobility (study/traineeship) grants"
+   ],
+   "geo": "EU/associated countries",
+   "remote": "No",
+   "audience": "Enrolled students at participating institutions.",
+   "tags": [
+    "erasmus",
+    "mobility",
+    "scholarship"
+   ],
+   "why": "Structural funding route for studies/traineeships abroad; applications run through the university.",
+   "stable_ids": "Page URL",
+   "dates": "Few; deadlines are institution-specific",
+   "difficulty": "Medium: little structured data; per-university deadlines are the real signal.",
+   "terms_url": "https://commission.europa.eu/legal-notice_en",
+   "terms_finding": "Commission legal notice read: EU-owned content licensed CC BY 4.0 (reuse permitted with credit).",
+   "rate": "None published",
+   "polling": "estimate 72-168 h",
+   "poll_hours": 168,
+   "policy": "no_restriction_observed",
+   "policy_note": "robots.txt allows; CC BY 4.0 reuse licence stated for EU-owned content.",
+   "stability": "High.",
+   "evidence": [
+    {
+     "claim": "Page 'Students - Erasmus+' fetched (200) after 301 redirect from the older path",
+     "url": "https://erasmus-plus.ec.europa.eu/opportunities/individuals/students"
+    },
+    {
+     "claim": "Legal notice: EU-owned content licensed under CC BY 4.0",
+     "url": "https://commission.europa.eu/legal-notice_en"
+    }
+   ],
+   "scores": {
+    "R": 3,
+    "A": 5,
+    "Q": 2,
+    "F": 2,
+    "I": 3
+   },
+   "why_s": {
+    "R": "Relevant for study abroad; not research-specific.",
+    "A": "European Commission.",
+    "Q": "Deadlines are set by each university.",
+    "F": "Static programme pages.",
+    "I": "HTML works, little to extract."
+   },
+   "priority": "P2",
+   "status": "PROBE_PASSED",
+   "confidence": "medium",
+   "unknown": [
+    "Hochschule Mannheim's Erasmus deadlines (own source needed)"
+   ],
+   "next": "Pair with the university's Erasmus office page.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://erasmus-plus.ec.europa.eu/opportunities/individuals/students",
+    "robots_allowed": true,
+    "robots_status": 200,
+    "http_status": 200,
+    "content_type": "text/html",
+    "bytes": 186633,
+    "final_url": "https://erasmus-plus.ec.europa.eu/opportunities/individuals/students",
+    "note": null
+   },
+   "total": 15,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": true,
+    "C_config_draft": true,
+    "D_live_probe_passed": true,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": {
+    "result": "ok",
+    "detail": "200, 1495 chars, 57 links, 0 entries",
+    "timestamp_berlin": "2026-10-30T01:19:28+0100"
+   }
+  },
+  {
+   "id": "S18",
+   "batch": 2,
+   "cat": "E",
+   "name": "NeurIPS dates and deadlines",
+   "publisher": "NeurIPS Foundation",
+   "canonical": "https://neurips.cc/",
+   "endpoint": "https://neurips.cc/Conferences/2026/Dates",
+   "method": "Official dates page (HTML)",
+   "adapter": "html",
+   "adapter_fit": "existing",
+   "official": "first-party",
+   "auth": "none",
+   "registration": "none",
+   "types": [
+    "conference dates, submission and registration deadlines, workshops, competitions, financial aid pointers"
+   ],
+   "geo": "Global (2026: Sydney and Atlanta sites)",
+   "remote": "Hybrid/virtual options vary",
+   "audience": "Researchers, students.",
+   "tags": [
+    "ai",
+    "conference",
+    "deadlines"
+   ],
+   "why": "The flagship ML conference; dates page contains 27 deadline-related mentions.",
+   "stable_ids": "Year in URL",
+   "dates": "Yes",
+   "difficulty": "Low-medium: year in URL changes yearly; dates in prose tables.",
+   "terms_url": "https://neurips.cc/public/PrivacyPolicy",
+   "terms_finding": "Privacy policy only; terms not read.",
+   "rate": "None published",
+   "polling": "estimate 72 h",
+   "poll_hours": 72,
+   "policy": "unclear",
+   "policy_note": "robots.txt allows; terms not reviewed.",
+   "stability": "High.",
+   "evidence": [
+    {
+     "claim": "'2026 Dates and Deadlines' page lists meeting dates (Dec 6-12) and deadline terms",
+     "url": "https://neurips.cc/Conferences/2026/Dates"
+    }
+   ],
+   "scores": {
+    "R": 5,
+    "A": 5,
+    "Q": 4,
+    "F": 4,
+    "I": 4
+   },
+   "why_s": {
+    "R": "Top-tier ML venue, includes competitions and workshops.",
+    "A": "Official conference site.",
+    "Q": "Detailed dates; eligibility for aid elsewhere.",
+    "F": "2026 page current; 2027 page will appear later.",
+    "I": "Existing adapter; yearly URL update."
+   },
+   "priority": "P1",
+   "status": "PROBE_PASSED",
+   "confidence": "high",
+   "unknown": [
+    "2027 URL timing"
+   ],
+   "next": "Add yearly URL pattern review to the onboarding checklist.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://neurips.cc/Conferences/2026/Dates",
+    "robots_allowed": true,
+    "robots_status": 200,
+    "http_status": 200,
+    "content_type": "text/html",
+    "bytes": 130627,
+    "final_url": "https://neurips.cc/Conferences/2026/Dates",
+    "note": null
+   },
+   "total": 22,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": false,
+    "C_config_draft": true,
+    "D_live_probe_passed": true,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": {
+    "result": "ok",
+    "detail": "200, 6087 chars, 71 links, 0 entries",
+    "timestamp_berlin": "2026-10-30T01:19:28+0100"
+   }
+  },
+  {
+   "id": "S19",
+   "batch": 2,
+   "cat": "F",
+   "name": "Codeforces contests (official API)",
+   "publisher": "Codeforces",
+   "canonical": "https://codeforces.com/",
+   "endpoint": "https://codeforces.com/api/contest.list?gym=false",
+   "method": "Documented public JSON API (contest.list)",
+   "adapter": "JSON API adapter (missing)",
+   "adapter_fit": "gap",
+   "official": "first-party platform",
+   "auth": "none for public data",
+   "registration": "none",
+   "types": [
+    "programming contests (rounds, ICPC-style, Kotlin Heroes etc.)"
+   ],
+   "geo": "Global",
+   "remote": "Yes",
+   "audience": "Anyone; some rated divisions.",
+   "tags": [
+    "competitive-programming",
+    "api"
+   ],
+   "why": "Documented API with contest id, name, start time, duration and phase.",
+   "stable_ids": "contest id",
+   "dates": "Yes (startTimeSeconds, durationSeconds)",
+   "difficulty": "Medium: JSON adapter needed; payload is 413 KB (all contests) so filter by phase=BEFORE.",
+   "terms_url": "https://codeforces.com/apiHelp",
+   "terms_finding": "API help documents the limit: 'API may be requested at most 1 time per two seconds'; anonymous access to public data.",
+   "rate": "1 request per 2 seconds (documented)",
+   "polling": "estimate 24 h",
+   "poll_hours": 24,
+   "policy": "no_restriction_observed",
+   "policy_note": "Documented public API with a stated rate limit; robots.txt allowed the API path in this run.",
+   "stability": "High.",
+   "evidence": [
+    {
+     "claim": "API help: 'API may be requested at most 1 time per two seconds'; 'All methods can be requested anonymously'",
+     "url": "https://codeforces.com/apiHelp"
+    },
+    {
+     "claim": "contest.list returned status OK with contests incl. phase BEFORE and startTimeSeconds",
+     "url": "https://codeforces.com/api/contest.list?gym=false"
+    }
+   ],
+   "scores": {
+    "R": 3,
+    "A": 5,
+    "Q": 4,
+    "F": 5,
+    "I": 3
+   },
+   "why_s": {
+    "R": "Algorithmic contests; useful but peripheral to AI/robotics.",
+    "A": "Operator of the contests.",
+    "Q": "Structured times; no prizes/eligibility fields.",
+    "F": "Upcoming rounds listed.",
+    "I": "Needs JSON adapter; API well documented."
+   },
+   "priority": "P2",
+   "status": "PROBE_PASSED",
+   "confidence": "high",
+   "unknown": [
+    "Value to the user's goals"
+   ],
+   "next": "Low priority; implement JSON adapter if shared with other APIs.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://codeforces.com/api/contest.list?gym=false",
+    "robots_allowed": true,
+    "robots_status": 200,
+    "http_status": 200,
+    "content_type": "application/json",
+    "bytes": 412641,
+    "final_url": "https://codeforces.com/api/contest.list?gym=false",
+    "note": null
+   },
+   "total": 20,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": true,
+    "C_config_draft": false,
+    "D_live_probe_passed": true,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": null
+  },
+  {
+   "id": "S20",
+   "batch": 2,
+   "cat": "F",
+   "name": "Google Summer of Code timeline",
+   "publisher": "Google Open Source Programs Office",
+   "canonical": "https://developers.google.com/open-source/gsoc",
+   "endpoint": "https://developers.google.com/open-source/gsoc/timeline",
+   "method": "Official timeline page (HTML); the contributor site summerofcode.withgoogle.com is a JavaScript app",
+   "adapter": "html",
+   "adapter_fit": "existing",
+   "official": "first-party",
+   "auth": "none",
+   "registration": "Contributor application via GSoC site",
+   "types": [
+    "paid open-source contributor programme (summer)"
+   ],
+   "geo": "Global (remote)",
+   "remote": "Yes",
+   "audience": "Contributors, including students; eligibility on FAQ (not read).",
+   "tags": [
+    "open-source",
+    "internship",
+    "remote"
+   ],
+   "why": "Best-known open-source programme; official timeline page lists application windows.",
+   "stable_ids": "Page URL",
+   "dates": "Yes, but formatted 'January 19 - 18:00 UTC' under a year heading (yearless per line)",
+   "difficulty": "Medium: dates need the heading year; strict parser flags yearless lines.",
+   "terms_url": "https://developers.google.com/open-source/gsoc/faq",
+   "terms_finding": "Not read in this run.",
+   "rate": "None published",
+   "polling": "estimate 168 h",
+   "poll_hours": 168,
+   "policy": "unclear",
+   "policy_note": "robots.txt allows; terms/FAQ not reviewed.",
+   "stability": "High.",
+   "evidence": [
+    {
+     "claim": "Timeline page: 'Mentoring organizations can apply ... January 22nd to February 6th' and a dated 2026 timeline",
+     "url": "https://developers.google.com/open-source/gsoc/timeline"
+    },
+    {
+     "claim": "summerofcode.withgoogle.com/programs renders no text (JS app)",
+     "url": "https://summerofcode.withgoogle.com/programs"
+    }
+   ],
+   "scores": {
+    "R": 4,
+    "A": 5,
+    "Q": 4,
+    "F": 3,
+    "I": 4
+   },
+   "why_s": {
+    "R": "Remote, paid OSS work accessible to bachelor students.",
+    "A": "Run by Google.",
+    "Q": "Clear dates; eligibility on FAQ.",
+    "F": "Annual cycle; current page shows 2026 timeline.",
+    "I": "Static official HTML."
+   },
+   "priority": "P1",
+   "status": "PROBE_PASSED",
+   "confidence": "high",
+   "unknown": [
+    "2027 timeline publication date",
+    "Eligibility details"
+   ],
+   "next": "Probe with ohg; re-check in December.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://developers.google.com/open-source/gsoc/timeline",
+    "robots_allowed": true,
+    "robots_status": 200,
+    "http_status": 200,
+    "content_type": "text/html",
+    "bytes": 73490,
+    "final_url": "https://developers.google.com/open-source/gsoc/timeline",
+    "note": null
+   },
+   "total": 20,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": false,
+    "C_config_draft": true,
+    "D_live_probe_passed": true,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": {
+    "result": "ok",
+    "detail": "200, 3981 chars, 41 links, 0 entries",
+    "timestamp_berlin": "2026-10-30T01:19:28+0100"
+   }
+  },
+  {
+   "id": "S21",
+   "batch": 3,
+   "cat": "B",
+   "name": "euROBIN events and competitions",
+   "publisher": "euROBIN (European Robotics and AI Network)",
+   "canonical": "https://www.eurobin-project.eu/",
+   "endpoint": "https://www.eurobin-project.eu/index.php/events",
+   "method": "Event listing page (HTML); related pages: /competitions, /competitions/hackathons; open calls run on a separate FundingBox site",
+   "adapter": "html",
+   "adapter_fit": "existing",
+   "official": "first-party (EU-funded network)",
+   "auth": "none",
+   "registration": "none",
+   "types": [
+    "events",
+    "robotics competitions/hackathons",
+    "open calls (external platform)"
+   ],
+   "geo": "Europe",
+   "remote": "Some online",
+   "audience": "Robotics researchers, students, SMEs.",
+   "tags": [
+    "robotics",
+    "europe",
+    "competitions"
+   ],
+   "why": "European robotics network with a dated events list (41 dates on the page) plus competition and hackathon pages.",
+   "stable_ids": "Joomla article URLs",
+   "dates": "Yes on events page (e.g. 09 July 2026, 17 June 2026)",
+   "difficulty": "Low-medium: Joomla page; open calls are on a different publisher (FundingBox) and not assessed.",
+   "terms_url": "https://www.eurobin-project.eu/index.php/privacy-policy",
+   "terms_finding": "Privacy policy only.",
+   "rate": "None published",
+   "polling": "estimate 72 h",
+   "poll_hours": 72,
+   "policy": "unclear",
+   "policy_note": "robots.txt allows; terms not reviewed. The FundingBox open-call site was not probed.",
+   "stability": "Medium-low: project-based site; a funded project's site may change when the project ends (estimate, end date not checked).",
+   "evidence": [
+    {
+     "claim": "Events page lists dated events ('09 July 2026 ... AI-based Robotics in Europe: Live technology demonstration')",
+     "url": "https://www.eurobin-project.eu/index.php/events"
+    },
+    {
+     "claim": "Homepage links Competitions, Hackathons, Coopetitions and 'Open calls' (eurobin-network.fundingbox.com)",
+     "url": "https://www.eurobin-project.eu/"
+    }
+   ],
+   "scores": {
+    "R": 4,
+    "A": 4,
+    "Q": 3,
+    "F": 3,
+    "I": 4
+   },
+   "why_s": {
+    "R": "Robotics competitions and hackathons in Europe.",
+    "A": "Project consortium, first-party.",
+    "Q": "Dates yes; eligibility per competition page.",
+    "F": "Latest listed event July 2026.",
+    "I": "Existing adapter; one listing page."
+   },
+   "priority": "P1",
+   "status": "PROBE_PASSED",
+   "confidence": "medium",
+   "unknown": [
+    "Project end date and site longevity",
+    "FundingBox call access policy"
+   ],
+   "next": "Probe with ohg; evaluate FundingBox separately.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://www.eurobin-project.eu/index.php/events",
+    "robots_allowed": true,
+    "robots_status": 200,
+    "http_status": 200,
+    "content_type": "text/html",
+    "bytes": 105748,
+    "final_url": "https://www.eurobin-project.eu/index.php/events",
+    "note": null
+   },
+   "total": 18,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": false,
+    "C_config_draft": true,
+    "D_live_probe_passed": true,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": {
+    "result": "ok",
+    "detail": "200, 244 chars, 55 links, 0 entries",
+    "timestamp_berlin": "2026-10-30T01:19:53+0100"
+   }
+  },
+  {
+   "id": "S22",
+   "batch": 3,
+   "cat": "B",
+   "name": "Cyber Valley careers",
+   "publisher": "Cyber Valley GmbH (Tübingen/Stuttgart AI & robotics network)",
+   "canonical": "https://cyber-valley.de/",
+   "endpoint": "https://cyber-valley.de/career/",
+   "method": "Career listing page (HTML); /en/jobs redirects here",
+   "adapter": "html",
+   "adapter_fit": "existing",
+   "official": "first-party",
+   "auth": "none",
+   "registration": "none",
+   "types": [
+    "research engineer roles",
+    "working student and student assistant positions",
+    "PhD/postdoc roles",
+    "internships (one listing is for PhD students)"
+   ],
+   "geo": "Germany (Baden-Württemberg)",
+   "remote": "Mostly on-site",
+   "audience": "Per listing; includes working-student and student-assistant roles.",
+   "tags": [
+    "ai",
+    "robotics",
+    "germany",
+    "student-jobs"
+   ],
+   "why": "Regional AI/robotics hub with listings such as 'Computer Vision Engineer – Working Student' and 'Student Assistant'.",
+   "stable_ids": "Job URL slug (/job/<slug>/)",
+   "dates": "Listing page shows titles/locations; dates are on job pages",
+   "difficulty": "Low-medium: list page + detail pages; crawl depth 1 would reach the details.",
+   "terms_url": "https://cyber-valley.de/privacy-policy/",
+   "terms_finding": "Privacy policy only.",
+   "rate": "None published",
+   "polling": "estimate 24 h",
+   "poll_hours": 24,
+   "policy": "unclear",
+   "policy_note": "robots.txt allows; terms not reviewed.",
+   "stability": "Medium.",
+   "evidence": [
+    {
+     "claim": "Careers page links 'Computer Vision Engineer – Working Student', 'Student Assistant CELLnROLL', 'Research internship for PhD students'",
+     "url": "https://cyber-valley.de/career/"
+    }
+   ],
+   "scores": {
+    "R": 5,
+    "A": 4,
+    "Q": 3,
+    "F": 4,
+    "I": 4
+   },
+   "why_s": {
+    "R": "AI/robotics roles in Baden-Württemberg including student jobs.",
+    "A": "Network's own listing; employers are institutes.",
+    "Q": "Titles/locations in list; details on job pages.",
+    "F": "Current listings present (Oct 2026).",
+    "I": "Existing adapter with depth-1 crawl."
+   },
+   "priority": "P0",
+   "status": "PROBE_PASSED",
+   "confidence": "high",
+   "unknown": [
+    "Posting dates/deadlines on job pages"
+   ],
+   "next": "Probe with ohg using follow_internal_links depth 1; review listings for student eligibility.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://cyber-valley.de/career/",
+    "robots_allowed": true,
+    "robots_status": 200,
+    "http_status": 200,
+    "content_type": "text/html",
+    "bytes": 322803,
+    "final_url": "https://cyber-valley.de/career/",
+    "note": null
+   },
+   "total": 20,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": false,
+    "C_config_draft": true,
+    "D_live_probe_passed": true,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": {
+    "result": "ok",
+    "detail": "200, 592 chars, 70 links, 0 entries",
+    "timestamp_berlin": "2026-10-30T01:19:53+0100"
+   }
+  },
+  {
+   "id": "S23",
+   "batch": 3,
+   "cat": "A",
+   "name": "TUM.ai events and hackathons",
+   "publisher": "TUM.ai (student initiative at TU Munich)",
+   "canonical": "https://www.tum-ai.com/",
+   "endpoint": "https://www.tum-ai.com/events",
+   "method": "Events page (HTML); /hackathons is a historical list (oldest first)",
+   "adapter": "html",
+   "adapter_fit": "existing",
+   "official": "first-party student initiative",
+   "auth": "none",
+   "registration": "none for browsing",
+   "types": [
+    "hackathons (Makeathon, league), workshops, founder events"
+   ],
+   "geo": "Germany (Munich)",
+   "remote": "Some",
+   "audience": "Students; per-event rules.",
+   "tags": [
+    "ai",
+    "hackathon",
+    "germany",
+    "students"
+   ],
+   "why": "Germany's leading AI student initiative; events page lists dozens of dated items (68 date mentions) and sponsor-backed challenges.",
+   "stable_ids": "None observed",
+   "dates": "Yes",
+   "difficulty": "Medium: page mixes past/future events (items from 2025 and 2026 observed) and is partly JS-built.",
+   "terms_url": "https://www.tum-ai.com/",
+   "terms_finding": "No terms read.",
+   "rate": "None published",
+   "polling": "estimate 72 h",
+   "poll_hours": 72,
+   "policy": "unclear",
+   "policy_note": "robots.txt returned 404 (no restrictions per RFC 9309); terms not reviewed.",
+   "stability": "Medium.",
+   "evidence": [
+    {
+     "claim": "/events lists dated events (e.g. '24 September 2025', '24 September 2026 ELAB: Women in Startups')",
+     "url": "https://www.tum-ai.com/events"
+    },
+    {
+     "claim": "/hackathons: 'Every TUM.ai hackathon, oldest first' with dates from 2021; points to the events page for upcoming ones",
+     "url": "https://www.tum-ai.com/hackathons"
+    }
+   ],
+   "scores": {
+    "R": 4,
+    "A": 4,
+    "Q": 3,
+    "F": 3,
+    "I": 3
+   },
+   "why_s": {
+    "R": "AI hackathons for students in Germany.",
+    "A": "Organiser's own site.",
+    "Q": "Dates present; eligibility/deadlines unclear.",
+    "F": "Mixed old and new items.",
+    "I": "HTML adapter works but filtering past events is needed."
+   },
+   "priority": "P1",
+   "status": "PROBE_PASSED",
+   "confidence": "medium",
+   "unknown": [
+    "Which events are currently open"
+   ],
+   "next": "Probe /events with ohg; keep EHL (S14) as the league source.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://www.tum-ai.com/events",
+    "robots_allowed": true,
+    "robots_status": 404,
+    "http_status": 200,
+    "content_type": "text/html",
+    "bytes": 777641,
+    "final_url": "https://www.tum-ai.com/events",
+    "note": null
+   },
+   "total": 17,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": false,
+    "C_config_draft": true,
+    "D_live_probe_passed": true,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": {
+    "result": "ok",
+    "detail": "200, 1716 chars, 17 links, 0 entries",
+    "timestamp_berlin": "2026-10-30T01:19:53+0100"
+   }
+  },
+  {
+   "id": "S24",
+   "batch": 3,
+   "cat": "A",
+   "name": "EvalAI challenges",
+   "publisher": "EvalAI (CloudCV)",
+   "canonical": "https://eval.ai/",
+   "endpoint": "https://eval.ai/api/challenges/challenge/present/approved/public",
+   "method": "Public JSON endpoint used by the platform's own web app (observed, not found in documentation during this run)",
+   "adapter": "JSON API adapter (missing)",
+   "adapter_fit": "gap",
+   "official": "first-party platform",
+   "auth": "none observed",
+   "registration": "none for this endpoint",
+   "types": [
+    "ML/AI evaluation challenges"
+   ],
+   "geo": "Global",
+   "remote": "Yes",
+   "audience": "Researchers and practitioners; per-challenge rules.",
+   "tags": [
+    "ml",
+    "challenges",
+    "api"
+   ],
+   "why": "Open-source challenge platform; the endpoint returned count=18 ongoing approved public challenges.",
+   "stable_ids": "challenge id",
+   "dates": "Yes in JSON (not parsed in this run)",
+   "difficulty": "Medium: JSON adapter; endpoint stability unknown because it is not shown to be a documented API.",
+   "terms_url": "https://eval.ai/",
+   "terms_finding": "Terms not read; documentation of this endpoint not verified.",
+   "rate": "Unknown",
+   "polling": "estimate 24 h",
+   "poll_hours": 24,
+   "policy": "unclear",
+   "policy_note": "robots.txt allowed the path; the endpoint is undocumented in our evidence, so permission to automate is unclear.",
+   "stability": "Medium-low (undocumented API).",
+   "evidence": [
+    {
+     "claim": "GET returned 200 application/json: {count: 18, results: [{id: 2703, title: 'CLIP2 - The 2nd Cadenza Lyrics Intelligibility Prediction Challenge', ...}]}",
+     "url": "https://eval.ai/api/challenges/challenge/present/approved/public"
+    },
+    {
+     "claim": "Docs site exists (API Reference / Endpoints sections); specific page for this endpoint not located",
+     "url": "https://evalai.readthedocs.io/en/latest/"
+    }
+   ],
+   "scores": {
+    "R": 3,
+    "A": 4,
+    "Q": 3,
+    "F": 4,
+    "I": 2
+   },
+   "why_s": {
+    "R": "Research-benchmark challenges, fewer student-friendly prizes.",
+    "A": "Operated by the open-source maintainers.",
+    "Q": "JSON has dates; eligibility inside description HTML.",
+    "F": "18 ongoing challenges.",
+    "I": "New adapter + undocumented endpoint risk."
+   },
+   "priority": "P2",
+   "status": "MANUAL_REVIEW",
+   "confidence": "medium",
+   "unknown": [
+    "Whether the endpoint is a supported public API",
+    "Terms of use"
+   ],
+   "next": "Find API documentation or ask maintainers before relying on this endpoint.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://eval.ai/api/challenges/challenge/present/approved/public",
+    "robots_allowed": true,
+    "robots_status": 200,
+    "http_status": 200,
+    "content_type": "application/json",
+    "bytes": 167658,
+    "final_url": "https://eval.ai/api/challenges/challenge/present/approved/public",
+    "note": null
+   },
+   "total": 16,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": false,
+    "C_config_draft": false,
+    "D_live_probe_passed": false,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": null
+  },
+  {
+   "id": "S25",
+   "batch": 3,
+   "cat": "C",
+   "name": "IAESTE Germany",
+   "publisher": "IAESTE Germany (DAAD-run national committee)",
+   "canonical": "https://www.iaeste.de/",
+   "endpoint": "https://www.iaeste.de/de/",
+   "method": "Programme pages (HTML); site RSS feed exists but returned 0 items",
+   "adapter": "html",
+   "adapter_fit": "existing",
+   "official": "first-party",
+   "auth": "none",
+   "registration": "Application via the internship portal (not accessed)",
+   "types": [
+    "technical internships abroad for students"
+   ],
+   "geo": "Germany outbound, international",
+   "remote": "No",
+   "audience": "Students (page text: 'Du studierst und willst ein Praktikum im Ausland machen?').",
+   "tags": [
+    "internship",
+    "abroad",
+    "engineering"
+   ],
+   "why": "Established route to engineering/IT internships abroad for students at German universities.",
+   "stable_ids": "None",
+   "dates": "None on the landing page",
+   "difficulty": "Medium: landing page has no listings; offers live in a portal that was not accessed.",
+   "terms_url": "https://www.iaeste.de/",
+   "terms_finding": "Not reviewed.",
+   "rate": "None published",
+   "polling": "estimate 168 h",
+   "poll_hours": 168,
+   "policy": "unclear",
+   "policy_note": "robots.txt allows the landing page; internship portal access unverified.",
+   "stability": "High.",
+   "evidence": [
+    {
+     "claim": "Landing page: 'Für Studierende ... Praktikum im Ausland machen?'",
+     "url": "https://www.iaeste.de/de/"
+    },
+    {
+     "claim": "RSS feed https://www.iaeste.de/de/feed/ is valid but has 0 entries",
+     "url": "https://www.iaeste.de/de/feed/"
+    }
+   ],
+   "scores": {
+    "R": 3,
+    "A": 5,
+    "Q": 1,
+    "F": 2,
+    "I": 2
+   },
+   "why_s": {
+    "R": "Relevant to students but not AI-specific.",
+    "A": "National committee.",
+    "Q": "No listings, deadlines or eligibility in the probed page.",
+    "F": "Static.",
+    "I": "Actual offers are elsewhere."
+   },
+   "priority": "P2",
+   "status": "MANUAL_REVIEW",
+   "confidence": "medium",
+   "unknown": [
+    "Where offers and deadlines are published"
+   ],
+   "next": "Locate the internship offer portal and its access rules.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://www.iaeste.de/de/",
+    "robots_allowed": true,
+    "robots_status": 200,
+    "http_status": 200,
+    "content_type": "text/html",
+    "bytes": 60142,
+    "final_url": "https://www.iaeste.de/de/",
+    "note": null
+   },
+   "total": 13,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": false,
+    "C_config_draft": false,
+    "D_live_probe_passed": false,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": null
+  },
+  {
+   "id": "S26",
+   "batch": 3,
+   "cat": "C",
+   "name": "Max Planck Institute for Informatics job openings",
+   "publisher": "Max Planck Institute for Informatics (Saarbrücken)",
+   "canonical": "https://www.mpi-inf.mpg.de/",
+   "endpoint": "https://www.mpi-inf.mpg.de/career/job-openings",
+   "method": "Career page (HTML)",
+   "adapter": "html",
+   "adapter_fit": "existing",
+   "official": "first-party",
+   "auth": "none",
+   "registration": "none",
+   "types": [
+    "student assistant, PhD, postdoc and group-leader positions"
+   ],
+   "geo": "Germany (Saarbrücken)",
+   "remote": "No",
+   "audience": "Per listing; page mentions student assistants.",
+   "tags": [
+    "research",
+    "computer-vision",
+    "machine-learning",
+    "germany"
+   ],
+   "why": "Top German CS institute with departments in Computer Vision & ML and Visual Computing & AI.",
+   "stable_ids": "None observed",
+   "dates": "None on the page",
+   "difficulty": "Medium: page links department job lists; listings not enumerated in this run.",
+   "terms_url": "https://www.mpi-inf.mpg.de/",
+   "terms_finding": "Not reviewed.",
+   "rate": "None published",
+   "polling": "estimate 24-72 h",
+   "poll_hours": 72,
+   "policy": "unclear",
+   "policy_note": "robots.txt allows; terms not reviewed.",
+   "stability": "High.",
+   "evidence": [
+    {
+     "claim": "Page: 'Whether you're a student assistant, Ph.D. student, postdoc, or research group leader'; lists departments D2 and D6",
+     "url": "https://www.mpi-inf.mpg.de/career/job-openings"
+    }
+   ],
+   "scores": {
+    "R": 4,
+    "A": 5,
+    "Q": 2,
+    "F": 3,
+    "I": 3
+   },
+   "why_s": {
+    "R": "Strong CV/ML research environment; hiring is mostly graduate-level.",
+    "A": "Max Planck institute.",
+    "Q": "Landing page lacks listings.",
+    "F": "Unknown posting recency.",
+    "I": "Needs link-following to listings."
+   },
+   "priority": "P2",
+   "status": "MANUAL_REVIEW",
+   "confidence": "medium",
+   "unknown": [
+    "Where actual openings are listed and in what format"
+   ],
+   "next": "Identify the listing URLs from the career page before drafting.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://www.mpi-inf.mpg.de/career/job-openings",
+    "robots_allowed": true,
+    "robots_status": 200,
+    "http_status": 200,
+    "content_type": "text/html",
+    "bytes": 106617,
+    "final_url": "https://www.mpi-inf.mpg.de/career/job-openings",
+    "note": null
+   },
+   "total": 17,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": false,
+    "C_config_draft": false,
+    "D_live_probe_passed": false,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": null
+  },
+  {
+   "id": "S27",
+   "batch": 3,
+   "cat": "D",
+   "name": "Studienstiftung des deutschen Volkes",
+   "publisher": "Studienstiftung des deutschen Volkes",
+   "canonical": "https://www.studienstiftung.de/",
+   "endpoint": "https://www.studienstiftung.de/",
+   "method": "Homepage news (HTML); the linked /rss URL returns an HTML page, not a feed",
+   "adapter": "html",
+   "adapter_fit": "existing",
+   "official": "first-party",
+   "auth": "none",
+   "registration": "Application/nomination process (not read)",
+   "types": [
+    "scholarship programme and related programmes (e.g. CERN network programme mentioned on the homepage)"
+   ],
+   "geo": "Germany",
+   "remote": "n/a",
+   "audience": "Not verified in this run.",
+   "tags": [
+    "scholarship",
+    "germany"
+   ],
+   "why": "Germany's largest scholarship foundation; homepage mentions a CERN-network technical programme.",
+   "stable_ids": "None",
+   "dates": "None on homepage",
+   "difficulty": "Medium: application information is on sub-pages not read.",
+   "terms_url": "https://www.studienstiftung.de/",
+   "terms_finding": "Not reviewed.",
+   "rate": "None published",
+   "polling": "estimate 168 h",
+   "poll_hours": 168,
+   "policy": "unclear",
+   "policy_note": "robots.txt allows; terms not reviewed.",
+   "stability": "High.",
+   "evidence": [
+    {
+     "claim": "Homepage news block including 'Mission CERN: Mit dem CERN-Netzwerk baut die Studienstiftung ein technikorientiertes Angebot ...'",
+     "url": "https://www.studienstiftung.de/"
+    },
+    {
+     "claim": "Link '/rss' returns an HTML page, so no usable feed was verified",
+     "url": "https://www.studienstiftung.de/rss"
+    }
+   ],
+   "scores": {
+    "R": 3,
+    "A": 5,
+    "Q": 1,
+    "F": 2,
+    "I": 3
+   },
+   "why_s": {
+    "R": "Relevant long-term scholarship, but eligibility is competitive/nomination-based (not verified here).",
+    "A": "Official foundation.",
+    "Q": "Homepage lacks deadlines/eligibility.",
+    "F": "News only.",
+    "I": "Static HTML; low yield."
+   },
+   "priority": "P2",
+   "status": "PROBE_PASSED",
+   "confidence": "low",
+   "unknown": [
+    "Application route and deadlines",
+    "Eligibility for the user"
+   ],
+   "next": "Read the application sub-pages; probably track manually.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://www.studienstiftung.de/",
+    "robots_allowed": true,
+    "robots_status": 200,
+    "http_status": 200,
+    "content_type": "text/html",
+    "bytes": 44095,
+    "final_url": "https://www.studienstiftung.de/",
+    "note": null
+   },
+   "total": 14,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": false,
+    "C_config_draft": true,
+    "D_live_probe_passed": true,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": {
+    "result": "ok",
+    "detail": "200, 2969 chars, 128 links, 0 entries",
+    "timestamp_berlin": "2026-10-30T01:19:53+0100"
+   }
+  },
+  {
+   "id": "S28",
+   "batch": 3,
+   "cat": "E",
+   "name": "ICLR 2027",
+   "publisher": "International Conference on Learning Representations",
+   "canonical": "https://iclr.cc/",
+   "endpoint": "https://iclr.cc/",
+   "method": "Conference homepage (HTML)",
+   "adapter": "html",
+   "adapter_fit": "existing",
+   "official": "first-party",
+   "auth": "none",
+   "registration": "none",
+   "types": [
+    "conference dates, call for papers, workshops, volunteering/financial aid"
+   ],
+   "geo": "Global (2027: California)",
+   "remote": "n/a",
+   "audience": "Researchers, students.",
+   "tags": [
+    "ai",
+    "conference"
+   ],
+   "why": "Top ML venue; homepage states ICLR 2027, California, April 26-30, 2027.",
+   "stable_ids": "Year in URL",
+   "dates": "Yes",
+   "difficulty": "Low: yearly page.",
+   "terms_url": "https://iclr.cc/public/PrivacyPolicy",
+   "terms_finding": "Privacy policy only.",
+   "rate": "None published",
+   "polling": "estimate 168 h",
+   "poll_hours": 168,
+   "policy": "unclear",
+   "policy_note": "robots.txt allows; terms not reviewed.",
+   "stability": "High.",
+   "evidence": [
+    {
+     "claim": "Homepage: 'ICLR 2027 The Fifteenth International Conference on Learning Representations California April 26-30, 2027'",
+     "url": "https://iclr.cc/"
+    }
+   ],
+   "scores": {
+    "R": 5,
+    "A": 5,
+    "Q": 3,
+    "F": 4,
+    "I": 4
+   },
+   "why_s": {
+    "R": "Core ML venue.",
+    "A": "Official site.",
+    "Q": "Dates yes; deadlines on sub-pages.",
+    "F": "2027 page live.",
+    "I": "Existing adapter."
+   },
+   "priority": "P1",
+   "status": "PROBE_PASSED",
+   "confidence": "high",
+   "unknown": [
+    "Submission deadline page"
+   ],
+   "next": "Add the 'Dates' sub-page to the entry.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://iclr.cc/",
+    "robots_allowed": true,
+    "robots_status": 200,
+    "http_status": 200,
+    "content_type": "text/html",
+    "bytes": 58731,
+    "final_url": "https://iclr.cc/",
+    "note": null
+   },
+   "total": 21,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": false,
+    "C_config_draft": true,
+    "D_live_probe_passed": true,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": {
+    "result": "ok",
+    "detail": "200, 3080 chars, 54 links, 0 entries",
+    "timestamp_berlin": "2026-10-30T01:19:53+0100"
+   }
+  },
+  {
+   "id": "S29",
+   "batch": 3,
+   "cat": "E",
+   "name": "CVPR 2027",
+   "publisher": "IEEE/CVF",
+   "canonical": "https://cvpr.thecvf.com/",
+   "endpoint": "https://cvpr.thecvf.com/",
+   "method": "Conference homepage (HTML)",
+   "adapter": "html",
+   "adapter_fit": "existing",
+   "official": "first-party",
+   "auth": "none",
+   "registration": "none",
+   "types": [
+    "conference dates, call for papers/workshops, announcements"
+   ],
+   "geo": "Global (2027: Seattle)",
+   "remote": "n/a",
+   "audience": "Researchers, students.",
+   "tags": [
+    "computer-vision",
+    "conference"
+   ],
+   "why": "Top computer-vision venue; homepage: CVPR 2027, Seattle, June 20-25, 2027, with dated announcements (28 Oct 2026).",
+   "stable_ids": "Year in URL",
+   "dates": "Announcement dates yes",
+   "difficulty": "Low.",
+   "terms_url": "https://cvpr.thecvf.com/Conferences/2024/PrivacyPolicy",
+   "terms_finding": "Privacy policy only.",
+   "rate": "None published",
+   "polling": "estimate 168 h",
+   "poll_hours": 168,
+   "policy": "unclear",
+   "policy_note": "robots.txt allows; terms not reviewed.",
+   "stability": "High.",
+   "evidence": [
+    {
+     "claim": "Homepage: 'CVPR 2027 Seattle WA June 20-25, 2027 ... Oct 28: CVPR 2026 Program Committee Releases Compute Report'",
+     "url": "https://cvpr.thecvf.com/"
+    }
+   ],
+   "scores": {
+    "R": 5,
+    "A": 5,
+    "Q": 3,
+    "F": 4,
+    "I": 4
+   },
+   "why_s": {
+    "R": "Computer vision is a stated priority domain.",
+    "A": "Official site.",
+    "Q": "Announcement list, deadlines on sub-pages.",
+    "F": "Announcements within last 2 days.",
+    "I": "Existing adapter."
+   },
+   "priority": "P1",
+   "status": "PROBE_PASSED",
+   "confidence": "high",
+   "unknown": [
+    "Deadline page URL"
+   ],
+   "next": "Add the dates page to the entry.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://cvpr.thecvf.com/",
+    "robots_allowed": true,
+    "robots_status": 200,
+    "http_status": 200,
+    "content_type": "text/html",
+    "bytes": 38229,
+    "final_url": "https://cvpr.thecvf.com/",
+    "note": null
+   },
+   "total": 21,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": false,
+    "C_config_draft": true,
+    "D_live_probe_passed": true,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": {
+    "result": "ok",
+    "detail": "200, 519 chars, 33 links, 0 entries",
+    "timestamp_berlin": "2026-10-30T01:19:53+0100"
+   }
+  },
+  {
+   "id": "S30",
+   "batch": 3,
+   "cat": "F",
+   "name": "Outreachy internships",
+   "publisher": "Outreachy (Software Freedom Conservancy)",
+   "canonical": "https://www.outreachy.org/",
+   "endpoint": "https://www.outreachy.org/",
+   "method": "Programme homepage (HTML) and /apply/ guide",
+   "adapter": "html",
+   "adapter_fit": "existing",
+   "official": "first-party",
+   "auth": "none",
+   "registration": "Account required to apply",
+   "types": [
+    "remote paid open-source internships"
+   ],
+   "geo": "Global",
+   "remote": "Yes",
+   "audience": "People subject to systemic bias/underrepresentation; the apply guide says 'We have strict eligibility rules'.",
+   "tags": [
+    "open-source",
+    "internship",
+    "remote"
+   ],
+   "why": "Remote paid internships with published rounds; eligibility is restricted and must be read per applicant.",
+   "stable_ids": "None",
+   "dates": "Yes (e.g. February 13, 2026, August 17, 2026 on the homepage)",
+   "difficulty": "Low: static pages; dates in text.",
+   "terms_url": "https://www.outreachy.org/privacy-policy/",
+   "terms_finding": "Privacy policy only.",
+   "rate": "None published",
+   "polling": "estimate 168 h",
+   "poll_hours": 168,
+   "policy": "unclear",
+   "policy_note": "robots.txt returned 404 (no restrictions per RFC 9309); terms not reviewed.",
+   "stability": "High.",
+   "evidence": [
+    {
+     "claim": "Homepage lists application round dates incl. 'August 17, 2026'",
+     "url": "https://www.outreachy.org/"
+    },
+    {
+     "claim": "Apply guide: 'We have strict eligibility rules for people with...'",
+     "url": "https://www.outreachy.org/apply/"
+    }
+   ],
+   "scores": {
+    "R": 3,
+    "A": 5,
+    "Q": 4,
+    "F": 4,
+    "I": 4
+   },
+   "why_s": {
+    "R": "Relevant if the user meets eligibility; unknown.",
+    "A": "Program operator.",
+    "Q": "Rounds and rules clear.",
+    "F": "Current rounds listed.",
+    "I": "Existing adapter."
+   },
+   "priority": "P2",
+   "status": "PROBE_PASSED",
+   "confidence": "high",
+   "unknown": [
+    "Whether the user is eligible"
+   ],
+   "next": "User reads the eligibility rules before onboarding.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://www.outreachy.org/",
+    "robots_allowed": true,
+    "robots_status": 404,
+    "http_status": 200,
+    "content_type": "text/html",
+    "bytes": 17017,
+    "final_url": "https://www.outreachy.org/",
+    "note": null
+   },
+   "total": 20,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": false,
+    "C_config_draft": true,
+    "D_live_probe_passed": true,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": {
+    "result": "ok",
+    "detail": "200, 3633 chars, 34 links, 0 entries",
+    "timestamp_berlin": "2026-10-30T01:19:53+0100"
+   }
+  },
+  {
+   "id": "S31",
+   "batch": 4,
+   "cat": "B",
+   "name": "ELLIS event calendar",
+   "publisher": "European Laboratory for Learning and Intelligent Systems (ELLIS)",
+   "canonical": "https://ellis.eu/",
+   "endpoint": "https://ellis.eu/event-calendar",
+   "method": "Event calendar (HTML)",
+   "adapter": "html",
+   "adapter_fit": "existing",
+   "official": "first-party",
+   "auth": "none",
+   "registration": "none",
+   "types": [
+    "workshops, summits, conferences and summer schools at ELLIS units across Europe"
+   ],
+   "geo": "Europe (incl. German units)",
+   "remote": "Some",
+   "audience": "AI researchers and students; per event.",
+   "tags": [
+    "ai",
+    "europe",
+    "events",
+    "summer-schools"
+   ],
+   "why": "Dated pan-European AI events (e.g. 'ELLIS UnConference 2026' on 8 Dec 2026 in Paris; unit summits in Turku, Warsaw, Milan).",
+   "stable_ids": "Event page URL",
+   "dates": "Yes (DD/MM/YY format)",
+   "difficulty": "Low-medium: dates in 'DD/MM/YY' form; the strict parser may flag two-digit years.",
+   "terms_url": "https://ellis.eu/about/privacy-policy",
+   "terms_finding": "Privacy policy only.",
+   "rate": "None published",
+   "polling": "estimate 72 h",
+   "poll_hours": 72,
+   "policy": "unclear",
+   "policy_note": "robots.txt allows; terms not reviewed. /feed returned 404.",
+   "stability": "Medium-high.",
+   "evidence": [
+    {
+     "claim": "Calendar entries: '08/12/26 • Palais des Congrès de Paris ELLIS UnConference 2026', '26/11/26 • Milan ...'",
+     "url": "https://ellis.eu/event-calendar"
+    },
+    {
+     "claim": "Search result: ELLIS summer schools are published as /events/<slug> pages (2026 editions at Tübingen, Munich, Cambridge)",
+     "url": "https://ellis.eu/events/ellis-summer-school-at-institute-tuebingen-2026"
+    }
+   ],
+   "scores": {
+    "R": 5,
+    "A": 5,
+    "Q": 3,
+    "F": 4,
+    "I": 3
+   },
+   "why_s": {
+    "R": "AI research events and summer schools in Europe/Germany.",
+    "A": "Official network.",
+    "Q": "Dates yes; deadlines inside event pages.",
+    "F": "Events through Dec 2026.",
+    "I": "Date format needs handling; depth-1 crawl for details."
+   },
+   "priority": "P1",
+   "status": "PROBE_PASSED",
+   "confidence": "medium",
+   "unknown": [
+    "Two-digit-year date handling",
+    "2027 summer school listings"
+   ],
+   "next": "Probe with ohg; follow events pages at depth 1.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://ellis.eu/event-calendar",
+    "robots_allowed": true,
+    "robots_status": 200,
+    "http_status": 200,
+    "content_type": "text/html",
+    "bytes": 123222,
+    "final_url": "https://ellis.eu/events",
+    "note": null
+   },
+   "total": 20,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": false,
+    "C_config_draft": true,
+    "D_live_probe_passed": true,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": {
+    "result": "ok",
+    "detail": "200, 8709 chars, 51 links, 0 entries",
+    "timestamp_berlin": "2026-10-30T01:20:18+0100"
+   }
+  },
+  {
+   "id": "S32",
+   "batch": 4,
+   "cat": "B",
+   "name": "Helmholtz AI",
+   "publisher": "Helmholtz AI (Helmholtz Association)",
+   "canonical": "https://www.helmholtz.ai/",
+   "endpoint": "https://www.helmholtz.ai/",
+   "method": "Homepage with news and dated event list (HTML)",
+   "adapter": "html",
+   "adapter_fit": "existing",
+   "official": "first-party",
+   "auth": "none",
+   "registration": "none",
+   "types": [
+    "AI project funding calls",
+    "events and symposia",
+    "consulting/compute access for Helmholtz researchers"
+   ],
+   "geo": "Germany/Europe",
+   "remote": "Some",
+   "audience": "Mainly researchers in the Helmholtz Association; not student-specific.",
+   "tags": [
+    "ai",
+    "germany",
+    "research",
+    "funding"
+   ],
+   "why": "German applied-AI research platform; homepage lists dated events (e.g. 02.12.2026, 30.11.2026, 09.11.2026).",
+   "stable_ids": "None",
+   "dates": "Yes (DD.MM.YYYY)",
+   "difficulty": "Low.",
+   "terms_url": "https://www.helmholtz.ai/",
+   "terms_finding": "Not reviewed.",
+   "rate": "None published",
+   "polling": "estimate 72 h",
+   "poll_hours": 72,
+   "policy": "unclear",
+   "policy_note": "robots.txt allows; terms not reviewed.",
+   "stability": "High.",
+   "evidence": [
+    {
+     "claim": "Homepage: 'Project funding: Secure funding ... via our AI project call' and dated events '02.12.2026', '30.11.2026', '09.11.2026'",
+     "url": "https://www.helmholtz.ai/"
+    }
+   ],
+   "scores": {
+    "R": 3,
+    "A": 5,
+    "Q": 3,
+    "F": 4,
+    "I": 4
+   },
+   "why_s": {
+    "R": "AI research ecosystem; mostly for Helmholtz staff.",
+    "A": "Official platform.",
+    "Q": "Dated events; eligibility for students unclear.",
+    "F": "Events through Dec 2026.",
+    "I": "Existing adapter."
+   },
+   "priority": "P2",
+   "status": "PROBE_PASSED",
+   "confidence": "medium",
+   "unknown": [
+    "Whether students outside Helmholtz can use any offering"
+   ],
+   "next": "Review which sections are relevant before activation.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://www.helmholtz.ai/",
+    "robots_allowed": true,
+    "robots_status": 200,
+    "http_status": 200,
+    "content_type": "text/html",
+    "bytes": 167483,
+    "final_url": "https://www.helmholtz.ai/",
+    "note": null
+   },
+   "total": 19,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": false,
+    "C_config_draft": true,
+    "D_live_probe_passed": true,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": {
+    "result": "ok",
+    "detail": "200, 1171 chars, 64 links, 0 entries",
+    "timestamp_berlin": "2026-10-30T01:20:18+0100"
+   }
+  },
+  {
+   "id": "S33",
+   "batch": 4,
+   "cat": "A",
+   "name": "Codabench public competitions",
+   "publisher": "Codabench (open-source platform, CNRS/Université Paris-Saclay ecosystem)",
+   "canonical": "https://www.codabench.org/",
+   "endpoint": "https://www.codabench.org/competitions/public/",
+   "method": "Public listing page loaded dynamically; API docs linked at /api/docs/ (JavaScript, not readable in this run)",
+   "adapter": "JSON API / JS render (missing)",
+   "adapter_fit": "gap",
+   "official": "first-party platform",
+   "auth": "none to browse",
+   "registration": "Account to participate",
+   "types": [
+    "AI benchmarks and competitions"
+   ],
+   "geo": "Global",
+   "remote": "Yes",
+   "audience": "Researchers and practitioners; per-competition rules.",
+   "tags": [
+    "ml",
+    "benchmarks",
+    "competitions"
+   ],
+   "why": "Open-source benchmark platform with a public competition list and documented API link.",
+   "stable_ids": "competition id",
+   "dates": "Not visible without JS",
+   "difficulty": "High until the API contract is confirmed.",
+   "terms_url": "https://www.codabench.org/",
+   "terms_finding": "Footer lists 'Privacy and Terms'; not read.",
+   "rate": "Unknown",
+   "polling": "estimate 24 h",
+   "poll_hours": 24,
+   "policy": "unclear",
+   "policy_note": "Listing page returns 497 characters of static text; data loads dynamically.",
+   "stability": "Medium.",
+   "evidence": [
+    {
+     "claim": "Public page links 'API docs' and shows 'Open-source platform for AI benchmarks and competitions'",
+     "url": "https://www.codabench.org/competitions/public/"
+    },
+    {
+     "claim": "Documentation site",
+     "url": "https://docs.codabench.org/latest/"
+    }
+   ],
+   "scores": {
+    "R": 3,
+    "A": 4,
+    "Q": 2,
+    "F": 3,
+    "I": 1
+   },
+   "why_s": {
+    "R": "Research benchmarks; moderate student relevance.",
+    "A": "Maintained open-source platform.",
+    "Q": "Not assessed (dynamic).",
+    "F": "Unknown.",
+    "I": "Needs API contract + adapter."
+   },
+   "priority": "P2",
+   "status": "MANUAL_REVIEW",
+   "confidence": "low",
+   "unknown": [
+    "Public list API path and terms"
+   ],
+   "next": "Read https://www.codabench.org/api/docs/ in a browser and confirm a public listing endpoint.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://www.codabench.org/competitions/public/",
+    "robots_allowed": true,
+    "robots_status": 404,
+    "http_status": 200,
+    "content_type": "text/html",
+    "bytes": 13441,
+    "final_url": "https://www.codabench.org/competitions/public/",
+    "note": null
+   },
+   "total": 13,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": false,
+    "C_config_draft": false,
+    "D_live_probe_passed": false,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": null
+  },
+  {
+   "id": "S34",
+   "batch": 4,
+   "cat": "A",
+   "name": "Junction hackathon",
+   "publisher": "Junction (Hackjunction)",
+   "canonical": "https://www.hackjunction.com/",
+   "endpoint": "https://www.hackjunction.com/",
+   "method": "Single-page JavaScript site (no static content observed)",
+   "adapter": "Playwright (missing)",
+   "adapter_fit": "gap",
+   "official": "first-party",
+   "auth": "none",
+   "registration": "n/a",
+   "types": [
+    "large European hackathon (annual)"
+   ],
+   "geo": "Europe (Finland)",
+   "remote": "No",
+   "audience": "Participants of the event; not verified.",
+   "tags": [
+    "hackathon",
+    "europe"
+   ],
+   "why": "Large annual European hackathon; the site is a JavaScript shell (1.6 KB HTML, 0 visible text characters).",
+   "stable_ids": "None",
+   "dates": "Not extractable without rendering",
+   "difficulty": "High: needs Playwright and policy approval; one event per year.",
+   "terms_url": "https://www.hackjunction.com/",
+   "terms_finding": "Not reviewed.",
+   "rate": "None",
+   "polling": "monthly (estimate)",
+   "poll_hours": 720,
+   "policy": "unclear",
+   "policy_note": "robots.txt allows; no content without JavaScript.",
+   "stability": "Medium.",
+   "evidence": [
+    {
+     "claim": "Fetched page is 1,615 bytes with no visible text; title 'Hackjunction'",
+     "url": "https://www.hackjunction.com/"
+    },
+    {
+     "claim": "/events returned 200 with 0 visible characters",
+     "url": "https://www.hackjunction.com/events"
+    }
+   ],
+   "scores": {
+    "R": 3,
+    "A": 4,
+    "Q": 1,
+    "F": 2,
+    "I": 1
+   },
+   "why_s": {
+    "R": "One big hackathon per year.",
+    "A": "Organiser site.",
+    "Q": "No extractable data.",
+    "F": "Unknown.",
+    "I": "Requires rendering."
+   },
+   "priority": "Hold",
+   "status": "MANUAL_REVIEW",
+   "confidence": "low",
+   "unknown": [
+    "2026/2027 dates",
+    "Eligibility"
+   ],
+   "next": "Check manually; skip until a Playwright adapter exists.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://www.hackjunction.com/",
+    "robots_allowed": true,
+    "robots_status": 200,
+    "http_status": 200,
+    "content_type": "text/html",
+    "bytes": 1615,
+    "final_url": "https://www.hackjunction.com/",
+    "note": null
+   },
+   "total": 11,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": false,
+    "C_config_draft": false,
+    "D_live_probe_passed": false,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": null
+  },
+  {
+   "id": "S35",
+   "batch": 4,
+   "cat": "C",
+   "name": "TH Mannheim Career Center",
+   "publisher": "Technische Hochschule Mannheim",
+   "canonical": "https://www.career.hs-mannheim.de/",
+   "endpoint": "https://www.career.hs-mannheim.de/",
+   "method": "Career Center page (HTML); student job board runs on JobTeaser (access model unverified)",
+   "adapter": "html",
+   "adapter_fit": "existing",
+   "official": "first-party (the user's own university)",
+   "auth": "Unknown for the job board",
+   "registration": "Likely student login for JobTeaser (unverified)",
+   "types": [
+    "career events, company contact fairs (e.g. CareerStation 29 April 2027), job board"
+   ],
+   "geo": "Mannheim",
+   "remote": "n/a",
+   "audience": "Students and alumni of the university.",
+   "tags": [
+    "university",
+    "careers",
+    "mannheim"
+   ],
+   "why": "The user's own institution; the Career Center page shows dated events (14 date mentions) and the annual CareerStation fair on 29 April 2027.",
+   "stable_ids": "None",
+   "dates": "Yes for events",
+   "difficulty": "Medium-high: the actual job listings are on JobTeaser and probably login-gated.",
+   "terms_url": "https://www.hs-mannheim.de/unternehmen/jobteaser.html",
+   "terms_finding": "Page describes JobTeaser career network for recruiters; student access rules not stated.",
+   "rate": "n/a",
+   "polling": "estimate 72 h for the events page",
+   "poll_hours": 72,
+   "policy": "unclear",
+   "policy_note": "The Career Center page is public; job board access likely requires login which must not be bypassed.",
+   "stability": "Medium.",
+   "evidence": [
+    {
+     "claim": "Career Center page lists dated events (e.g. '1. September 2026', '02.12.2026')",
+     "url": "https://www.career.hs-mannheim.de/"
+    },
+    {
+     "claim": "CareerStation fair: 'Willkommen bei der CareerStation 2027' (29. April 2027)",
+     "url": "https://www.hs-mannheim.de/studierende/careerstation-fuer-studierende.html"
+    },
+    {
+     "claim": "JobTeaser Karrierenetzwerk of the university",
+     "url": "https://www.hs-mannheim.de/unternehmen/jobteaser.html"
+    }
+   ],
+   "scores": {
+    "R": 4,
+    "A": 5,
+    "Q": 2,
+    "F": 3,
+    "I": 2
+   },
+   "why_s": {
+    "R": "Local jobs/internships, but not AI-specific.",
+    "A": "The university itself.",
+    "Q": "Events are dated; jobs not visible.",
+    "F": "Current events listed.",
+    "I": "Job board likely gated."
+   },
+   "priority": "P2",
+   "status": "MANUAL_REVIEW",
+   "confidence": "medium",
+   "unknown": [
+    "Whether JobTeaser exposes a public feed",
+    "Login requirements"
+   ],
+   "next": "Check with the Career Center whether a public feed exists; track events page meanwhile.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://www.career.hs-mannheim.de/",
+    "robots_allowed": true,
+    "robots_status": 200,
+    "http_status": 200,
+    "content_type": "text/html",
+    "bytes": 74166,
+    "final_url": "https://www.career.hs-mannheim.de/",
+    "note": null
+   },
+   "total": 16,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": true,
+    "C_config_draft": false,
+    "D_live_probe_passed": false,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": null
+  },
+  {
+   "id": "S36",
+   "batch": 4,
+   "cat": "D",
+   "name": "DAAD scholarship database",
+   "publisher": "Deutscher Akademischer Austauschdienst (DAAD)",
+   "canonical": "https://www.daad.de/",
+   "endpoint": "https://www2.daad.de/deutschland/stipendium/datenbank/en/21148-scholarship-database/",
+   "method": "Search-form database (the English page verified is the inbound variant for international applicants)",
+   "adapter": "form/search (missing)",
+   "adapter_fit": "gap",
+   "official": "first-party",
+   "auth": "none",
+   "registration": "none to browse",
+   "types": [
+    "scholarships for study, research stays and internships"
+   ],
+   "geo": "Germany and abroad",
+   "remote": "n/a",
+   "audience": "Page verified for 'international students and researchers'; the outbound variant for German students was not located (guessed outbound URLs returned 404).",
+   "tags": [
+    "scholarship",
+    "daad"
+   ],
+   "why": "DAAD is the main funder of study/research stays; secondary sources say the database is the starting point for German bachelor students searching with status 'Studierende'.",
+   "stable_ids": "programme id in URL",
+   "dates": "Per programme",
+   "difficulty": "High: results come from form queries; no static list.",
+   "terms_url": "https://www.daad.de/",
+   "terms_finding": "Not reviewed.",
+   "rate": "None published",
+   "polling": "manual",
+   "poll_hours": 720,
+   "policy": "unclear",
+   "policy_note": "robots.txt returned 404; form-driven search is not a polling target.",
+   "stability": "High.",
+   "evidence": [
+    {
+     "claim": "Database page: 'Here you will find information about our DAAD scholarship programmes for international students and researchers'",
+     "url": "https://www2.daad.de/deutschland/stipendium/datenbank/en/21148-scholarship-database/"
+    },
+    {
+     "claim": "Secondary: Uni Mannheim page says Bachelor students search with status 'Studierende' (search snippet, not fetched)",
+     "url": "https://www.uni-mannheim.de/studium/von-mannheim-ins-ausland/austauschstudium/finanzierung/stipendien"
+    }
+   ],
+   "scores": {
+    "R": 4,
+    "A": 5,
+    "Q": 3,
+    "F": 3,
+    "I": 1
+   },
+   "why_s": {
+    "R": "Major funder for stays abroad; the relevant outbound entry point is unverified.",
+    "A": "Official funder.",
+    "Q": "Rich per-programme data, but only via search.",
+    "F": "Continuously updated.",
+    "I": "No static endpoint."
+   },
+   "priority": "Hold",
+   "status": "MANUAL_REVIEW",
+   "confidence": "low",
+   "unknown": [
+    "Outbound database URL",
+    "Any public data feed"
+   ],
+   "next": "Manual review: find the German outbound database URL; consider monthly human check.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://www2.daad.de/deutschland/stipendium/datenbank/en/21148-scholarship-database/",
+    "robots_allowed": true,
+    "robots_status": 404,
+    "http_status": 200,
+    "content_type": "text/html",
+    "bytes": 23476,
+    "final_url": "https://www2.daad.de/deutschland/stipendium/datenbank/en/21148-scholarship-database/",
+    "note": null
+   },
+   "total": 16,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": false,
+    "C_config_draft": false,
+    "D_live_probe_passed": false,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": null
+  },
+  {
+   "id": "S37",
+   "batch": 4,
+   "cat": "D",
+   "name": "Deutschlandstipendium (BMFTR)",
+   "publisher": "German Federal Ministry (BMFTR)",
+   "canonical": "https://www.deutschlandstipendium.de/",
+   "endpoint": "https://www.deutschlandstipendium.de/deutschlandstipendium/de/home/home_node.html",
+   "method": "Official programme site (HTML); applications go through each university",
+   "adapter": "html",
+   "adapter_fit": "existing",
+   "official": "first-party",
+   "auth": "none",
+   "registration": "Via the student's university",
+   "types": [
+    "merit scholarship (EUR 300/month, estimate from programme knowledge, not verified in this run)"
+   ],
+   "geo": "Germany",
+   "remote": "n/a",
+   "audience": "Students at participating German universities.",
+   "tags": [
+    "scholarship",
+    "germany"
+   ],
+   "why": "Directly applicable at universities of applied sciences; the national site gives general information and news.",
+   "stable_ids": "None",
+   "dates": "None on the home page",
+   "difficulty": "Medium: per-university deadlines are the real signal and live on each university site (Mannheim page not located).",
+   "terms_url": "https://www.deutschlandstipendium.de/",
+   "terms_finding": "Not reviewed.",
+   "rate": "None published",
+   "polling": "estimate 168 h",
+   "poll_hours": 168,
+   "policy": "unclear",
+   "policy_note": "robots.txt allows; terms not reviewed.",
+   "stability": "High.",
+   "evidence": [
+    {
+     "claim": "Home page 'Startseite - BMFTR Deutschlandstipendium' with news items",
+     "url": "https://www.deutschlandstipendium.de/deutschlandstipendium/de/home/home_node.html"
+    }
+   ],
+   "scores": {
+    "R": 3,
+    "A": 5,
+    "Q": 1,
+    "F": 2,
+    "I": 3
+   },
+   "why_s": {
+    "R": "Relevant to the user but deadlines are at the university.",
+    "A": "Federal ministry.",
+    "Q": "No dates on probed page.",
+    "F": "News only.",
+    "I": "Low data yield."
+   },
+   "priority": "P2",
+   "status": "PROBE_PASSED",
+   "confidence": "medium",
+   "unknown": [
+    "Hochschule Mannheim's application window"
+   ],
+   "next": "Add the university's scholarship page as its own source.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://www.deutschlandstipendium.de/deutschlandstipendium/de/home/home_node.html",
+    "robots_allowed": true,
+    "robots_status": 200,
+    "http_status": 200,
+    "content_type": "text/html",
+    "bytes": 111173,
+    "final_url": "https://www.deutschlandstipendium.de/deutschlandstipendium/de/home/home_node.html",
+    "note": null
+   },
+   "total": 14,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": false,
+    "C_config_draft": true,
+    "D_live_probe_passed": true,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": {
+    "result": "ok",
+    "detail": "200, 1893 chars, 88 links, 0 entries",
+    "timestamp_berlin": "2026-10-30T01:20:18+0100"
+   }
+  },
+  {
+   "id": "S38",
+   "batch": 4,
+   "cat": "E",
+   "name": "CoRL 2026",
+   "publisher": "Conference on Robot Learning",
+   "canonical": "https://www.corl.org/",
+   "endpoint": "https://www.corl.org/",
+   "method": "Conference site (HTML, Google Sites)",
+   "adapter": "html",
+   "adapter_fit": "existing",
+   "official": "first-party",
+   "auth": "none",
+   "registration": "none",
+   "types": [
+    "conference dates, calls, workshops, volunteering"
+   ],
+   "geo": "Global (2026: Austin, Texas)",
+   "remote": "n/a",
+   "audience": "Researchers, students.",
+   "tags": [
+    "robotics",
+    "conference",
+    "learning"
+   ],
+   "why": "Premier robot-learning venue; homepage: CoRL 2026, November 9-12, 2026, Austin, Texas.",
+   "stable_ids": "Year in site",
+   "dates": "Yes",
+   "difficulty": "Low-medium: Google Sites page structure; yearly redesign.",
+   "terms_url": "https://www.corl.org/",
+   "terms_finding": "Not reviewed.",
+   "rate": "None published",
+   "polling": "estimate 168 h",
+   "poll_hours": 168,
+   "policy": "unclear",
+   "policy_note": "robots.txt returned 404 (no restrictions per RFC 9309); terms not reviewed.",
+   "stability": "Medium: site is recreated each year.",
+   "evidence": [
+    {
+     "claim": "Homepage: 'Conference on Robot Learning November 9-12, 2026 | Austin, Texas, US'",
+     "url": "https://www.corl.org/"
+    }
+   ],
+   "scores": {
+    "R": 5,
+    "A": 5,
+    "Q": 3,
+    "F": 3,
+    "I": 3
+   },
+   "why_s": {
+    "R": "Robot learning is a stated focus.",
+    "A": "Official site.",
+    "Q": "Dates yes; other deadlines on sub-pages.",
+    "F": "2026 edition within weeks; 2027 unknown.",
+    "I": "Yearly URL/structure drift."
+   },
+   "priority": "P1",
+   "status": "PROBE_PASSED",
+   "confidence": "high",
+   "unknown": [
+    "2027 site timing"
+   ],
+   "next": "Re-check after the 2026 conference for the 2027 site.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://www.corl.org/",
+    "robots_allowed": true,
+    "robots_status": 404,
+    "http_status": 200,
+    "content_type": "text/html",
+    "bytes": 279783,
+    "final_url": "https://www.corl.org/",
+    "note": null
+   },
+   "total": 19,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": false,
+    "C_config_draft": true,
+    "D_live_probe_passed": true,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": {
+    "result": "ok",
+    "detail": "200, 1891 chars, 101 links, 0 entries",
+    "timestamp_berlin": "2026-10-30T01:20:18+0100"
+   }
+  },
+  {
+   "id": "S39",
+   "batch": 4,
+   "cat": "F",
+   "name": "Cyber Security Challenge Germany (CSCG)",
+   "publisher": "NFITS e.V.",
+   "canonical": "https://cscg.de/",
+   "endpoint": "https://cscg.de/",
+   "method": "Programme site (HTML); RSS at /index.xml exists but its newest item is from March 2024",
+   "adapter": "html",
+   "adapter_fit": "existing",
+   "official": "first-party",
+   "auth": "none",
+   "registration": "Participation via play.cscg.live",
+   "types": [
+    "annual online security competition (1 March - 1 May) feeding Germany's ECSC team"
+   ],
+   "geo": "Germany",
+   "remote": "Yes (online qualifier)",
+   "audience": "People in Germany; age/eligibility on the site (not read).",
+   "tags": [
+    "cybersecurity",
+    "germany",
+    "competition"
+   ],
+   "why": "Germany's national CTF qualifier; page states it runs yearly from 1 March to 1 May online.",
+   "stable_ids": "None",
+   "dates": "Annual window stated",
+   "difficulty": "Low: tiny static page.",
+   "terms_url": "https://cscg.de/",
+   "terms_finding": "Not reviewed.",
+   "rate": "None published",
+   "polling": "estimate 168 h",
+   "poll_hours": 168,
+   "policy": "unclear",
+   "policy_note": "robots.txt returned 404 (no restrictions per RFC 9309); terms not reviewed.",
+   "stability": "High.",
+   "evidence": [
+    {
+     "claim": "Page: 'Die CSCG findet jährlich vom 1. März bis zum 1. Mai online statt.'",
+     "url": "https://cscg.de/"
+    },
+    {
+     "claim": "RSS feed parses (28 entries) but newest observed entry is 'Start der CSCG 2024' (1 Mar 2024), so it is stale",
+     "url": "https://cscg.de/index.xml"
+    }
+   ],
+   "scores": {
+    "R": 3,
+    "A": 4,
+    "Q": 3,
+    "F": 3,
+    "I": 4
+   },
+   "why_s": {
+    "R": "Security competition in Germany; secondary priority.",
+    "A": "Organiser (NFITS e.V.).",
+    "Q": "Annual window stated; eligibility to be read.",
+    "F": "Feed stale since 2024; page current.",
+    "I": "Static HTML."
+   },
+   "priority": "P2",
+   "status": "PROBE_PASSED",
+   "confidence": "medium",
+   "unknown": [
+    "2027 edition announcement date",
+    "Eligibility"
+   ],
+   "next": "Poll the page weekly in February.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://cscg.de/",
+    "robots_allowed": true,
+    "robots_status": 404,
+    "http_status": 200,
+    "content_type": "text/html",
+    "bytes": 5486,
+    "final_url": "https://cscg.de/",
+    "note": null
+   },
+   "total": 17,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": false,
+    "C_config_draft": true,
+    "D_live_probe_passed": true,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": {
+    "result": "ok",
+    "detail": "200, 314 chars, 17 links, 0 entries",
+    "timestamp_berlin": "2026-10-30T01:20:18+0100"
+   }
+  },
+  {
+   "id": "S40",
+   "batch": 4,
+   "cat": "F",
+   "name": "European Cybersecurity Challenge (ECSC)",
+   "publisher": "ENISA / ECSC organisers",
+   "canonical": "https://ecsc.eu/",
+   "endpoint": "https://ecsc.eu/",
+   "method": "Programme site (HTML)",
+   "adapter": "html",
+   "adapter_fit": "existing",
+   "official": "first-party",
+   "auth": "none",
+   "registration": "National team selection (via national qualifiers such as CSCG)",
+   "types": [
+    "annual European security competition"
+   ],
+   "geo": "Europe",
+   "remote": "No (on-site finals)",
+   "audience": "Selected national teams; individuals qualify through national competitions.",
+   "tags": [
+    "cybersecurity",
+    "europe",
+    "competition"
+   ],
+   "why": "Pan-European security championship (2026: Bochum, 12-16 Oct 2026) with national qualifier pipeline.",
+   "stable_ids": "None",
+   "dates": "Edition dates stated",
+   "difficulty": "Low.",
+   "terms_url": "https://ecsc.eu/",
+   "terms_finding": "Not reviewed.",
+   "rate": "None published",
+   "polling": "estimate 168 h",
+   "poll_hours": 168,
+   "policy": "unclear",
+   "policy_note": "robots.txt returned 404 (no restrictions per RFC 9309); terms not reviewed.",
+   "stability": "High.",
+   "evidence": [
+    {
+     "claim": "Homepage: 'EUROPEAN CYBERSECURITY CHALLENGE 2026 ... 12th - 16th October 2026 Bochum, Germany'",
+     "url": "https://ecsc.eu/"
+    }
+   ],
+   "scores": {
+    "R": 2,
+    "A": 5,
+    "Q": 2,
+    "F": 2,
+    "I": 4
+   },
+   "why_s": {
+    "R": "Individuals reach it only via national qualifiers.",
+    "A": "Official organisers.",
+    "Q": "Edition info; no application details.",
+    "F": "2026 edition just ended.",
+    "I": "Static HTML."
+   },
+   "priority": "P2",
+   "status": "PROBE_PASSED",
+   "confidence": "high",
+   "unknown": [
+    "2027 host/dates"
+   ],
+   "next": "Track yearly; mostly redundant with S39.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://ecsc.eu/",
+    "robots_allowed": true,
+    "robots_status": 404,
+    "http_status": 200,
+    "content_type": "text/html",
+    "bytes": 48229,
+    "final_url": "https://ecsc.eu/",
+    "note": null
+   },
+   "total": 15,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": false,
+    "C_config_draft": true,
+    "D_live_probe_passed": true,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": {
+    "result": "ok",
+    "detail": "200, 2035 chars, 18 links, 0 entries",
+    "timestamp_berlin": "2026-10-30T01:20:18+0100"
+   }
+  },
+  {
+   "id": "S41",
+   "batch": 5,
+   "cat": "B",
+   "name": "Open Robotics Discourse – Jobs category",
+   "publisher": "Open Source Robotics Foundation (Open Robotics)",
+   "canonical": "https://discourse.openrobotics.org/",
+   "endpoint": "https://discourse.openrobotics.org/c/jobs/15",
+   "method": "Forum category page (HTML). The category RSS (/c/jobs/15.rss) is disallowed by robots.txt for our agent.",
+   "adapter": "html",
+   "adapter_fit": "existing",
+   "official": "community forum (official ROS community host)",
+   "auth": "none",
+   "registration": "none to read",
+   "types": [
+    "robotics job and internship postings"
+   ],
+   "geo": "Global",
+   "remote": "Many remote/on-site listings",
+   "audience": "Per post (internships, postdocs, full-time).",
+   "tags": [
+    "robotics",
+    "ros",
+    "jobs",
+    "internships"
+   ],
+   "why": "Highest-signal ROS job board: topics dated within days (e.g. 28 Oct 2026).",
+   "stable_ids": "Topic id in URL",
+   "dates": "Activity dates yes",
+   "difficulty": "Medium: Discourse markup; RSS cannot be used under robots.txt; HTML is permitted.",
+   "terms_url": "https://discourse.openrobotics.org/tos",
+   "terms_finding": "Terms page not read in this run.",
+   "rate": "Discourse default limits not verified",
+   "polling": "estimate 24 h",
+   "poll_hours": 24,
+   "policy": "restricted",
+   "policy_note": "robots.txt: 'Disallow: /c/*.rss' and 'Disallow: /t/*/*.rss' apply to category/topic RSS; the HTML category path is allowed.",
+   "stability": "High.",
+   "evidence": [
+    {
+     "claim": "Category page lists topics with 'October 28, 2026' activity and tags such as internship, postdoc",
+     "url": "https://discourse.openrobotics.org/c/jobs/15"
+    },
+    {
+     "claim": "robots.txt contains 'Disallow: /c/*.rss'",
+     "url": "https://discourse.openrobotics.org/robots.txt"
+    }
+   ],
+   "scores": {
+    "R": 5,
+    "A": 3,
+    "Q": 4,
+    "F": 5,
+    "I": 3
+   },
+   "why_s": {
+    "R": "Robotics job/internship posts worldwide.",
+    "A": "Community posts, employers self-report.",
+    "Q": "Tags and titles; eligibility in post text.",
+    "F": "Posts on 28 Oct 2026.",
+    "I": "HTML only; RSS blocked."
+   },
+   "priority": "P1",
+   "status": "PROBE_PASSED",
+   "confidence": "medium",
+   "unknown": [
+    "Forum terms on automated access"
+   ],
+   "next": "Use HTML category page only; do not use .rss.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://discourse.openrobotics.org/c/jobs/15",
+    "robots_allowed": true,
+    "robots_status": 200,
+    "http_status": 200,
+    "content_type": "text/html",
+    "bytes": 72154,
+    "final_url": "https://discourse.openrobotics.org/c/jobs/15",
+    "note": null
+   },
+   "total": 20,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": true,
+    "C_config_draft": true,
+    "D_live_probe_passed": true,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": {
+    "result": "ok",
+    "detail": "200, 3510 chars, 129 links, 0 entries",
+    "timestamp_berlin": "2026-10-30T01:20:46+0100"
+   }
+  },
+  {
+   "id": "S42",
+   "batch": 5,
+   "cat": "B",
+   "name": "RoboCup news and events",
+   "publisher": "RoboCup Federation",
+   "canonical": "https://www.robocup.org/",
+   "endpoint": "https://www.robocup.org/",
+   "method": "Homepage news (HTML); /events returned HTTP 406 to our agent (not worked around)",
+   "adapter": "html",
+   "adapter_fit": "existing",
+   "official": "first-party",
+   "auth": "none",
+   "registration": "n/a",
+   "types": [
+    "robot competitions, leagues, event announcements (e.g. RoboCup 2026)"
+   ],
+   "geo": "Global",
+   "remote": "No",
+   "audience": "Teams and students; national events exist (e.g. German Open, whose site has a TLS fault).",
+   "tags": [
+    "robotics",
+    "competition"
+   ],
+   "why": "Main international robot-competition body; homepage news mentions the RoboCup 2026 call to teams.",
+   "stable_ids": "None",
+   "dates": "Sparse",
+   "difficulty": "Medium: the listing page rejects our agent; homepage has few dated items.",
+   "terms_url": "https://www.robocup.org/",
+   "terms_finding": "Not reviewed.",
+   "rate": "None published",
+   "polling": "estimate 72 h",
+   "poll_hours": 72,
+   "policy": "restricted",
+   "policy_note": "Events path returned 406 to our user agent; homepage is accessible. No evasion attempted.",
+   "stability": "Medium.",
+   "evidence": [
+    {
+     "claim": "Homepage 200: 'Robot Competitions ... Recent News ... invite teams from around the world to participate in the RoboCup 2026'",
+     "url": "https://www.robocup.org/"
+    },
+    {
+     "claim": "https://www.robocup.org/events returned HTTP 406 to our agent",
+     "url": "https://www.robocup.org/events"
+    }
+   ],
+   "scores": {
+    "R": 4,
+    "A": 5,
+    "Q": 2,
+    "F": 3,
+    "I": 2
+   },
+   "why_s": {
+    "R": "Robotics competitions for students.",
+    "A": "Federation.",
+    "Q": "Homepage lacks structured events.",
+    "F": "News current.",
+    "I": "Listing endpoint unavailable to us."
+   },
+   "priority": "P2",
+   "status": "MANUAL_REVIEW",
+   "confidence": "medium",
+   "unknown": [
+    "Event listing URL accessible to automated clients"
+   ],
+   "next": "Find an accessible feed/listing or contact the federation.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://www.robocup.org/",
+    "robots_allowed": true,
+    "robots_status": 200,
+    "http_status": 200,
+    "content_type": "text/html",
+    "bytes": 72381,
+    "final_url": "https://www.robocup.org/",
+    "note": null
+   },
+   "total": 16,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": false,
+    "C_config_draft": false,
+    "D_live_probe_passed": false,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": null
+  },
+  {
+   "id": "S43",
+   "batch": 5,
+   "cat": "A",
+   "name": "Devpost hackathons",
+   "publisher": "Devpost, Inc.",
+   "canonical": "https://devpost.com/",
+   "endpoint": "https://devpost.com/hackathons",
+   "method": "Listing page behind a Cloudflare bot challenge",
+   "adapter": "none until access is permitted",
+   "adapter_fit": "gap",
+   "official": "platform",
+   "auth": "Bot challenge",
+   "registration": "n/a",
+   "types": [
+    "online and in-person hackathons"
+   ],
+   "geo": "Global",
+   "remote": "Many",
+   "audience": "Per hackathon.",
+   "tags": [
+    "hackathon"
+   ],
+   "why": "Largest hackathon platform; blocked to our agent, so unusable without permission.",
+   "stable_ids": "hackathon slug",
+   "dates": "Unknown",
+   "difficulty": "Blocked: HTTP 403 'Just a moment...' challenge.",
+   "terms_url": "https://devpost.com/",
+   "terms_finding": "Not read; page not accessible.",
+   "rate": "Unknown",
+   "polling": "none",
+   "poll_hours": 720,
+   "policy": "blocked",
+   "policy_note": "robots.txt allows the path, but the site serves a bot challenge (403). Not circumvented.",
+   "stability": "High.",
+   "evidence": [
+    {
+     "claim": "HTTP 403 with title 'Just a moment...' (Cloudflare challenge) for /hackathons",
+     "url": "https://devpost.com/hackathons"
+    },
+    {
+     "claim": "Web search: Devpost describes itself as running AI hackathons (third-party snippets only)",
+     "url": "https://scriptagc.wasmer.app/https_info_devpost_com/product/ai-hackathons"
+    }
+   ],
+   "scores": {
+    "R": 4,
+    "A": 4,
+    "Q": 3,
+    "F": 4,
+    "I": 0
+   },
+   "why_s": {
+    "R": "Many online AI hackathons.",
+    "A": "Platform.",
+    "Q": "Unknown (not accessible).",
+    "F": "Unknown.",
+    "I": "Blocked for automated clients."
+   },
+   "priority": "Hold",
+   "status": "MANUAL_REVIEW",
+   "confidence": "low",
+   "unknown": [
+    "Any permitted machine access (API/feed)"
+   ],
+   "next": "Check for an official API or ask for access; otherwise review manually.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://devpost.com/hackathons",
+    "robots_allowed": true,
+    "robots_status": 200,
+    "http_status": 403,
+    "content_type": "text/html",
+    "bytes": 5613,
+    "final_url": "https://devpost.com/hackathons",
+    "note": null
+   },
+   "total": 15,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": true,
+    "C_config_draft": false,
+    "D_live_probe_passed": false,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": null
+  },
+  {
+   "id": "S44",
+   "batch": 5,
+   "cat": "A",
+   "name": "DrivenData competitions",
+   "publisher": "DrivenData",
+   "canonical": "https://www.drivendata.org/",
+   "endpoint": "https://www.drivendata.org/competitions/",
+   "method": "Server-rendered listing (HTML)",
+   "adapter": "html",
+   "adapter_fit": "existing",
+   "official": "first-party",
+   "auth": "none",
+   "registration": "Account to participate",
+   "types": [
+    "social-impact data science competitions with prizes"
+   ],
+   "geo": "Global",
+   "remote": "Yes",
+   "audience": "Anyone; per-competition rules.",
+   "tags": [
+    "ml",
+    "competitions",
+    "social-impact"
+   ],
+   "why": "Credible prize competitions (e.g. $300,000 GEMS Prize Challenge); but the terms forbid automated access.",
+   "stable_ids": "Competition URL",
+   "dates": "Relative only ('4 weeks left'), no absolute dates",
+   "difficulty": "Medium, and policy-blocked.",
+   "terms_url": "https://www.drivendata.org/termsofuse/",
+   "terms_finding": "Terms of use prohibit: 'Use any robot, spider or other automatic device, process or means to access the Website for any purpose, including monitoring or copying any of the material'.",
+   "rate": "n/a",
+   "polling": "none",
+   "poll_hours": 720,
+   "policy": "prohibited",
+   "policy_note": "Explicit prohibition of automated access in the terms of use.",
+   "stability": "High.",
+   "evidence": [
+    {
+     "claim": "Terms of use text prohibits robots/spiders/automatic devices",
+     "url": "https://www.drivendata.org/termsofuse/"
+    },
+    {
+     "claim": "Listing shows cards such as 'The Geologic Enhanced Mapping System (GEMS) Prize Challenge ... $300,000 in prizes 4 weeks left'",
+     "url": "https://www.drivendata.org/competitions/"
+    }
+   ],
+   "scores": {
+    "R": 3,
+    "A": 4,
+    "Q": 2,
+    "F": 4,
+    "I": 0
+   },
+   "why_s": {
+    "R": "Good competitions, many in non-AI-systems domains.",
+    "A": "Operator.",
+    "Q": "No absolute deadlines in the list.",
+    "F": "Active.",
+    "I": "Automated access prohibited."
+   },
+   "priority": "Hold",
+   "status": "MANUAL_REVIEW",
+   "confidence": "high",
+   "unknown": [
+    "Whether the operator would permit a low-rate personal reader"
+   ],
+   "next": "Do not activate. Track manually or request permission.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://www.drivendata.org/competitions/",
+    "robots_allowed": true,
+    "robots_status": 200,
+    "http_status": 200,
+    "content_type": "text/html",
+    "bytes": 287258,
+    "final_url": "https://www.drivendata.org/competitions/",
+    "note": null
+   },
+   "total": 13,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": true,
+    "C_config_draft": false,
+    "D_live_probe_passed": false,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": null
+  },
+  {
+   "id": "S45",
+   "batch": 5,
+   "cat": "C",
+   "name": "ESA careers portal (students & graduates)",
+   "publisher": "European Space Agency",
+   "canonical": "https://jobs.esa.int/",
+   "endpoint": "https://jobs.esa.int/",
+   "method": "JavaScript careers portal behind a cookie consent",
+   "adapter": "Playwright (missing)",
+   "adapter_fit": "gap",
+   "official": "first-party",
+   "auth": "none to browse",
+   "registration": "Account to apply",
+   "types": [
+    "student placements, young graduate roles"
+   ],
+   "geo": "Europe",
+   "remote": "No",
+   "audience": "Per listing (not read).",
+   "tags": [
+    "space",
+    "internship",
+    "europe"
+   ],
+   "why": "Relevant robotics/autonomy placements exist at ESA, but the portal exposes no static content to our fetcher (guessed student pages returned 404).",
+   "stable_ids": "Unknown",
+   "dates": "Unknown",
+   "difficulty": "High: JS portal; static pages not located.",
+   "terms_url": "https://www.esa.int/Services/Terms_and_conditions",
+   "terms_finding": "ESA terms page read (8,493 chars): no scraping/automation clause found by keyword scan.",
+   "rate": "Unknown",
+   "polling": "manual",
+   "poll_hours": 720,
+   "policy": "unclear",
+   "policy_note": "robots.txt allows; portal content not available without JavaScript.",
+   "stability": "Medium.",
+   "evidence": [
+    {
+     "claim": "jobs.esa.int returns 200 with cookie-consent text only (no job content)",
+     "url": "https://jobs.esa.int/"
+    },
+    {
+     "claim": "ESA terms and conditions page",
+     "url": "https://www.esa.int/Services/Terms_and_conditions"
+    }
+   ],
+   "scores": {
+    "R": 3,
+    "A": 5,
+    "Q": 1,
+    "F": 2,
+    "I": 1
+   },
+   "why_s": {
+    "R": "Space/robotics roles; limited bachelor fit unknown.",
+    "A": "Official agency.",
+    "Q": "No visible data.",
+    "F": "Unknown.",
+    "I": "JS only."
+   },
+   "priority": "Hold",
+   "status": "MANUAL_REVIEW",
+   "confidence": "low",
+   "unknown": [
+    "Student programme URL and any feed"
+   ],
+   "next": "Locate an official static student-opportunity page or RSS.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://jobs.esa.int/",
+    "robots_allowed": true,
+    "robots_status": 200,
+    "http_status": 200,
+    "content_type": "text/html",
+    "bytes": 63006,
+    "final_url": "https://jobs.esa.int/",
+    "note": null
+   },
+   "total": 12,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": true,
+    "C_config_draft": false,
+    "D_live_probe_passed": false,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": null
+  },
+  {
+   "id": "S46",
+   "batch": 5,
+   "cat": "C",
+   "name": "EURAXESS jobs",
+   "publisher": "European Commission (EURAXESS)",
+   "canonical": "https://euraxess.ec.europa.eu/",
+   "endpoint": "https://euraxess.ec.europa.eu/jobs/search",
+   "method": "Job search (HTML); robots.txt disallows /jobs/* for all agents",
+   "adapter": "none while robots disallows",
+   "adapter_fit": "gap",
+   "official": "first-party",
+   "auth": "none",
+   "registration": "none to browse",
+   "types": [
+    "research jobs and fellowships across Europe"
+   ],
+   "geo": "Europe",
+   "remote": "Some",
+   "audience": "Researchers; some listings for early-stage researchers.",
+   "tags": [
+    "research",
+    "europe",
+    "jobs"
+   ],
+   "why": "Authoritative European researcher job portal, but our agent is disallowed.",
+   "stable_ids": "job node id",
+   "dates": "Yes",
+   "difficulty": "Blocked by robots.txt.",
+   "terms_url": "https://commission.europa.eu/legal-notice_en",
+   "terms_finding": "EU legal notice: EU-owned content licensed CC BY 4.0 (reuse allowed with credit); robots.txt still disallows /jobs/*.",
+   "rate": "Unknown",
+   "polling": "none",
+   "poll_hours": 720,
+   "policy": "blocked",
+   "policy_note": "robots.txt has 'Allow: /jobs' followed by 'Disallow: /jobs/*'; our robots-checked fetch refused /jobs/search.",
+   "stability": "High.",
+   "evidence": [
+    {
+     "claim": "robots.txt lines: 'Allow: /jobs' and 'Disallow: /jobs/*'",
+     "url": "https://euraxess.ec.europa.eu/robots.txt"
+    },
+    {
+     "claim": "EU legal notice states CC BY 4.0 for EU-owned content",
+     "url": "https://commission.europa.eu/legal-notice_en"
+    }
+   ],
+   "scores": {
+    "R": 4,
+    "A": 5,
+    "Q": 4,
+    "F": 5,
+    "I": 0
+   },
+   "why_s": {
+    "R": "Research jobs across Europe.",
+    "A": "European Commission.",
+    "Q": "Rich structured data (not retrieved).",
+    "F": "Continuous.",
+    "I": "Disallowed by robots.txt."
+   },
+   "priority": "Hold",
+   "status": "MANUAL_REVIEW",
+   "confidence": "high",
+   "unknown": [
+    "Existence of an official data feed/API"
+   ],
+   "next": "Search for an official EURAXESS API/export before any use.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://euraxess.ec.europa.eu/jobs/search",
+    "robots_allowed": false,
+    "robots_status": 200,
+    "http_status": null,
+    "content_type": null,
+    "bytes": null,
+    "final_url": null,
+    "note": "blocked by robots.txt for our agent; not fetched"
+   },
+   "total": 18,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": true,
+    "C_config_draft": false,
+    "D_live_probe_passed": false,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": null
+  },
+  {
+   "id": "S47",
+   "batch": 5,
+   "cat": "D",
+   "name": "Fulbright Germany",
+   "publisher": "German-American Fulbright Commission",
+   "canonical": "https://www.fulbright.de/",
+   "endpoint": "https://www.fulbright.de/",
+   "method": "Programme site (HTML, Nuxt)",
+   "adapter": "html",
+   "adapter_fit": "existing",
+   "official": "first-party",
+   "auth": "none",
+   "registration": "Application portal (not accessed)",
+   "types": [
+    "exchange scholarships between Germany and the USA"
+   ],
+   "geo": "Germany/USA",
+   "remote": "n/a",
+   "audience": "Not verified for bachelor students in this run.",
+   "tags": [
+    "scholarship",
+    "usa",
+    "exchange"
+   ],
+   "why": "Prestigious exchange funder; the homepage shows 19 dated entries (e.g. 02.10.2026, 30.09.2026) including deadline wording.",
+   "stable_ids": "None",
+   "dates": "Yes (DD.MM.YYYY)",
+   "difficulty": "Medium: dates are in news/teasers; programme eligibility is on sub-pages.",
+   "terms_url": "https://www.fulbright.de/",
+   "terms_finding": "Not reviewed.",
+   "rate": "None published",
+   "polling": "estimate 168 h",
+   "poll_hours": 168,
+   "policy": "unclear",
+   "policy_note": "robots.txt allows; terms not reviewed.",
+   "stability": "High.",
+   "evidence": [
+    {
+     "claim": "Homepage mentions 'Seit 1952 ermöglicht die Deutsch-Amerikanische Fulbright-Kommission ...' and carries dated entries",
+     "url": "https://www.fulbright.de/"
+    }
+   ],
+   "scores": {
+    "R": 3,
+    "A": 5,
+    "Q": 3,
+    "F": 3,
+    "I": 3
+   },
+   "why_s": {
+    "R": "Prestigious but graduate-leaning (to verify).",
+    "A": "Binational commission.",
+    "Q": "Dates on homepage; eligibility elsewhere.",
+    "F": "Dated items 2026.",
+    "I": "Existing adapter."
+   },
+   "priority": "P2",
+   "status": "PROBE_PASSED",
+   "confidence": "medium",
+   "unknown": [
+    "Eligibility for bachelor students",
+    "Which dates are deadlines"
+   ],
+   "next": "Read programme pages; add the specific scholarship page to the entry.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://www.fulbright.de/",
+    "robots_allowed": true,
+    "robots_status": 200,
+    "http_status": 200,
+    "content_type": "text/html",
+    "bytes": 382567,
+    "final_url": "https://www.fulbright.de/",
+    "note": null
+   },
+   "total": 17,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": false,
+    "C_config_draft": true,
+    "D_live_probe_passed": true,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": {
+    "result": "ok",
+    "detail": "200, 1558 chars, 51 links, 0 entries",
+    "timestamp_berlin": "2026-10-30T01:20:46+0100"
+   }
+  },
+  {
+   "id": "S48",
+   "batch": 5,
+   "cat": "E",
+   "name": "RSS: Robotics Science and Systems 2027",
+   "publisher": "Robotics: Science and Systems Foundation",
+   "canonical": "https://roboticsconference.org/",
+   "endpoint": "https://roboticsconference.org/",
+   "method": "Conference homepage (HTML); the Atom feed is stale (items from 2019)",
+   "adapter": "html",
+   "adapter_fit": "existing",
+   "official": "first-party",
+   "auth": "none",
+   "registration": "none",
+   "types": [
+    "conference dates, call for papers/participation, deadlines"
+   ],
+   "geo": "Global (2027: Athens, Greece)",
+   "remote": "n/a",
+   "audience": "Researchers, students.",
+   "tags": [
+    "robotics",
+    "conference",
+    "deadlines"
+   ],
+   "why": "Top robotics venue; homepage shows July 6-11, 2027 in Athens and several dated deadlines (December 4, 2026; February 5, 2027; February 12, 2027).",
+   "stable_ids": "None",
+   "dates": "Yes",
+   "difficulty": "Low.",
+   "terms_url": "https://roboticsconference.org/",
+   "terms_finding": "Not reviewed.",
+   "rate": "None published",
+   "polling": "estimate 168 h",
+   "poll_hours": 168,
+   "policy": "unclear",
+   "policy_note": "robots.txt returned 404 (no restrictions per RFC 9309); terms not reviewed.",
+   "stability": "Medium: site rebuilt per year.",
+   "evidence": [
+    {
+     "claim": "Homepage: 'Robotics: Science and Systems July 6-11, 2027 Athens, Greece' with deadline dates",
+     "url": "https://roboticsconference.org/"
+    },
+    {
+     "claim": "Atom feed newest item dated 2019-12-04 (stale)",
+     "url": "https://roboticsconference.org/atom.xml"
+    }
+   ],
+   "scores": {
+    "R": 5,
+    "A": 5,
+    "Q": 4,
+    "F": 4,
+    "I": 4
+   },
+   "why_s": {
+    "R": "Core robotics venue.",
+    "A": "Official site.",
+    "Q": "Several explicit dates on homepage.",
+    "F": "2027 edition announced.",
+    "I": "Existing adapter."
+   },
+   "priority": "P1",
+   "status": "PROBE_PASSED",
+   "confidence": "high",
+   "unknown": [
+    "Which dates map to submission vs registration"
+   ],
+   "next": "Probe with ohg.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://roboticsconference.org/",
+    "robots_allowed": true,
+    "robots_status": 404,
+    "http_status": 200,
+    "content_type": "text/html",
+    "bytes": 11452,
+    "final_url": "https://roboticsconference.org/",
+    "note": null
+   },
+   "total": 22,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": false,
+    "C_config_draft": true,
+    "D_live_probe_passed": true,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": {
+    "result": "ok",
+    "detail": "200, 1325 chars, 9 links, 0 entries",
+    "timestamp_berlin": "2026-10-30T01:20:46+0100"
+   }
+  },
+  {
+   "id": "S49",
+   "batch": 5,
+   "cat": "E",
+   "name": "Eastern European Machine Learning (EEML) Summer School",
+   "publisher": "EEML / Montenegrin AI Association",
+   "canonical": "https://www.eeml.eu/",
+   "endpoint": "https://www.eeml.eu/",
+   "method": "Programme site (HTML, Google Sites)",
+   "adapter": "html",
+   "adapter_fit": "existing",
+   "official": "first-party",
+   "auth": "none",
+   "registration": "Application form (not accessed)",
+   "types": [
+    "annual ML summer school"
+   ],
+   "geo": "Europe (2026: Cetinje, Montenegro)",
+   "remote": "No",
+   "audience": "Students and researchers (details not read).",
+   "tags": [
+    "ml",
+    "summer-school",
+    "europe"
+   ],
+   "why": "Established annual ML summer school; the 2026 edition (27 July - 1 August 2026) has finished and its application deadline passed.",
+   "stable_ids": "None",
+   "dates": "2026 dates stated; 2027 unknown",
+   "difficulty": "Low.",
+   "terms_url": "https://www.eeml.eu/",
+   "terms_finding": "Not reviewed.",
+   "rate": "None published",
+   "polling": "estimate 168-720 h",
+   "poll_hours": 720,
+   "policy": "unclear",
+   "policy_note": "robots.txt returned 404 (no restrictions per RFC 9309); terms not reviewed.",
+   "stability": "Medium.",
+   "evidence": [
+    {
+     "claim": "Homepage: 'Eastern European Machine Learning Summer School 27 July-1 August 2026, Cetinje, Montenegro ... The deadline for applications has passed'",
+     "url": "https://www.eeml.eu/"
+    }
+   ],
+   "scores": {
+    "R": 4,
+    "A": 4,
+    "Q": 3,
+    "F": 2,
+    "I": 4
+   },
+   "why_s": {
+    "R": "ML summer school in Europe; bachelor eligibility unknown.",
+    "A": "Organisers' own site.",
+    "Q": "Dates clear for 2026; nothing for 2027 yet.",
+    "F": "Between editions.",
+    "I": "Static page."
+   },
+   "priority": "P2",
+   "status": "PROBE_PASSED",
+   "confidence": "medium",
+   "unknown": [
+    "2027 edition",
+    "Eligibility for bachelor students"
+   ],
+   "next": "Low-frequency polling until the 2027 call appears.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://www.eeml.eu/",
+    "robots_allowed": true,
+    "robots_status": 404,
+    "http_status": 200,
+    "content_type": "text/html",
+    "bytes": 428485,
+    "final_url": "https://www.eeml.eu/",
+    "note": null
+   },
+   "total": 17,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": false,
+    "C_config_draft": true,
+    "D_live_probe_passed": true,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": {
+    "result": "ok",
+    "detail": "200, 1446 chars, 195 links, 0 entries",
+    "timestamp_berlin": "2026-10-30T01:20:46+0100"
+   }
+  },
+  {
+   "id": "S50",
+   "batch": 5,
+   "cat": "F",
+   "name": "LFX Mentorship",
+   "publisher": "The Linux Foundation",
+   "canonical": "https://lfx.linuxfoundation.org/tools/mentorship/",
+   "endpoint": "https://mentorship.lfx.linuxfoundation.org/",
+   "method": "JavaScript application (static HTML shows placeholder counters)",
+   "adapter": "Playwright / JSON API (missing)",
+   "adapter_fit": "gap",
+   "official": "first-party",
+   "auth": "none to browse",
+   "registration": "LFX account to apply",
+   "types": [
+    "paid/unpaid open-source mentorship terms across foundations"
+   ],
+   "geo": "Global",
+   "remote": "Yes",
+   "audience": "Per programme.",
+   "tags": [
+    "open-source",
+    "mentorship"
+   ],
+   "why": "Broad open-source mentorship programme, but the listing is rendered in the browser; no static data or API was verified.",
+   "stable_ids": "Unknown",
+   "dates": "Unknown",
+   "difficulty": "High until an API/feed is found.",
+   "terms_url": "https://www.linuxfoundation.org/legal/terms",
+   "terms_finding": "LF terms: site content licensed CC BY 3.0 per the terms page; no automated-access rule found by keyword scan.",
+   "rate": "Unknown",
+   "polling": "manual",
+   "poll_hours": 720,
+   "policy": "unclear",
+   "policy_note": "robots.txt returned 404 on lfx.*; listing needs JavaScript.",
+   "stability": "Medium.",
+   "evidence": [
+    {
+     "claim": "Page shows '0 mentees graduated since 2019' and '0 programs across 0 foundations' placeholders (JS-populated)",
+     "url": "https://mentorship.lfx.linuxfoundation.org/"
+    },
+    {
+     "claim": "CNCF mentoring repository lists programmes in Markdown on GitHub (alternative lead source)",
+     "url": "https://github.com/cncf/mentoring"
+    }
+   ],
+   "scores": {
+    "R": 3,
+    "A": 5,
+    "Q": 1,
+    "F": 3,
+    "I": 1
+   },
+   "why_s": {
+    "R": "Open-source mentorship; moderate fit.",
+    "A": "Linux Foundation.",
+    "Q": "No static data.",
+    "F": "Unknown.",
+    "I": "JS only."
+   },
+   "priority": "Hold",
+   "status": "MANUAL_REVIEW",
+   "confidence": "low",
+   "unknown": [
+    "Public API or feed"
+   ],
+   "next": "Find a documented API; consider CNCF mentoring GitHub as a substitute lead.",
+   "probe": {
+    "timestamp_berlin": "2026-10-30T01:17:32+01:00",
+    "url": "https://mentorship.lfx.linuxfoundation.org/",
+    "robots_allowed": true,
+    "robots_status": 200,
+    "http_status": 200,
+    "content_type": "text/html",
+    "bytes": 32124,
+    "final_url": "https://mentorship.linuxfoundation.org",
+    "note": null
+   },
+   "total": 13,
+   "verified_at": "2026-10-30T01:17:32+01:00",
+   "stages": {
+    "A_research_verified": true,
+    "B_policy_reviewed": true,
+    "C_config_draft": false,
+    "D_live_probe_passed": false,
+    "E_end_to_end_ingestion_validated": false,
+    "F_approved_for_activation": false
+   },
+   "ohg_probe": null
+  }
+ ],
+ "rejected_or_substituted": [
+  {
+   "name": "AIcrowd challenges",
+   "url": "https://www.aicrowd.com/challenges",
+   "reason": "Terms prohibit automated access ('monitor (e.g. spider, scrape) the Platform'); the list is JavaScript-loaded ('Loading Challenges').",
+   "evidence": [
+    "https://www.aicrowd.com/terms",
+    "https://www.aicrowd.com/challenges"
+   ],
+   "replaced_by": "Codabench / EvalAI / lablab.ai"
+  },
+  {
+   "name": "ARC Prize",
+   "url": "https://arcprize.org/competitions",
+   "reason": "Terms prohibit bots/scrapers; competitions run on Kaggle, which is already covered (S13).",
+   "evidence": [
+    "https://arcprize.org/terms"
+   ],
+   "replaced_by": "Kaggle (S13)"
+  },
+  {
+   "name": "Hack Club hackathons",
+   "url": "https://hackathons.hackclub.com/",
+   "reason": "Page is titled 'High School Hackathons in 2026'; the primary user is a university student.",
+   "evidence": [
+    "https://hackathons.hackclub.com/"
+   ],
+   "replaced_by": "MLH (S04)"
+  },
+  {
+   "name": "HackZurich",
+   "url": "https://hackzurich.com/",
+   "reason": "Site states 'HackZurich is currently on hiatus'.",
+   "evidence": [
+    "https://hackzurich.com/"
+   ],
+   "replaced_by": "European Hackathon League (S14)"
+  },
+  {
+   "name": "DoraHacks hackathons",
+   "url": "https://dorahacks.io/hackathon",
+   "reason": "HTTP 405 to our agent for the page and robots.txt; no usable endpoint.",
+   "evidence": [
+    "https://dorahacks.io/hackathon"
+   ],
+   "replaced_by": "lablab.ai (S03)"
+  },
+  {
+   "name": "DFKI career pages",
+   "url": "https://www.dfki.de/web/karriere/stellenangebote",
+   "reason": "Bot challenge ('Just a moment...', HTTP 403); not circumvented.",
+   "evidence": [
+    "https://www.dfki.de/web/karriere"
+   ],
+   "replaced_by": "FZI (S15), Cyber Valley (S22)"
+  },
+  {
+   "name": "Max Planck Institute for Intelligent Systems jobs",
+   "url": "https://is.mpg.de/jobs",
+   "reason": "Redirects to a bot-detection challenge page.",
+   "evidence": [
+    "https://is.mpg.de/jobs"
+   ],
+   "replaced_by": "Cyber Valley (S22)"
+  },
+  {
+   "name": "Prototype Fund",
+   "url": "https://prototypefund.de/en/",
+   "reason": "Security interstitial ('Establishing a secure connection', HTTP 403) for our agent.",
+   "evidence": [
+    "https://www.prototypefund.de/en/"
+   ],
+   "replaced_by": "NLnet (S07), Sovereign Tech (S16)"
+  },
+  {
+   "name": "DLR careers",
+   "url": "https://www.dlr.de/de/karriere",
+   "reason": "TLS certificate chain cannot be verified ('unable to get local issuer certificate'); not bypassed.",
+   "evidence": [
+    "https://www.dlr.de/de/karriere"
+   ],
+   "replaced_by": "Helmholtz AI (S32)"
+  },
+  {
+   "name": "RoboCup German Open (robocup.de)",
+   "url": "https://www.robocup.de/",
+   "reason": "TLS certificate verification fails.",
+   "evidence": [
+    "https://www.robocup.de/"
+   ],
+   "replaced_by": "RoboCup (S42)"
+  },
+  {
+   "name": "Stipendienlotse",
+   "url": "https://www.stipendienlotse.de/",
+   "reason": "TLS certificate verification fails.",
+   "evidence": [
+    "https://www.stipendienlotse.de/"
+   ],
+   "replaced_by": "DAAD (S36), Studienstiftung (S27)"
+  },
+  {
+   "name": "MLSS (mlss.cc)",
+   "url": "https://mlss.cc/",
+   "reason": "TLS certificate verification fails; MLSS 2027 Okinawa is covered by a single event page only.",
+   "evidence": [
+    "https://mlss.cc/"
+   ],
+   "replaced_by": "ELLIS (S31), EEML (S49)"
+  },
+  {
+   "name": "NASA Space Apps",
+   "url": "https://www.spaceappschallenge.org/",
+   "reason": "TLS certificate verification fails.",
+   "evidence": [
+    "https://www.spaceappschallenge.org/"
+   ],
+   "replaced_by": "MLH (S04)"
+  },
+  {
+   "name": "DAAD RISE Germany",
+   "url": "https://www.daad.de/rise/en/rise-germany/what-applicants-need-to-know/",
+   "reason": "Eligibility excludes the primary user: 'You are enrolled as Master or Ph.D. student or a Bachelor who is a RISE Germany-Alumni at a North American, British or Irish university'. The programme feed is also stale (newest item 2016).",
+   "evidence": [
+    "https://www.daad.de/rise/en/rise-germany/what-applicants-need-to-know/",
+    "https://www.daad.de/rise/en/feed/"
+   ],
+   "replaced_by": "FZI (S15)"
+  },
+  {
+   "name": "AI Deadlines (aideadlin.es)",
+   "url": "https://aideadlin.es/",
+   "reason": "Underlying repository last pushed 2024-09-15 (stale); overlaps with CCF-Deadlines (S08).",
+   "evidence": [
+    "https://api.github.com/repos/paperswithcode/ai-deadlines"
+   ],
+   "replaced_by": "CCF-Deadlines (S08)"
+  },
+  {
+   "name": "HackHPI",
+   "url": "https://hackhpi.de/",
+   "reason": "Single annual event page whose visible edition is 10-11 April 2026; narrow value.",
+   "evidence": [
+    "https://hackhpi.de/"
+   ],
+   "replaced_by": "TUM.ai (S23)"
+  },
+  {
+   "name": "ETH Zurich RSL student projects",
+   "url": "https://rsl.ethz.ch/education-students/student-projects.html",
+   "reason": "URL returned 404 and no replacement listing was found.",
+   "evidence": [
+    "https://rsl.ethz.ch/education-students/student-projects.html"
+   ],
+   "replaced_by": "Cyber Valley (S22)"
+  },
+  {
+   "name": "CERN openlab (guessed URL)",
+   "url": "https://openlab.cern/summer-student-programme",
+   "reason": "Guessed path returned 404; correct page found from the homepage and used instead (S05).",
+   "evidence": [
+    "https://openlab.cern/"
+   ],
+   "replaced_by": "S05"
+  },
+  {
+   "name": "Google Student Researcher / Microsoft Research academic pages",
+   "url": "https://research.google/programs-and-events/student-researcher-program/",
+   "reason": "Guessed URLs returned 404; no official listing endpoint verified.",
+   "evidence": [
+    "https://research.google/programs-and-events/student-researcher-program/"
+   ],
+   "replaced_by": "CERN openlab (S05)"
+  },
+  {
+   "name": "Fraunhofer IPA jobs / HPI careers / ZIB jobs",
+   "url": "https://www.ipa.fraunhofer.de/en/jobs-and-careers.html",
+   "reason": "Guessed URLs returned 404; not verified.",
+   "evidence": [
+    "https://www.ipa.fraunhofer.de/en/jobs-and-careers.html"
+   ],
+   "replaced_by": "FZI (S15)"
+  },
+  {
+   "name": "picoCTF",
+   "url": "https://picoctf.org/",
+   "reason": "Site now redirects visitors to the CMU CyLab Security Academy; no event list on the fetched page.",
+   "evidence": [
+    "https://picoctf.org/"
+   ],
+   "replaced_by": "CTFtime (S10)"
+  },
+  {
+   "name": "MLH Fellowship (spare)",
+   "url": "https://fellowship.mlh.com/",
+   "reason": "Same publisher as S04; static page has no dated cycles. Kept as a spare rather than counted.",
+   "evidence": [
+    "https://fellowship.mlh.com/"
+   ],
+   "replaced_by": "Outreachy (S30)"
+  }
+ ]
+}

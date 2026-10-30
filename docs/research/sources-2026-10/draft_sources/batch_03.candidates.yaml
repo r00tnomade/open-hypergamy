@@ -1,0 +1,87 @@
+# RESEARCH CANDIDATES - NOT ACTIVATED. No robots_policy_checked_at / terms_review_note is recorded on purpose,
+# so `ohg sources import` would load these disabled (review_required). Review policy per source first.
+version: 1
+sources:
+  - source_key: s21-eurobin-events-and-competitions
+    name: "euROBIN events and competitions"
+    canonical_url: https://www.eurobin-project.eu/index.php/events
+    domain: www.eurobin-project.eu
+    source_type: listing_page
+    portfolio: europe_research
+    adapter_type: html
+    trust_tier: t2_official_org
+    topic_tags: ["robotics", "europe", "competitions"]
+    fetch_interval_hours: 72
+    enabled: false   # CANDIDATE - not reviewed, not activated
+
+  - source_key: s22-cyber-valley-careers
+    name: "Cyber Valley careers"
+    canonical_url: https://cyber-valley.de/career/
+    domain: cyber-valley.de
+    source_type: listing_page
+    portfolio: europe_research
+    adapter_type: html
+    trust_tier: t2_official_org
+    topic_tags: ["ai", "robotics", "germany", "student-jobs"]
+    fetch_interval_hours: 24
+    enabled: false   # CANDIDATE - not reviewed, not activated
+
+  - source_key: s23-tum-ai-events-and-hackathons
+    name: "TUM.ai events and hackathons"
+    canonical_url: https://www.tum-ai.com/events
+    domain: www.tum-ai.com
+    source_type: listing_page
+    portfolio: hackathons_challenges
+    adapter_type: html
+    trust_tier: t1_official_program
+    topic_tags: ["ai", "hackathon", "germany", "students"]
+    fetch_interval_hours: 72
+    enabled: false   # CANDIDATE - not reviewed, not activated
+
+  - source_key: s27-studienstiftung-des-deutschen-volkes
+    name: "Studienstiftung des deutschen Volkes"
+    canonical_url: https://www.studienstiftung.de/
+    domain: www.studienstiftung.de
+    source_type: listing_page
+    portfolio: funding_fellowships
+    adapter_type: html
+    trust_tier: t2_official_org
+    topic_tags: ["scholarship", "germany"]
+    fetch_interval_hours: 168
+    enabled: false   # CANDIDATE - not reviewed, not activated
+
+  - source_key: s28-iclr-2027
+    name: "ICLR 2027"
+    canonical_url: https://iclr.cc/
+    domain: iclr.cc
+    source_type: listing_page
+    portfolio: conferences_societies
+    adapter_type: html
+    trust_tier: t2_official_org
+    topic_tags: ["ai", "conference"]
+    fetch_interval_hours: 168
+    enabled: false   # CANDIDATE - not reviewed, not activated
+
+  - source_key: s29-cvpr-2027
+    name: "CVPR 2027"
+    canonical_url: https://cvpr.thecvf.com/
+    domain: cvpr.thecvf.com
+    source_type: listing_page
+    portfolio: conferences_societies
+    adapter_type: html
+    trust_tier: t2_official_org
+    topic_tags: ["computer-vision", "conference"]
+    fetch_interval_hours: 168
+    enabled: false   # CANDIDATE - not reviewed, not activated
+
+  - source_key: s30-outreachy-internships
+    name: "Outreachy internships"
+    canonical_url: https://www.outreachy.org/
+    domain: www.outreachy.org
+    source_type: listing_page
+    portfolio: hackathons_challenges
+    adapter_type: html
+    trust_tier: t1_official_program
+    topic_tags: ["open-source", "internship", "remote"]
+    fetch_interval_hours: 168
+    enabled: false   # CANDIDATE - not reviewed, not activated

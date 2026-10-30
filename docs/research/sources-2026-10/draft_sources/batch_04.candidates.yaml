@@ -1,0 +1,75 @@
+# RESEARCH CANDIDATES - NOT ACTIVATED. No robots_policy_checked_at / terms_review_note is recorded on purpose,
+# so `ohg sources import` would load these disabled (review_required). Review policy per source first.
+version: 1
+sources:
+  - source_key: s31-ellis-event-calendar
+    name: "ELLIS event calendar"
+    canonical_url: https://ellis.eu/event-calendar
+    domain: ellis.eu
+    source_type: listing_page
+    portfolio: europe_research
+    adapter_type: html
+    trust_tier: t2_official_org
+    topic_tags: ["ai", "europe", "events", "summer-schools"]
+    fetch_interval_hours: 72
+    enabled: false   # CANDIDATE - not reviewed, not activated
+
+  - source_key: s32-helmholtz-ai
+    name: "Helmholtz AI"
+    canonical_url: https://www.helmholtz.ai/
+    domain: www.helmholtz.ai
+    source_type: listing_page
+    portfolio: europe_research
+    adapter_type: html
+    trust_tier: t2_official_org
+    topic_tags: ["ai", "germany", "research", "funding"]
+    fetch_interval_hours: 72
+    enabled: false   # CANDIDATE - not reviewed, not activated
+
+  - source_key: s37-deutschlandstipendium-bmftr
+    name: "Deutschlandstipendium (BMFTR)"
+    canonical_url: https://www.deutschlandstipendium.de/deutschlandstipendium/de/home/home_node.html
+    domain: www.deutschlandstipendium.de
+    source_type: listing_page
+    portfolio: funding_fellowships
+    adapter_type: html
+    trust_tier: t2_official_org
+    topic_tags: ["scholarship", "germany"]
+    fetch_interval_hours: 168
+    enabled: false   # CANDIDATE - not reviewed, not activated
+
+  - source_key: s38-corl-2026
+    name: "CoRL 2026"
+    canonical_url: https://www.corl.org/
+    domain: www.corl.org
+    source_type: listing_page
+    portfolio: conferences_societies
+    adapter_type: html
+    trust_tier: t2_official_org
+    topic_tags: ["robotics", "conference", "learning"]
+    fetch_interval_hours: 168
+    enabled: false   # CANDIDATE - not reviewed, not activated
+
+  - source_key: s39-cyber-security-challenge-germany-cscg
+    name: "Cyber Security Challenge Germany (CSCG)"
+    canonical_url: https://cscg.de/
+    domain: cscg.de
+    source_type: listing_page
+    portfolio: hackathons_challenges
+    adapter_type: html
+    trust_tier: t1_official_program
+    topic_tags: ["cybersecurity", "germany", "competition"]
+    fetch_interval_hours: 168
+    enabled: false   # CANDIDATE - not reviewed, not activated
+
+  - source_key: s40-european-cybersecurity-challenge-ecsc
+    name: "European Cybersecurity Challenge (ECSC)"
+    canonical_url: https://ecsc.eu/
+    domain: ecsc.eu
+    source_type: listing_page
+    portfolio: hackathons_challenges
+    adapter_type: html
+    trust_tier: t1_official_program
+    topic_tags: ["cybersecurity", "europe", "competition"]
+    fetch_interval_hours: 168
+    enabled: false   # CANDIDATE - not reviewed, not activated

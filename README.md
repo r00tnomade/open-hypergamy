@@ -56,7 +56,7 @@ Skip it and everything still works. You just lose the LLM-proposed extras, which
 
 The `config/sources/*.yaml` batch files are **empty on purpose**. Nobody verified real URLs, robots rules or site terms on your behalf, and filling the quota with junk defeats the point. Quality over count.
 
-For each batch of ~10 official sources: check robots.txt and terms, write them down in the entry (`robots_policy_checked_at`, `terms_review_note`), pick a `portfolio`, then:
+For each batch of ~10 official sources: read the site's terms (robots.txt is shown for information only, see ADR-008), write them down in the entry (`robots_policy_checked_at`, `terms_review_note`), pick a `portfolio`, then:
 
 ```bash
 uv run ohg sources probe  config/sources/de_research.yaml   # live check, imports nothing
@@ -101,6 +101,22 @@ scripts/uninstall_launchd.sh
 ## Backups
 
 `ohg db backup` runs daily (keeps 7 daily + 4 weekly). Check one with `ohg db restore --check FILE`, or restore into a throwaway file with `ohg db restore FILE --to /tmp/test.sqlite3`. Your live database is never overwritten.
+
+## Security and responsible use
+
+OpenHypergamy is a tool for discovering, monitoring and researching publicly announced opportunities. It reads pages you point it at, at modest rates, from your own machine.
+
+**Your responsibility.** You decide which sources to configure and how to use what they return. Make sure your use complies with applicable law, any contracts you have agreed to, and the rights of third parties. Public accessibility alone does not give you permission to reproduce, redistribute or commercially exploit content. Copyright, database rights, privacy law and each site's terms of service apply independently of one another and of anything this software does or does not check.
+
+**robots.txt.** OpenHypergamy does not enforce robots.txt. It may retrieve the file and show what it says, but source policy is yours to set in the source configuration, and a missing objection in robots.txt is not permission. Read the terms of every source before enabling it, and record that review in the entry.
+
+**What the software will not do.** It is not designed to bypass authentication, paywalls, CAPTCHAs, IP blocks or other technical access controls, and it must not be used or modified for that purpose. A `403` or similar response is treated as a stop-and-review signal, and `429` and `Retry-After` are honoured.
+
+**Be a good neighbour.** Keep request rates low, leave the per-host throttle in place, prefer feeds and published APIs, and do not put load on services that are not yours. If a site owner asks you to stop, stop.
+
+**No warranty.** The software is provided "AS IS", without warranty of any kind, to the extent permitted by applicable law. The maintainers do not authorize unlawful use and accept no responsibility for how it is used.
+
+*This notice is not legal advice. It does not establish that any particular crawling or reuse activity is lawful. If you are unsure, ask a qualified lawyer or the site's operator.*
 
 ## Share the sauce
 

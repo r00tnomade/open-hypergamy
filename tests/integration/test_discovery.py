@@ -132,13 +132,19 @@ def test_failure_preserves_last_known_state_and_backs_off(env):
     assert repo.coverage()["failing_2plus"] == 1
 
 
-def test_robots_block_is_policy_not_failure_and_page_never_fetched(env):
+def test_robots_disallow_does_not_block_discovery(env):
     web = FakeWeb({"https://example.edu/robots.txt": httpx.Response(200, text="User-agent: *\nDisallow: /\n"),
                    SEED: html(b"x")})  # fmt: skip
     s = run(env, web)
-    assert s.results[0]["status"] == "blocked_policy" and SEED not in web.urls
+    assert s.results[0]["status"] != "blocked_policy" and SEED in web.urls
+
+
+def test_http_403_is_a_failure_with_backoff_not_evasion(env):
+    web = FakeWeb({SEED: httpx.Response(403)})
+    s = run(env, web)
+    assert s.results[0]["status"] == "failed" and web.urls.count(SEED) == 1
     src = env[2].get("example-student-programmes")
-    assert src.failure_streak == 0 and src.next_due_at == "2026-11-05T12:00:00Z"
+    assert src.failure_streak == 1 and src.next_due_at != "2026-11-05T12:00:00Z"
 
 
 def test_crawl_child_failure_gives_partial(env):

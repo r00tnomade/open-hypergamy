@@ -248,7 +248,7 @@ def test_probe_checks_a_batch_without_importing(setup, tmp_path):
     assert runner.invoke(app, ["sources", "probe", str(bad_yaml)]).exit_code == 2
 
 
-def test_probe_reports_policy_blocks(setup, tmp_path):
+def test_probe_notes_robots_disallow_as_informational_only(setup, tmp_path):
     web, sink = setup
     web.routes["https://example.edu/robots.txt"] = httpx.Response(
         200, text="User-agent: *\nDisallow: /\n"
@@ -256,4 +256,4 @@ def test_probe_reports_policy_blocks(setup, tmp_path):
     batch = tmp_path / "batch.yaml"
     batch.write_text((FIX / "sources_good.yaml").read_text())
     r = runner.invoke(app, ["sources", "probe", str(batch)])
-    assert r.exit_code == 4 and "blocked" in r.output
+    assert r.exit_code == 0 and "informational only" in r.output and "blocked" not in r.output
