@@ -93,7 +93,7 @@ Full profiles with evidence and score rationales are in the batch files (same co
 |---|---|---|
 | AIcrowd challenges | Terms prohibit automated access ('monitor (e.g. spider, scrape) the Platform'); the list is JavaScript-loaded ('Loading Challenges'). | Codabench / EvalAI / lablab.ai |
 | ARC Prize | Terms prohibit bots/scrapers; competitions run on Kaggle, which is already covered (S13). | Kaggle (S13) |
-| Hack Club hackathons | Page is titled 'High School Hackathons in 2026'; the primary user is a university student. | MLH (S04) |
+| Hack Club hackathons | Page is titled 'High School Hackathons in 2026'; the target profile is a university student. | MLH (S04) |
 | HackZurich | Site states 'HackZurich is currently on hiatus'. | European Hackathon League (S14) |
 | DoraHacks hackathons | HTTP 405 to our agent for the page and robots.txt; no usable endpoint. | lablab.ai (S03) |
 | DFKI career pages | Bot challenge ('Just a moment...', HTTP 403); not circumvented. | FZI (S15), Cyber Valley (S22) |
@@ -104,7 +104,7 @@ Full profiles with evidence and score rationales are in the batch files (same co
 | Stipendienlotse | TLS certificate verification fails. | DAAD (S36), Studienstiftung (S27) |
 | MLSS (mlss.cc) | TLS certificate verification fails; MLSS 2027 Okinawa is covered by a single event page only. | ELLIS (S31), EEML (S49) |
 | NASA Space Apps | TLS certificate verification fails. | MLH (S04) |
-| DAAD RISE Germany | Eligibility excludes the primary user: 'You are enrolled as Master or Ph.D. student or a Bachelor who is a RISE Germany-Alumni at a North American, British or Irish university'. The programme feed is also stale (newest item 2016). | FZI (S15) |
+| DAAD RISE Germany | Eligibility excludes the target profile (a bachelor student at a German university): 'You are enrolled as Master or Ph.D. student or a Bachelor who is a RISE Germany-Alumni at a North American, British or Irish university'. The programme feed is also stale (newest item 2016). | FZI (S15) |
 | AI Deadlines (aideadlin.es) | Underlying repository last pushed 2024-09-15 (stale); overlaps with CCF-Deadlines (S08). | CCF-Deadlines (S08) |
 | HackHPI | Single annual event page whose visible edition is 10-11 April 2026; narrow value. | TUM.ai (S23) |
 | ETH Zurich RSL student projects | URL returned 404 and no replacement listing was found. | Cyber Valley (S22) |
@@ -158,7 +158,7 @@ Ranked by total score among P0/P1 sources with PROBE_PASSED; each still needs a 
 - Staleness: yearly conference sites change URL/structure; feeds for S39 and S48 are stale.
 - Date handling: yearless/two-digit dates will be flagged for review, not auto-confirmed.
 - Undocumented endpoint: S24 (EvalAI) works but its documentation status is unverified.
-- Eligibility: Outreachy, Fulbright, Studienstiftung eligibility for the user is unverified.
+- Eligibility: Outreachy, Fulbright, Studienstiftung eligibility for the target profile is unverified.
 - Coverage: no industry-programme sources were accessible; the portfolio is research-heavy.
 
 ## 12. Limitations

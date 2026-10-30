@@ -785,7 +785,7 @@
     "I": 3
    },
    "why_s": {
-    "R": "Covers the AI/CV/ML venues the user cares about.",
+    "R": "Covers the AI/CV/ML venues in scope.",
     "A": "Community-curated; correctness not guaranteed (must verify on official sites).",
     "Q": "Structured deadlines and timezones.",
     "F": "Active repo (push on 29 Oct 2026).",
@@ -1434,7 +1434,7 @@
     "germany",
     "internship"
    ],
-   "why": "Applied-research institute close to Mannheim; page states it offers internships, student assistant jobs and theses.",
+   "why": "Applied-research institute in Karlsruhe; page states it offers internships, student assistant jobs and theses.",
    "stable_ids": "Job posting URLs (not enumerated)",
    "dates": "Landing page has few dates; listings not enumerated in this run",
    "difficulty": "Medium: listings live on a sub-page not located in this run (guessed /career/jobs-talents/ returned 404).",
@@ -1460,7 +1460,7 @@
     "I": 3
    },
    "why_s": {
-    "R": "Applied AI/robotics research near the user (Karlsruhe).",
+    "R": "Applied AI/robotics research in Karlsruhe.",
     "A": "Institute is the employer/publisher.",
     "Q": "Landing page lacks listings; details unknown.",
     "F": "Listings not verified.",
@@ -1656,7 +1656,7 @@
    "status": "PROBE_PASSED",
    "confidence": "medium",
    "unknown": [
-    "Hochschule Mannheim's Erasmus deadlines (own source needed)"
+    "the home university's Erasmus deadlines (own source needed)"
    ],
    "next": "Pair with the university's Erasmus office page.",
    "probe": {
@@ -1841,7 +1841,7 @@
    "status": "PROBE_PASSED",
    "confidence": "high",
    "unknown": [
-    "Value to the user's goals"
+    "Value to the target profile"
    ],
    "next": "Low priority; implement JSON adapter if shared with other APIs.",
    "probe": {
@@ -2588,7 +2588,7 @@
    "confidence": "low",
    "unknown": [
     "Application route and deadlines",
-    "Eligibility for the user"
+    "Eligibility for the target profile"
    ],
    "next": "Read the application sub-pages; probably track manually.",
    "probe": {
@@ -2853,7 +2853,7 @@
     "I": 4
    },
    "why_s": {
-    "R": "Relevant if the user meets eligibility; unknown.",
+    "R": "Relevant if the operator meets eligibility; unknown.",
     "A": "Program operator.",
     "Q": "Rounds and rules clear.",
     "F": "Current rounds listed.",
@@ -2863,7 +2863,7 @@
    "status": "PROBE_PASSED",
    "confidence": "high",
    "unknown": [
-    "Whether the user is eligible"
+    "Whether the operator is eligible"
    ],
    "next": "User reads the eligibility rules before onboarding.",
    "probe": {
@@ -3277,7 +3277,7 @@
    "method": "Career Center page (HTML); student job board runs on JobTeaser (access model unverified)",
    "adapter": "html",
    "adapter_fit": "existing",
-   "official": "first-party (the user's own university)",
+   "official": "first-party (university)",
    "auth": "Unknown for the job board",
    "registration": "Likely student login for JobTeaser (unverified)",
    "types": [
@@ -3291,7 +3291,7 @@
     "careers",
     "mannheim"
    ],
-   "why": "The user's own institution; the Career Center page shows dated events (14 date mentions) and the annual CareerStation fair on 29 April 2027.",
+   "why": "A local university's career service; the Career Center page shows dated events (14 date mentions) and the annual CareerStation fair on 29 April 2027.",
    "stable_ids": "None",
    "dates": "Yes for events",
    "difficulty": "Medium-high: the actual job listings are on JobTeaser and probably login-gated.",
@@ -3503,7 +3503,7 @@
     "I": 3
    },
    "why_s": {
-    "R": "Relevant to the user but deadlines are at the university.",
+    "R": "Relevant to the target profile but deadlines are at the university.",
     "A": "Federal ministry.",
     "Q": "No dates on probed page.",
     "F": "News only.",
@@ -3513,7 +3513,7 @@
    "status": "PROBE_PASSED",
    "confidence": "medium",
    "unknown": [
-    "Hochschule Mannheim's application window"
+    "the home university's application window"
    ],
    "next": "Add the university's scholarship page as its own source.",
    "probe": {
@@ -4762,7 +4762,7 @@
   {
    "name": "Hack Club hackathons",
    "url": "https://hackathons.hackclub.com/",
-   "reason": "Page is titled 'High School Hackathons in 2026'; the primary user is a university student.",
+   "reason": "Page is titled 'High School Hackathons in 2026'; the target profile is a university student.",
    "evidence": [
     "https://hackathons.hackclub.com/"
    ],
@@ -4861,7 +4861,7 @@
   {
    "name": "DAAD RISE Germany",
    "url": "https://www.daad.de/rise/en/rise-germany/what-applicants-need-to-know/",
-   "reason": "Eligibility excludes the primary user: 'You are enrolled as Master or Ph.D. student or a Bachelor who is a RISE Germany-Alumni at a North American, British or Irish university'. The programme feed is also stale (newest item 2016).",
+   "reason": "Eligibility excludes the target profile (a bachelor student at a German university): 'You are enrolled as Master or Ph.D. student or a Bachelor who is a RISE Germany-Alumni at a North American, British or Irish university'. The programme feed is also stale (newest item 2016).",
    "evidence": [
     "https://www.daad.de/rise/en/rise-germany/what-applicants-need-to-know/",
     "https://www.daad.de/rise/en/feed/"

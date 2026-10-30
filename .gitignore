@@ -16,3 +16,7 @@ config/settings.yaml
 
 # graphify output
 graphify-out/
+
+# build output
+dist/
+build/

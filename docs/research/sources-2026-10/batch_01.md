@@ -222,7 +222,7 @@ Verification pass: 2026-10-30T01:17:32+01:00 (Europe/Berlin). Nothing here is ac
   - GitHub API: license MIT, pushed_at 2026-10-29T15:46:27Z, archived=false - <https://api.github.com/repos/ccfddl/ccf-deadlines>
   - conference/AI directory lists 61 files (e.g. aaai.yml, acl.yml) - <https://api.github.com/repos/ccfddl/ccf-deadlines/contents/conference/AI>
   - Raw file nips.yml fetched successfully (2,021 bytes) - <https://raw.githubusercontent.com/ccfddl/ccf-deadlines/main/conference/AI/nips.yml>
-- **Scores:** relevance 4 (Covers the AI/CV/ML venues the user cares about.) | authority 3 (Community-curated; correctness not guaranteed (must verify on official sites).) | signal quality 5 (Structured deadlines and timezones.) | freshness 5 (Active repo (push on 29 Oct 2026).) | integration 3 (Requires a new YAML/JSON adapter; otherwise simple.)
+- **Scores:** relevance 4 (Covers the AI/CV/ML venues in scope.) | authority 3 (Community-curated; correctness not guaranteed (must verify on official sites).) | signal quality 5 (Structured deadlines and timezones.) | freshness 5 (Active repo (push on 29 Oct 2026).) | integration 3 (Requires a new YAML/JSON adapter; otherwise simple.)
 - **Uncertainties:** Accuracy of individual deadlines; Complete list of robotics conferences in the dataset
 - **Next action:** Plan a small data adapter; treat values as T4 leads confirmed on official conference pages.
 - **Stages:** A=yes, B=yes, C=no, D=yes, E=no, F=no

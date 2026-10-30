@@ -1,5 +1,9 @@
 # OpenHypergamy
 
+[![CI](https://github.com/r00tnomade/open-hypergamy/actions/workflows/ci.yml/badge.svg)](https://github.com/r00tnomade/open-hypergamy/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue.svg)
+
 **Career hypergamy. Open source.**
 
 *LARP never stops. Professionally.*
@@ -216,11 +220,14 @@ OpenHypergamy is a tool for discovering, monitoring and researching publicly ann
 
 | Where | What |
 | --- | --- |
-| `open_hypergamy_lld_v1_2.md` | The implementation contract: schema, interfaces, CLI, test matrix |
-| `open_hypergamy_hld_v1_2.md` | Rationale, goals, trust tiers, risks |
+| `docs/design/open_hypergamy_lld_v1_2.md` | The implementation contract: schema, interfaces, CLI, test matrix |
+| `docs/design/open_hypergamy_hld_v1_2.md` | Rationale, goals, trust tiers, risks |
 | `docs/adr/` | Decisions that clarify or override the LLD (start with ADR-008 for robots.txt) |
 | `docs/research/` | Source research: evidence, scores, policy notes, draft configs |
 | `CLAUDE.md` | Contributor and agent notes, invariants that must not break |
+| `CONTRIBUTING.md` | Setup, the four checks, how to propose sources |
+| `SECURITY.md` | How to report a vulnerability privately |
+| `CHANGELOG.md` | What changed, per version |
 
 ## Share the sauce
 
@@ -237,3 +244,7 @@ Tests fake the network, DNS, the LLM gateway, Telegram, the Keychain and launchd
 ## Status
 
 Built and tested end to end against fakes. Not yet run against the real FreeLLMAPI gateway, the real Telegram API, a live Keychain or an actual launchd. No sources are seeded, and none of the research candidates is approved or enabled. Run `ohg doctor`, then `ohg notify test`, before you trust it with a deadline. Touch grass occasionally.
+
+## License
+
+MIT, see [LICENSE](LICENSE). The responsible-use notice above still applies.

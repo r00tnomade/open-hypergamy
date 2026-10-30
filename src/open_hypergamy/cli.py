@@ -663,7 +663,7 @@ def run_discovery_cmd(
     home: HomeOpt = None,
     config: ConfigOpt = None,
 ) -> None:
-    """Poll due sources and store observations (candidate extraction arrives in M3)."""
+    """Poll due sources, store observations and extract candidates."""
     with guard():
         cfg = _load(home, config)
         conn = _open(cfg)

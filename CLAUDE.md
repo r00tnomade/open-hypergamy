@@ -6,8 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 OpenHypergamy is a single-user, local CLI (`ohg`) that discovers, verifies, scores, and monitors research/education opportunities (internships, summer schools, fellowships, CFPs, hackathons) and alerts via Telegram. **Milestones 1–6 are implemented** (see "Implemented so far" below); later milestones are in the execution plan. Design docs:
 
-- `open_hypergamy_lld_v1_2.md` — **the implementation contract.** Exact SQL schema (§4), Pydantic contracts and module interfaces (§5), source YAML schema (§6), fetch rules (§7), LLM request/response schema (§9), Telegram templates and idempotency keys (§13), CLI surface and exit codes (§14), test matrix (§18), milestones (§19), task order (§22).
-- `open_hypergamy_hld_v1_2.md` — rationale, goals/non-goals, trust tiers, risks.
+- `docs/design/open_hypergamy_lld_v1_2.md` — **the implementation contract.** Exact SQL schema (§4), Pydantic contracts and module interfaces (§5), source YAML schema (§6), fetch rules (§7), LLM request/response schema (§9), Telegram templates and idempotency keys (§13), CLI surface and exit codes (§14), test matrix (§18), milestones (§19), task order (§22).
+- `docs/design/open_hypergamy_hld_v1_2.md` — rationale, goals/non-goals, trust tiers, risks.
 
 Where the two differ (repo layout, module names, table set), **the LLD wins**. Deviations from the LLD must be recorded as an ADR (`docs/adr/`, ADR-001 lives in LLD §19.1).
 

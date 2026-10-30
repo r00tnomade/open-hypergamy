@@ -132,7 +132,7 @@ Verification pass: 2026-10-30T01:17:32+01:00 (Europe/Berlin). Nothing here is ac
 - **Opportunity types:** internships; student assistant jobs; bachelor/master theses; full-time jobs
 - **Audience/eligibility:** Students and graduates; positions say per listing.
 - **Geography / remote:** Germany (Karlsruhe, Berlin) / Mostly on-site
-- **Value:** Applied-research institute close to Mannheim; page states it offers internships, student assistant jobs and theses.
+- **Value:** Applied-research institute in Karlsruhe; page states it offers internships, student assistant jobs and theses.
 - **Auth / registration:** none / none
 - **Adapter fit:** html (existing) | stable IDs: Job posting URLs (not enumerated) | dates: Landing page has few dates; listings not enumerated in this run | difficulty: Medium: listings live on a sub-page not located in this run (guessed /career/jobs-talents/ returned 404).
 - **Policy:** unclear - robots.txt allows the landing page; listing page not yet identified. The final pass requested /en/career/ and was redirected to an event page (career fair), so the landing page itself was not confirmed.
@@ -141,7 +141,7 @@ Verification pass: 2026-10-30T01:17:32+01:00 (Europe/Berlin). Nothing here is ac
 - **Final-pass probe:** 2026-10-30T01:17:32+01:00 - GET https://www.fzi.de/en/career/ - robots allowed=True (robots HTTP 200), HTTP 200, text/html, 135141 bytes
 - **Evidence:**
   - Page text: offers for employee positions, theses (Master's/Bachelor's), internships and student assistant jobs - <https://www.fzi.de/en/career/>
-- **Scores:** relevance 4 (Applied AI/robotics research near the user (Karlsruhe).) | authority 5 (Institute is the employer/publisher.) | signal quality 2 (Landing page lacks listings; details unknown.) | freshness 3 (Listings not verified.) | integration 3 (Listing sub-page must be found first.)
+- **Scores:** relevance 4 (Applied AI/robotics research in Karlsruhe.) | authority 5 (Institute is the employer/publisher.) | signal quality 2 (Landing page lacks listings; details unknown.) | freshness 3 (Listings not verified.) | integration 3 (Listing sub-page must be found first.)
 - **Uncertainties:** Exact job-listing URL and format
 - **Next action:** Locate the actual job/thesis listing URL before drafting an entry.
 - **Stages:** A=yes, B=no, C=no, D=no, E=no, F=no
@@ -194,7 +194,7 @@ Verification pass: 2026-10-30T01:17:32+01:00 (Europe/Berlin). Nothing here is ac
   - Page 'Students - Erasmus+' fetched (200) after 301 redirect from the older path - <https://erasmus-plus.ec.europa.eu/opportunities/individuals/students>
   - Legal notice: EU-owned content licensed under CC BY 4.0 - <https://commission.europa.eu/legal-notice_en>
 - **Scores:** relevance 3 (Relevant for study abroad; not research-specific.) | authority 5 (European Commission.) | signal quality 2 (Deadlines are set by each university.) | freshness 2 (Static programme pages.) | integration 3 (HTML works, little to extract.)
-- **Uncertainties:** Hochschule Mannheim's Erasmus deadlines (own source needed)
+- **Uncertainties:** the home university's Erasmus deadlines (own source needed)
 - **Next action:** Pair with the university's Erasmus office page.
 - **Stages:** A=yes, B=yes, C=yes, D=yes, E=no, F=no
 
@@ -245,7 +245,7 @@ Verification pass: 2026-10-30T01:17:32+01:00 (Europe/Berlin). Nothing here is ac
   - API help: 'API may be requested at most 1 time per two seconds'; 'All methods can be requested anonymously' - <https://codeforces.com/apiHelp>
   - contest.list returned status OK with contests incl. phase BEFORE and startTimeSeconds - <https://codeforces.com/api/contest.list?gym=false>
 - **Scores:** relevance 3 (Algorithmic contests; useful but peripheral to AI/robotics.) | authority 5 (Operator of the contests.) | signal quality 4 (Structured times; no prizes/eligibility fields.) | freshness 5 (Upcoming rounds listed.) | integration 3 (Needs JSON adapter; API well documented.)
-- **Uncertainties:** Value to the user's goals
+- **Uncertainties:** Value to the target profile
 - **Next action:** Low priority; implement JSON adapter if shared with other APIs.
 - **Stages:** A=yes, B=yes, C=no, D=yes, E=no, F=no
 

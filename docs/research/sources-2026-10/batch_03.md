@@ -193,7 +193,7 @@ Verification pass: 2026-10-30T01:17:32+01:00 (Europe/Berlin). Nothing here is ac
   - Homepage news block including 'Mission CERN: Mit dem CERN-Netzwerk baut die Studienstiftung ein technikorientiertes Angebot ...' - <https://www.studienstiftung.de/>
   - Link '/rss' returns an HTML page, so no usable feed was verified - <https://www.studienstiftung.de/rss>
 - **Scores:** relevance 3 (Relevant long-term scholarship, but eligibility is competitive/nomination-based (not verified here).) | authority 5 (Official foundation.) | signal quality 1 (Homepage lacks deadlines/eligibility.) | freshness 2 (News only.) | integration 3 (Static HTML; low yield.)
-- **Uncertainties:** Application route and deadlines; Eligibility for the user
+- **Uncertainties:** Application route and deadlines; Eligibility for the target profile
 - **Next action:** Read the application sub-pages; probably track manually.
 - **Stages:** A=yes, B=no, C=yes, D=yes, E=no, F=no
 
@@ -268,7 +268,7 @@ Verification pass: 2026-10-30T01:17:32+01:00 (Europe/Berlin). Nothing here is ac
 - **Evidence:**
   - Homepage lists application round dates incl. 'August 17, 2026' - <https://www.outreachy.org/>
   - Apply guide: 'We have strict eligibility rules for people with...' - <https://www.outreachy.org/apply/>
-- **Scores:** relevance 3 (Relevant if the user meets eligibility; unknown.) | authority 5 (Program operator.) | signal quality 4 (Rounds and rules clear.) | freshness 4 (Current rounds listed.) | integration 4 (Existing adapter.)
-- **Uncertainties:** Whether the user is eligible
+- **Scores:** relevance 3 (Relevant if the operator meets eligibility; unknown.) | authority 5 (Program operator.) | signal quality 4 (Rounds and rules clear.) | freshness 4 (Current rounds listed.) | integration 4 (Existing adapter.)
+- **Uncertainties:** Whether the operator is eligible
 - **Next action:** User reads the eligibility rules before onboarding.
 - **Stages:** A=yes, B=no, C=yes, D=yes, E=no, F=no

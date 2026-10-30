@@ -123,7 +123,7 @@ Verification pass: 2026-10-30T01:17:32+01:00 (Europe/Berlin). Nothing here is ac
 ### S35 - TH Mannheim Career Center  
 **Status:** MANUAL_REVIEW | **Priority:** P2 | **Score:** 16/25 | **Confidence:** medium
 
-- **Publisher:** Technische Hochschule Mannheim (first-party (the user's own university))
+- **Publisher:** Technische Hochschule Mannheim (first-party (university))
 - **Category:** C - Research internships and student technical opportunities | **Batch:** 4
 - **Canonical URL:** https://www.career.hs-mannheim.de/
 - **Endpoint:** https://www.career.hs-mannheim.de/
@@ -131,7 +131,7 @@ Verification pass: 2026-10-30T01:17:32+01:00 (Europe/Berlin). Nothing here is ac
 - **Opportunity types:** career events, company contact fairs (e.g. CareerStation 29 April 2027), job board
 - **Audience/eligibility:** Students and alumni of the university.
 - **Geography / remote:** Mannheim / n/a
-- **Value:** The user's own institution; the Career Center page shows dated events (14 date mentions) and the annual CareerStation fair on 29 April 2027.
+- **Value:** A local university's career service; the Career Center page shows dated events (14 date mentions) and the annual CareerStation fair on 29 April 2027.
 - **Auth / registration:** Unknown for the job board / Likely student login for JobTeaser (unverified)
 - **Adapter fit:** html (existing) | stable IDs: None | dates: Yes for events | difficulty: Medium-high: the actual job listings are on JobTeaser and probably login-gated.
 - **Policy:** unclear - The Career Center page is public; job board access likely requires login which must not be bypassed.
@@ -193,8 +193,8 @@ Verification pass: 2026-10-30T01:17:32+01:00 (Europe/Berlin). Nothing here is ac
 - **Final-pass probe:** 2026-10-30T01:17:32+01:00 - GET https://www.deutschlandstipendium.de/deutschlandstipendium/de/home/home_node.html - robots allowed=True (robots HTTP 200), HTTP 200, text/html, 111173 bytes
 - **Evidence:**
   - Home page 'Startseite - BMFTR Deutschlandstipendium' with news items - <https://www.deutschlandstipendium.de/deutschlandstipendium/de/home/home_node.html>
-- **Scores:** relevance 3 (Relevant to the user but deadlines are at the university.) | authority 5 (Federal ministry.) | signal quality 1 (No dates on probed page.) | freshness 2 (News only.) | integration 3 (Low data yield.)
-- **Uncertainties:** Hochschule Mannheim's application window
+- **Scores:** relevance 3 (Relevant to the target profile but deadlines are at the university.) | authority 5 (Federal ministry.) | signal quality 1 (No dates on probed page.) | freshness 2 (News only.) | integration 3 (Low data yield.)
+- **Uncertainties:** the home university's application window
 - **Next action:** Add the university's scholarship page as its own source.
 - **Stages:** A=yes, B=no, C=yes, D=yes, E=no, F=no
 

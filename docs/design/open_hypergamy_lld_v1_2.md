@@ -1,7 +1,7 @@
 # OpenHypergamy — Low-Level Design (LLD)
 
 **Document status:** Proposed implementation contract  
-**Amendment:** robots.txt handling (§7.3, `crawling.obey_robots_txt`, §17 security and privacy, §22 task 5) is superseded by [ADR-008](docs/adr/ADR-008-robots-txt-informational.md). Where this document and ADR-008 differ, ADR-008 wins.  
+**Amendment:** robots.txt handling (§7.3, `crawling.obey_robots_txt`, §17 security and privacy, §22 task 5) is superseded by [ADR-008](../adr/ADR-008-robots-txt-informational.md). Where this document and ADR-008 differ, ADR-008 wins.  
 **Version:** 1.2  
 **Date:** 29 October 2026  
 **Parent design:** OpenHypergamy HLD v1.1  
