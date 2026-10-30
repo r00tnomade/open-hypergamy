@@ -1,6 +1,7 @@
 # OpenHypergamy — Low-Level Design (LLD)
 
 **Document status:** Proposed implementation contract  
+**Amendment:** robots.txt handling (§7.3, `crawling.obey_robots_txt`, §17 security and privacy, §22 task 5) is superseded by [ADR-008](docs/adr/ADR-008-robots-txt-informational.md). Where this document and ADR-008 differ, ADR-008 wins.  
 **Version:** 1.2  
 **Date:** 29 October 2026  
 **Parent design:** OpenHypergamy HLD v1.1  
@@ -251,7 +252,7 @@ telegram:
   retry_limit: 3
 
 crawling:
-  obey_robots_txt: true
+  # obey_robots_txt: true   # REMOVED, superseded by ADR-008: robots.txt is informational and never gates a request
   require_source_policy_review: true
   discover_outbound_sources_as_unverified: true
   allow_login_pages: false
@@ -1041,8 +1042,9 @@ Do not add low-quality sources merely to reach 200.
 
 ### 7.3 robots and access policy
 
-- Check `robots.txt` when required by policy and before crawling new domains.
-- Robots permission does not by itself establish legal permission; terms review remains a separate recorded note.
+- **Superseded by ADR-008.** Original requirement (kept for history): check `robots.txt` when required by policy and before crawling new domains. Current behaviour: the fetcher does not evaluate `Disallow` or `Crawl-delay`; robots.txt may be retrieved and shown as informational metadata only (`Fetcher.robots_info`, `ohg sources probe`).
+- Neither robots.txt permission nor its absence establishes legal permission; terms review remains a separate recorded note. Crawl policy comes from source configuration, scope rules and the configured per-host throttle.
+- `429`/`Retry-After` and server errors are still honoured; `403` is never retried or evaded and is recorded as a source failure.
 - No CAPTCHA bypass, login scraping, paywall circumvention, or authentication bypass.
 - Search engine result pages are not a required discovery mechanism and must not be scraped contrary to provider terms.
 - Treat source body and links as untrusted data. Never execute downloaded code outside ordinary browser rendering.
@@ -1691,7 +1693,7 @@ Metrics are persisted as counts in `job_runs.summary_json`, with important sourc
 - Telegram messages contain minimal summaries and official links, never private profile contents or full extraction payloads.
 - User-specific profile values remain local and versioned.
 - Data export is opt-in; do not sync the database or backups to cloud storage automatically.
-- Respect robots directives, site terms, and source-specific crawling notes. No access-control circumvention.
+- Respect site terms and source-specific crawling notes (robots directives are informational only, see ADR-008). No access-control circumvention.
 
 ---
 
@@ -1872,7 +1874,7 @@ Implement in this order; keep each task small enough for review and tests.
 2. App data directory helper, SQLite connection factory, initial migration, migration checksums, backup/integrity commands.
 3. Pydantic source registry schema, canonical URL normalizer, safe URL/policy validation.
 4. Source repositories and job-run tracking.
-5. HTTP fetcher, caching, per-domain throttling, robots/policy checks, source health recording.
+5. HTTP fetcher, caching, per-domain throttling, source policy checks (robots.txt informational per ADR-008), source health recording.
 6. RSS/Atom and HTML adapters; add sitemap adapter after the generic fetch path is stable.
 7. Candidate repository, fingerprints, deterministic deduplication, candidate list/show commands.
 8. Extracted claims/evidence, field-specific validators, conflict/review queue.

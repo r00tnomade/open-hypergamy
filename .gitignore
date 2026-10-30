@@ -13,3 +13,6 @@ config/settings.yaml
 *.sqlite3-wal
 *.sqlite3-shm
 .DS_Store
+
+# graphify output
+graphify-out/
