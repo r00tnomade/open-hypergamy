@@ -6,7 +6,7 @@ import json
 import sqlite3
 import uuid
 from dataclasses import dataclass, field
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from open_hypergamy.clock import Clock, iso_z
 from open_hypergamy.errors import ConfigurationError
@@ -14,6 +14,8 @@ from open_hypergamy.observability.logging import redact
 from open_hypergamy.persistence.db import transaction
 from open_hypergamy.persistence.repositories.observations import insert_observation
 from open_hypergamy.sources.base import PageObservation, SourceRecord
+from open_hypergamy.sources.health import HealthPolicy, categorize, iso_or_none, plan_check
+from open_hypergamy.sources.pages import PageUpdate, TrackedPage, plan_page
 from open_hypergamy.sources.registry import SourceConfig
 
 
@@ -45,12 +47,30 @@ class CheckOutcome:
     error_detail: str | None = None
     etag: str | None = None
     last_modified: str | None = None
+    retry_after_seconds: float | None = None
     observations: tuple[PageObservation, ...] = ()
+    page_updates: tuple[PageUpdate, ...] = ()
+    egress: dict[str, object] | None = None  # EgressReport.as_json(); None = direct connection
+
+
+def _opt_str(v: object) -> str | None:
+    return v if isinstance(v, str) else None
+
+
+def _opt_int(v: object) -> int | None:
+    return v if isinstance(v, int) and not isinstance(v, bool) else None
+
+
+def _as_int(v: object) -> int:
+    return _opt_int(v) or 0
 
 
 class SourceRepository:
-    def __init__(self, conn: sqlite3.Connection, clock: Clock) -> None:
+    def __init__(
+        self, conn: sqlite3.Connection, clock: Clock, health: HealthPolicy | None = None
+    ) -> None:
         self.conn, self.clock = conn, clock
+        self.health = health or HealthPolicy()
 
     # -- queries --------------------------------------------------------------------------
     def get(self, ref: str) -> SourceRecord | None:
@@ -75,10 +95,11 @@ class SourceRepository:
 
     def list_due(self, now_iso: str, limit: int | None = None) -> list[SourceRecord]:
         sql = (
-            "SELECT * FROM sources WHERE enabled = 1 AND state = 'active' "
-            "AND (next_due_at IS NULL OR next_due_at <= ?) ORDER BY priority DESC, next_due_at"
+            "SELECT * FROM sources WHERE enabled = 1 AND state = 'active' AND blocked_reason IS NULL "
+            "AND (next_due_at IS NULL OR next_due_at <= ?) AND (cooldown_until IS NULL OR cooldown_until <= ?) "
+            "ORDER BY priority DESC, next_due_at"
         )
-        args: list[object] = [now_iso]
+        args: list[object] = [now_iso, now_iso]
         if limit:
             sql += " LIMIT ?"
             args.append(limit)
@@ -91,6 +112,12 @@ class SourceRepository:
             (url,),
         ).fetchone()
         return (row["etag"], row["last_modified"]) if row else (None, None)
+
+    def tracked_pages(self, source_id: str) -> list[TrackedPage]:
+        rows = self.conn.execute(
+            "SELECT * FROM source_pages WHERE source_id = ? ORDER BY canonical_url", (source_id,)
+        ).fetchall()
+        return [TrackedPage.from_row(r) for r in rows]
 
     def failures(self, since_iso: str) -> list[sqlite3.Row]:
         return self.conn.execute(
@@ -307,23 +334,48 @@ class SourceRepository:
         assert updated is not None
         return updated
 
+    def clear_hold(self, ref: str) -> SourceRecord:
+        """`ohg sources unblock`: an operator reviewed the source; end its hold and cooldown.
+
+        Streak and history are kept, so an unchanged 403 puts it straight back on hold.
+        """
+        src = self.get(ref)
+        if src is None:
+            raise ConfigurationError(f"unknown source: {ref}")
+        now = iso_z(self.clock.now_utc())
+        with transaction(self.conn):
+            self.conn.execute(
+                "UPDATE sources SET blocked_reason=NULL, blocked_at=NULL, cooldown_until=NULL, "
+                "next_due_at=NULL, updated_at=? WHERE id=?",
+                (now, src.id),
+            )
+            self.conn.execute(
+                "UPDATE source_pages SET status='active', status_reason=NULL, "
+                "consecutive_failures=0, next_check_at=? WHERE source_id=? AND status != 'active'",
+                (now, src.id),
+            )
+        updated = self.get(src.id)
+        assert updated is not None
+        return updated
+
     # -- health recording -----------------------------------------------------------------
     def record_check(
         self, source: SourceRecord, outcome: CheckOutcome, job_run_id: str | None
     ) -> list[tuple[str, PageObservation]]:
         """Persist one check atomically; returns the newly stored (id, observation) pairs. A failure never touches facts or last-known content."""
         ok = outcome.status in ("success", "not_modified", "partial")
-        blocked = outcome.status == "blocked_policy"
         now = self.clock.now_utc()
-        interval = timedelta(hours=source.fetch_interval_hours)
-        if ok:
-            streak, next_due = 0, now + interval
-        elif blocked or outcome.status == "skipped":  # not a source failure; retry next interval
-            streak, next_due = source.failure_streak, now + interval
-        else:
-            streak = source.failure_streak + 1
-            backoff = timedelta(hours=min(2 ** (streak - 1), source.fetch_interval_hours))
-            next_due = now + backoff
+        category = categorize(outcome.status, outcome.error_code, outcome.http_status)
+        plan = plan_check(
+            source,
+            outcome.status,
+            category,
+            now,
+            policy=self.health,
+            retry_after_seconds=outcome.retry_after_seconds,
+            detail=redact(outcome.error_detail)[:200] if outcome.error_detail else None,
+        )
+        newly_blocked = plan.blocked_reason is not None and source.blocked_reason is None
         run_id = str(uuid.uuid4())
         with transaction(self.conn):
             self.conn.execute(
@@ -349,6 +401,21 @@ class SourceRepository:
                     redact(outcome.error_detail)[:500] if outcome.error_detail else None,
                 ),
             )
+            if outcome.egress is not None:
+                self.conn.execute(
+                    "INSERT INTO source_check_egress(source_check_run_id, profile, rotation_count, "
+                    "failover_count, proxy_latency_ms, destination_status, detail_json) "
+                    "VALUES (?,?,?,?,?,?,?)",
+                    (
+                        run_id,
+                        _opt_str(outcome.egress.get("profile")),
+                        _as_int(outcome.egress.get("rotation_count")),
+                        _as_int(outcome.egress.get("failover_count")),
+                        _opt_int(outcome.egress.get("proxy_latency_ms")),
+                        _opt_int(outcome.egress.get("destination_status")),
+                        json.dumps(outcome.egress, sort_keys=True, separators=(",", ":")),
+                    ),
+                )
             changed = False
             inserted: list[tuple[str, PageObservation]] = []
             for obs in outcome.observations:
@@ -359,31 +426,84 @@ class SourceRepository:
                 )
                 if was_new:
                     inserted.append((obs_id, obs))
-                    changed = changed or obs.depth == 0
+                    changed = True
             sets = [
                 "last_attempt_at = ?",
                 "failure_streak = ?",
                 "next_due_at = ?",
                 "last_http_status = ?",
+                "cooldown_until = ?",
+                "last_error_category = ?",
+                "blocked_reason = ?",
                 "updated_at = ?",
             ]
             args: list[object] = [
                 iso_z(now),
-                streak,
-                iso_z(next_due),
+                plan.failure_streak,
+                iso_z(plan.next_due_at),
                 outcome.http_status,
+                iso_or_none(plan.cooldown_until),
+                plan.error_category.value if plan.error_category else None,
+                plan.blocked_reason,
                 iso_z(now),
             ]
+            if newly_blocked:
+                sets.append("blocked_at = ?")
+                args.append(iso_z(now))
             if ok:
                 sets.append("last_success_at = ?")
                 args.append(iso_z(now))
             if ok and outcome.status != "not_modified":
                 sets += ["etag = ?", "last_modified = ?", "last_content_hash = ?"]
                 args += [outcome.etag, outcome.last_modified, outcome.content_hash]
-                if changed:
-                    sets.append("last_content_change_at = ?")
-                    args.append(iso_z(now))
+            if ok and changed:  # the index or any followed child page produced new content
+                sets.append("last_content_change_at = ?")
+                args.append(iso_z(now))
             self.conn.execute(
                 f"UPDATE sources SET {', '.join(sets)} WHERE id = ?", [*args, source.id]
             )
+            self._apply_page_updates(source, outcome.page_updates, now)
         return inserted
+
+    def _apply_page_updates(
+        self, source: SourceRecord, updates: tuple[PageUpdate, ...], now: datetime
+    ) -> None:
+        """Upsert child-page state in the check's transaction; never deletes a row."""
+        if not updates:
+            return
+        raw = source.discovery_policy.get("child_recheck_hours")
+        hours = raw if isinstance(raw, int) and not isinstance(raw, bool) and raw > 0 else None
+        interval = timedelta(hours=hours or source.fetch_interval_hours)
+        known = {p.url: p for p in self.tracked_pages(source.id)}
+        for u in updates:
+            prev = known.get(u.url)
+            if prev is None and (
+                u.kind == "discovered" and len(known) >= self.health.max_tracked_pages
+            ):
+                continue  # cap: remember no more than N pages per source
+            page = plan_page(
+                prev, u, source_id=source.id, now=now, interval=interval, policy=self.health
+            )
+            known[u.url] = page
+            self.conn.execute(
+                "INSERT INTO source_pages(source_id, canonical_url, depth, status, status_reason, "
+                "first_seen_at, last_listed_at, last_attempt_at, last_checked_at, last_changed_at, "
+                "next_check_at, consecutive_failures, last_http_status, last_error_code, etag, "
+                "last_modified, content_hash) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) "
+                "ON CONFLICT(source_id, canonical_url) DO UPDATE SET depth=excluded.depth, "
+                "status=excluded.status, status_reason=excluded.status_reason, "
+                "last_listed_at=excluded.last_listed_at, last_attempt_at=excluded.last_attempt_at, "
+                "last_checked_at=excluded.last_checked_at, last_changed_at=excluded.last_changed_at, "
+                "next_check_at=excluded.next_check_at, "
+                "consecutive_failures=excluded.consecutive_failures, "
+                "last_http_status=excluded.last_http_status, last_error_code=excluded.last_error_code, "
+                "etag=excluded.etag, last_modified=excluded.last_modified, "
+                "content_hash=excluded.content_hash",
+                (
+                    page.source_id, page.url, page.depth, page.status, page.status_reason,
+                    page.first_seen_at, page.last_listed_at, page.last_attempt_at,
+                    page.last_checked_at, page.last_changed_at, page.next_check_at,
+                    page.consecutive_failures, page.last_http_status, page.last_error_code,
+                    page.etag, page.last_modified, page.content_hash,
+                ),
+            )  # fmt: skip

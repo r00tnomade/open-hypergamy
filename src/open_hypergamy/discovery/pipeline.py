@@ -32,6 +32,7 @@ from open_hypergamy.discovery.promotion import (
 )
 from open_hypergamy.domain.enums import TrustTier
 from open_hypergamy.domain.models import CandidateFact, ExtractionMethod
+from open_hypergamy.egress.pool import egress_scope
 from open_hypergamy.errors import LLMInvalidResponse, LLMUnavailable, OhgError
 from open_hypergamy.extraction.deterministic import detect_not_open, extract_date_facts
 from open_hypergamy.extraction.llm_extractor import LLMExtractionService
@@ -192,7 +193,8 @@ def _follow(
         cache=BodyCache(cfg.paths.cache) if cfg.settings.cache.enabled else None,
     )
     try:
-        resp = fetcher.fetch(url, source.scope)
+        with egress_scope(source.source_key):
+            resp = fetcher.fetch(url, source.scope)
     except OhgError as e:
         log.info("could not follow %s: %s", url, e)
         return None

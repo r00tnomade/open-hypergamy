@@ -142,3 +142,28 @@ def test_sitemap_blocks_entity_expansion():
             b'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>&b;</loc></url></urlset>')  # fmt: skip
     with pytest.raises(Exception):  # noqa: B017 - defusedxml raises EntitiesForbidden
         parse_sitemap(bomb)
+
+
+def test_html_adapter_applies_source_selectors_and_flags_them(tmp_path):
+    page = (
+        "<html><head><title>Careers</title></head><body><nav><a href='/about'>About</a></nav>"
+        "<main><h1>Jobs</h1><ul class='j'><li><a href='/job/a/'>A</a></li></ul>"
+        "<p>Deadline 1 March 2027 for the research internship.</p></main></body></html>"
+    )
+    src = source(
+        extraction_hints={"selectors": {"links": {"css": "ul.j a"}, "text": {"css": "main"}}}
+    )
+    web = FakeWeb({src.canonical_url: html(page.encode())})
+    ctx = ctx_for(web)
+    ctx.selector_storage = tmp_path / "sel.sqlite3"
+    [obs] = HtmlAdapter().fetch(src, ctx)
+    assert obs.links == ["https://example.edu/job/a/"]  # nav link excluded, absolute, canonical
+    assert "Deadline 1 March 2027" in obs.text and "About" not in obs.text
+    assert obs.meta["selectors"] == "ok"
+
+
+def test_html_adapter_selector_miss_is_a_parse_error():
+    src = source(extraction_hints={"selectors": {"text": {"css": "div.missing"}}})
+    web = FakeWeb({src.canonical_url: html(b"<html><body><p>hi</p></body></html>")})
+    with pytest.raises(ParseError):
+        HtmlAdapter().fetch(src, ctx_for(web))

@@ -8,7 +8,7 @@ import sqlite3
 import sys
 from collections.abc import Iterator
 from contextlib import contextmanager
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Annotated, Any
 
@@ -62,6 +62,7 @@ from open_hypergamy.profile import load_profile, load_profile_for, profile_path
 from open_hypergamy.sources.base import FetchContext, SourceRecord
 from open_hypergamy.sources.common import build_observation, decode_body
 from open_hypergamy.sources.fetch import BodyCache, build_fetcher
+from open_hypergamy.sources.health import health_state
 from open_hypergamy.sources.html import parse_html
 from open_hypergamy.sources.policy import Scope
 from open_hypergamy.sources.registry import load_source_files
@@ -151,6 +152,9 @@ def init(home: HomeOpt = None, config: ConfigOpt = None) -> None:
         if cfg.settings.llm.enabled and cfg.settings.llm.provider == "freellmapi":
             out.print()
             out.print(EXTERNAL_PROCESSING_CHECKLIST, markup=False, highlight=False)
+        if profile_path(cfg) is None:
+            out.print()
+            out.print("Next: run `ohg onboard` to set up your profile in the browser.")
 
 
 @app.command()
@@ -364,6 +368,10 @@ def _source_row(s: SourceRecord) -> dict[str, object]:
         "discovery_only": s.discovery_only,
         "priority": s.priority,
         "failure_streak": s.failure_streak,
+        "health": health_state(s, datetime.now(UTC)).value,
+        "last_error_category": s.last_error_category,
+        "cooldown_until": s.cooldown_until,
+        "blocked_reason": s.blocked_reason,
         "last_success_at": s.last_success_at,
         "next_due_at": s.next_due_at,
     }
@@ -393,19 +401,39 @@ def sources_list(
         if json_out:
             sys.stdout.write(json.dumps(rows, indent=2) + "\n")
             return
-        table = Table("key", "tier", "adapter", "state", "streak", "last ok", "url")
+        table = Table("key", "tier", "adapter", "state", "health", "streak", "last ok", "url")
         for r in rows:
             table.add_row(
                 str(r["key"]),
                 str(r["trust_tier"]).split("_")[0],
                 str(r["adapter"]),
                 str(r["state"]) + (" (discovery-only)" if r["discovery_only"] else ""),
+                str(r["health"]),
                 str(r["failure_streak"]),
                 str(r["last_success_at"] or "never"),
                 str(r["url"]),
             )
         out.print(table)
         out.print(f"{len(rows)} source(s).")
+
+
+@sources_app.command("unblock")
+def sources_unblock(ref: str, home: HomeOpt = None, config: ConfigOpt = None) -> None:
+    """End a source's review hold or cooldown after checking it by hand (health history kept)."""
+    with guard():
+        cfg = _load(home, config)
+        conn = _open(cfg)
+        try:
+            before = SourceRepository(conn, SystemClock()).get(ref)
+            src = SourceRepository(conn, SystemClock()).clear_hold(ref)
+        finally:
+            conn.close()
+        was = (before.blocked_reason or before.cooldown_until) if before else None
+        out.print(
+            f"{src.source_key}: hold/cooldown cleared ({was or 'none was set'}); due on the next run.",
+            highlight=False,
+            markup=False,
+        )
 
 
 @sources_app.command("add")
@@ -1816,6 +1844,18 @@ def notify_retry(
 from open_hypergamy import cli_ops  # noqa: E402
 
 cli_ops.register(__import__(__name__, fromlist=["x"]))
+
+from open_hypergamy import cli_proxy  # noqa: E402
+
+cli_proxy.register(__import__(__name__, fromlist=["x"]))
+
+from open_hypergamy import cli_resilience  # noqa: E402
+
+cli_resilience.register(__import__(__name__, fromlist=["x"]))
+
+from open_hypergamy import cli_gui  # noqa: E402
+
+cli_gui.register(__import__(__name__, fromlist=["x"]))
 
 
 if __name__ == "__main__":

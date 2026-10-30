@@ -13,6 +13,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_valida
 
 from open_hypergamy.domain.enums import AdapterType, TrustTier
 from open_hypergamy.errors import ConfigurationError, SourcePolicyDenied
+from open_hypergamy.extraction.selectors import parse_hints
 from open_hypergamy.sources.base import SourceRecord
 from open_hypergamy.sources.urls import canonicalize_url, check_static_host, host_of
 
@@ -44,6 +45,8 @@ class DiscoveryPolicy(BaseModel):
     follow_internal_links: bool = False
     max_depth: int = Field(default=1, ge=0, le=5)
     max_pages_per_run: int = Field(default=20, ge=1, le=500)
+    # Freshness window of each followed child page; default: the source's fetch interval.
+    child_recheck_hours: int | None = Field(default=None, ge=1, le=24 * 365)
     promote_outbound_links_automatically: bool = False
 
     @field_validator("promote_outbound_links_automatically")
@@ -80,6 +83,15 @@ class SourceConfig(BaseModel):
     robots_policy_checked_at: date | datetime | None = None
     discovery_policy: DiscoveryPolicy = DiscoveryPolicy()
     extraction_hints: dict[str, Any] = {}
+
+    @field_validator("extraction_hints")
+    @classmethod
+    def _hints(cls, v: dict[str, Any]) -> dict[str, Any]:
+        try:
+            parse_hints(v)
+        except ConfigurationError as e:  # pydantic only wraps ValueError into its error report
+            raise ValueError(str(e)) from e
+        return v
 
     @field_validator("portfolio")
     @classmethod
@@ -231,4 +243,5 @@ def record_from_config(c: SourceConfig) -> SourceRecord:
         if c.robots_policy_checked_at
         else None,
         terms_review_note=c.terms_review_note,
+        extraction_hints=dict(c.extraction_hints),
     )

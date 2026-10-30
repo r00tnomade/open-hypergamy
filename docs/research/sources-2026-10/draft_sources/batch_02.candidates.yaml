@@ -6,7 +6,7 @@ sources:
     name: "TUM MIRMI news & events RSS"
     canonical_url: https://www.mirmi.tum.de/mirmi/rss.xml
     domain: www.mirmi.tum.de
-    source_type: feed
+    source_type: official_programme_index
     portfolio: europe_research
     adapter_type: rss_atom
     trust_tier: t2_official_org
@@ -18,7 +18,7 @@ sources:
     name: "European Hackathon League"
     canonical_url: https://ehl.gg/
     domain: ehl.gg
-    source_type: listing_page
+    source_type: official_programme_index
     portfolio: hackathons_challenges
     adapter_type: html
     trust_tier: t1_official_program
@@ -30,7 +30,7 @@ sources:
     name: "Sovereign Tech Fellowship"
     canonical_url: https://www.sovereign.tech/programs/fellowship
     domain: www.sovereign.tech
-    source_type: listing_page
+    source_type: official_programme_index
     portfolio: funding_fellowships
     adapter_type: html
     trust_tier: t2_official_org
@@ -42,7 +42,7 @@ sources:
     name: "Erasmus+ opportunities for students"
     canonical_url: https://erasmus-plus.ec.europa.eu/opportunities/individuals/students
     domain: erasmus-plus.ec.europa.eu
-    source_type: listing_page
+    source_type: official_programme_index
     portfolio: funding_fellowships
     adapter_type: html
     trust_tier: t2_official_org
@@ -54,7 +54,7 @@ sources:
     name: "NeurIPS dates and deadlines"
     canonical_url: https://neurips.cc/Conferences/2026/Dates
     domain: neurips.cc
-    source_type: listing_page
+    source_type: official_programme_index
     portfolio: conferences_societies
     adapter_type: html
     trust_tier: t2_official_org
@@ -66,7 +66,7 @@ sources:
     name: "Google Summer of Code timeline"
     canonical_url: https://developers.google.com/open-source/gsoc/timeline
     domain: developers.google.com
-    source_type: listing_page
+    source_type: official_programme_index
     portfolio: hackathons_challenges
     adapter_type: html
     trust_tier: t1_official_program

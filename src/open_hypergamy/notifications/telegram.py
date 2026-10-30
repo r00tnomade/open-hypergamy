@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 import httpx
 
 from open_hypergamy.errors import ConfigurationError
@@ -47,7 +49,9 @@ class TelegramSink:
         if not token or not chat_id:
             raise ConfigurationError("TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID must be set")
         self._token, self._chat = token, chat_id
-        self._http = httpx.Client(transport=transport, timeout=timeout, follow_redirects=False)
+        self._http = httpx.Client(
+            transport=transport, timeout=timeout, follow_redirects=False, trust_env=False
+        )
 
     @classmethod
     def from_env(cls, *, transport: httpx.BaseTransport | None = None) -> TelegramSink:
@@ -91,3 +95,86 @@ class TelegramSink:
         if r.status_code in _PERMANENT:
             return SendResult(False, error=f"HTTP {r.status_code}: {desc}", permanent=True)
         return SendResult(False, error=f"HTTP {r.status_code}: {desc}")
+
+
+# --- setup checks (onboarding GUI, ADR-014). Neither function sends a message. -----------------
+
+TOKEN_SHAPE = r"^\d{5,12}:[A-Za-z0-9_-]{30,64}$"
+
+
+@dataclass(frozen=True)
+class BotCheck:
+    ok: bool
+    username: str | None = None
+    error: str | None = None
+    rejected: bool = False  # Telegram says the token is invalid (vs. unreachable)
+
+
+@dataclass(frozen=True)
+class ChatRef:
+    chat_id: str
+    label: str
+    kind: str
+
+
+def _setup_client(transport: httpx.BaseTransport | None, timeout: float) -> httpx.Client:
+    return httpx.Client(
+        transport=transport, timeout=timeout, follow_redirects=False, trust_env=False
+    )
+
+
+def _scrub(token: str, text: str) -> str:
+    return text.replace(token, "[REDACTED]")[:300] if token else text[:300]
+
+
+def check_bot(
+    token: str, *, transport: httpx.BaseTransport | None = None, timeout: float = 10.0
+) -> BotCheck:
+    """`getMe`: proves the token works without contacting any chat."""
+    with _setup_client(transport, timeout) as http:
+        try:
+            r = http.get(f"{API}/bot{token}/getMe")
+        except httpx.TimeoutException:
+            return BotCheck(False, error="Telegram did not answer in time")
+        except httpx.HTTPError as e:
+            return BotCheck(False, error=f"could not reach Telegram ({type(e).__name__})")
+    try:
+        data = r.json()
+    except ValueError:
+        data = {}
+    if r.status_code == 200 and data.get("ok"):
+        return BotCheck(True, username=str(data.get("result", {}).get("username") or "") or None)
+    desc = _scrub(token, str(data.get("description", r.reason_phrase or "")))
+    return BotCheck(
+        False, error=f"HTTP {r.status_code}: {desc}", rejected=r.status_code in (401, 404)
+    )
+
+
+def recent_chats(
+    token: str, *, transport: httpx.BaseTransport | None = None, timeout: float = 10.0
+) -> list[ChatRef]:
+    """Chats that recently messaged the bot (`getUpdates`), newest first, deduplicated."""
+    with _setup_client(transport, timeout) as http:
+        try:
+            r = http.get(f"{API}/bot{token}/getUpdates", params={"limit": 50, "timeout": 0})
+            data = r.json()
+        except (httpx.HTTPError, ValueError) as e:
+            raise ConfigurationError(f"could not read bot updates ({type(e).__name__})") from None
+    if not (r.status_code == 200 and data.get("ok")):
+        raise ConfigurationError(
+            f"Telegram refused getUpdates: {_scrub(token, str(data.get('description', '')))}"
+        )
+    seen: dict[str, ChatRef] = {}
+    for upd in reversed(data.get("result", [])):
+        msg = upd.get("message") or upd.get("channel_post") or upd.get("my_chat_member") or {}
+        chat = msg.get("chat") if isinstance(msg, dict) else None
+        if not isinstance(chat, dict) or "id" not in chat:
+            continue
+        cid = str(chat["id"])
+        name = chat.get("title") or " ".join(
+            x for x in (chat.get("first_name"), chat.get("last_name")) if x
+        )
+        if chat.get("username"):
+            name = f"{name} (@{chat['username']})".strip()
+        seen.setdefault(cid, ChatRef(cid, name or "unnamed chat", str(chat.get("type", "?"))))
+    return list(seen.values())

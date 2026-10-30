@@ -26,6 +26,12 @@ OpenHypergamy watches the places where good opportunities actually get announced
 
 ```bash
 uv sync
+uv run ohg onboard    # initialises, then opens a local setup page in your browser
+```
+
+`ohg onboard` walks you through your profile, the kinds of opportunities you want, how matching reads them, and (optionally) Telegram and the AI gateway. It runs on `127.0.0.1` only, stores tokens in the Keychain, and you can stop and resume any time. Prefer the terminal? It's all still there:
+
+```bash
 uv run ohg init       # creates ~/Library/Application Support/OpenHypergamy
 uv run ohg doctor     # tells you what's missing
 uv run ohg status     # real counts: sources, jobs, review queue, backups
@@ -119,6 +125,8 @@ Refresh with `graphify update src && python3 scripts/update_architecture.py`; `-
 `ohg review accept` records that *you* looked at something. It never upgrades a fact to `confirmed_official`.
 
 ## Setup
+
+`ohg onboard` covers everything in this section in the browser. The terminal route:
 
 Write your profile (degree level, year, interests). It stays local and never goes to the LLM or Telegram:
 

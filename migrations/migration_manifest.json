@@ -24,6 +24,21 @@
       "version": 5,
       "name": "source_portfolio",
       "sha256": "f6f213a6c20fdabc503b6ef71bd3b5094460cb54a2a8064ebe9b1115979288a9"
+    },
+    {
+      "version": 6,
+      "name": "source_health",
+      "sha256": "837af9ba70b36c6594c5d6d01a96a3302a44d18890fb7d90416f2fd9b7b9d25c"
+    },
+    {
+      "version": 7,
+      "name": "source_pages",
+      "sha256": "9c47f3c2f0c0fbd05933541ff983265a9c5960ed538c0b1af5ccda684a50bb5c"
+    },
+    {
+      "version": 8,
+      "name": "source_egress",
+      "sha256": "76129dc48ec63d3a1171efcb5d7d23f904917b85b4f6b1e87d3a3068224118af"
     }
   ]
 }

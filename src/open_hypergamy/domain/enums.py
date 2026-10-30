@@ -12,6 +12,7 @@ class TrustTier(StrEnum):
 class AdapterType(StrEnum):
     RSS_ATOM = "rss_atom"
     ICAL = "ical"
+    JSON_FEED = "json_feed"
     SITEMAP = "sitemap"
     HTML = "html"
     PLAYWRIGHT = "playwright"
@@ -77,3 +78,30 @@ class SourceRunStatus(StrEnum):
     BLOCKED_POLICY = "blocked_policy"
     FAILED = "failed"
     SKIPPED = "skipped"
+
+
+class SourceHealthState(StrEnum):
+    """Derived per check of the source row (sources/health.py, ADR-009); never stored."""
+
+    HEALTHY = "healthy"
+    DEGRADED = "degraded"
+    COOLDOWN = "cooldown"
+    BLOCKED_REVIEW = "blocked_review"
+    STALE = "stale"
+    DISABLED = "disabled"
+
+
+class ErrorCategory(StrEnum):
+    NETWORK = "network"
+    RATE_LIMITED = "rate_limited"
+    SERVER_ERROR = "server_error"
+    ACCESS_DENIED = "access_denied"
+    ACCESS_BARRIER = "access_barrier"
+    RENDERING_REQUIRED = "rendering_required"
+    NOT_FOUND = "not_found"
+    GONE = "gone"
+    HTTP_ERROR = "http_error"
+    CONTENT = "content"
+    POLICY = "policy"
+    PARTIAL = "partial"
+    INTERNAL = "internal"

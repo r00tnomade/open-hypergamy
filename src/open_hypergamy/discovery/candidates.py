@@ -14,6 +14,9 @@ from open_hypergamy.domain.models import CandidateFact, ExtractionMethod
 from open_hypergamy.extraction.deterministic import extract_date_facts
 from open_hypergamy.sources.base import PageObservation, SourceRecord
 
+# Adapters whose entries are discovery hints (dates can never confirm): feeds and calendars.
+FEED_ADAPTERS = frozenset({"rss_atom", "ical", "json_feed"})
+
 # A registered source page of these types *is* a programme/call page (not just an index).
 PAGE_SOURCE_TYPES = frozenset(
     {"official_programme_page", "official_call_page", "official_event_page"}
@@ -55,7 +58,7 @@ def drafts_from_observation(
                     )
                 )
         return out
-    if source.adapter_type == "rss_atom":
+    if source.adapter_type in FEED_ADAPTERS:
         for e in obs.entries:
             if not e.link or not e.title:
                 continue

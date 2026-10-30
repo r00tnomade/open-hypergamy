@@ -73,6 +73,35 @@ class UnsupportedContentType(FetchError):
     code = "unsupported_content_type"
 
 
+class AccessBarrier(FetchError):
+    """A 200 response that is really a challenge, CAPTCHA, login or access-denied page.
+
+    Never retried and never bypassed: the source is held for manual review (ADR-009).
+    """
+
+    code = "access_barrier"
+
+
+class HostCoolingDown(FetchError):
+    """The host asked us to back off earlier in this run; no request was sent."""
+
+    code = "host_cooldown"
+
+
+class RenderingRequired(FetchError):
+    """A 200 page whose content only exists after JavaScript runs. Never retried: the source is
+    held so an operator can pick an official feed/API/iCal channel or a rendering allowlist."""
+
+    code = "rendering_required"
+
+
+class EgressUnavailable(FetchError):
+    """No trusted egress proxy could carry the request (ADR-012). Never falls back to a direct
+    connection and never switches identity because of a destination restriction."""
+
+    code = "egress_unavailable"
+
+
 class ParseError(OhgError):
     code = "parse_error"
 
