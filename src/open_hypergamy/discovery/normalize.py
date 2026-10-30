@@ -39,6 +39,8 @@ _CATEGORIES: list[tuple[str, str]] = [
     ("conference", r"conference|symposium|konferenz"),
     ("workshop", r"workshop"),
     ("grant", r"\bgrants?\b|funding programme"),
+    # Last, so it only claims titles that previously fell through to "other" (ADR-014).
+    ("research_programme", r"research programm?e?\b|undergraduate research|summer research"),
 ]
 OPPORTUNITY_RE = re.compile(
     "|".join(p for _, p in _CATEGORIES)

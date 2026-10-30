@@ -17,9 +17,28 @@ class _Strict(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+# Programme categories as `discovery/normalize.py` assigns them; `preferences.categories`
+# narrows ranking to these (empty = everything relevant). See ADR-014.
+OpportunityCategory = Literal[
+    "research_programme",
+    "internship",
+    "fellowship",
+    "scholarship",
+    "grant",
+    "summer_school",
+    "conference",
+    "workshop",
+    "call_for_papers",
+    "hackathon",
+    "challenge",
+    "other",
+]
+
+
 class Academic(_Strict):
     country: str
     institution_type: str = "unknown"
+    institution: str | None = None  # display only; never used for eligibility
     degree_level: Literal["bachelor", "master", "phd"]
     subject_tags: list[str] = []
     current_year: int | None = None
@@ -33,12 +52,14 @@ class Preferences(_Strict):
     budget_limit_eur: float | None = None
     formats: list[str] = []
     career_goals: list[str] = []
+    categories: list[OpportunityCategory] = []
 
 
 class Profile(_Strict):
     version: Literal[1]
     profile_id: str = "primary"
     profile_version: str
+    display_name: str | None = None  # greeting in the GUI only
     academic: Academic
     skills: list[str] = []
     research_tags: list[str] = []
@@ -67,3 +88,35 @@ def load_profile(path: Path) -> Profile:
 def load_profile_for(cfg: LoadedConfig) -> Profile | None:
     p = profile_path(cfg)
     return load_profile(p) if p else None
+
+
+_HEADER = (
+    "# OpenHypergamy profile. Written by `ohg onboard`; safe to edit by hand.\n"
+    "# Local only: never sent to any LLM or to Telegram.\n"
+)
+
+
+def writable_profile_path(cfg: LoadedConfig, env: dict[str, str] | None = None) -> Path:
+    """Save target: `OHG_PROFILE` if set, else the profile in use, else `<home>/profile.yaml`."""
+    env = dict(os.environ) if env is None else env
+    if env.get("OHG_PROFILE"):
+        return Path(env["OHG_PROFILE"]).expanduser()
+    return profile_path(cfg, env) or cfg.paths.home / "profile.yaml"
+
+
+def save_profile(cfg: LoadedConfig, profile: Profile) -> Path:
+    """Atomically write the profile (0600), keeping the previous file as `profile.yaml.bak`."""
+    path = writable_profile_path(cfg)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    body = _HEADER + yaml.safe_dump(
+        profile.model_dump(mode="json"), sort_keys=False, allow_unicode=True
+    )
+    if path.is_file():
+        bak = path.with_name(path.name + ".bak")
+        bak.write_bytes(path.read_bytes())
+        bak.chmod(0o600)
+    tmp = path.with_name(path.name + ".tmp")
+    tmp.write_text(body)
+    tmp.chmod(0o600)
+    os.replace(tmp, path)
+    return path

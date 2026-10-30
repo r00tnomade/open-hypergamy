@@ -14,6 +14,7 @@ _REASON_PHRASES = {
     "FUNDING_CONFIRMED": "funding is confirmed",
     "APPLICATION_OPEN": "applications are open",
     "DEADLINE_WITHIN_14_DAYS": "deadline within 14 days",
+    "PREFERRED_CATEGORY": "a kind of opportunity you asked for",
 }
 _LABELS = {
     "confirmed_official": "confirmed",
