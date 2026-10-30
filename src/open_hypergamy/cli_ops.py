@@ -269,7 +269,7 @@ def register(cli: ModuleType) -> None:
     def sources_audit(
         json_out: JsonOpt = False, home: HomeOpt = None, config: ConfigOpt = None
     ) -> None:
-        """Quality gaps in the registry: policy review, never-checked, failing, portfolio vs target."""
+        """Quality and health gaps: policy review, holds, cooldowns, failures, staleness, portfolio."""
         with guard():
             cfg = cli._load(home, config)
             conn = cli._open(cfg)
@@ -283,17 +283,51 @@ def register(cli: ModuleType) -> None:
                     issues.append(f"{s['key']}: no recorded robots/terms review")
                 if s["state"] == "review_required":
                     issues.append(f"{s['key']}: disabled until policy review is complete")
+                if s["blocked_reason"]:
+                    issues.append(
+                        f"{s['key']}: held for manual review since {s['blocked_at']} "
+                        f"({s['blocked_reason']}); `ohg sources unblock` after checking"
+                    )
+                elif s["cooldown_until"]:
+                    issues.append(
+                        f"{s['key']}: cooling down until {s['cooldown_until']} "
+                        f"({s['last_error_category']})"
+                    )
                 if s["failure_streak"] >= 2:
                     issues.append(f"{s['key']}: {s['failure_streak']} consecutive failures")
+                for label, count in (
+                    ("missing", s["pages_missing"]),
+                    ("held for review", s["pages_held"]),
+                    ("invalid or out of scope", s["pages_invalid"]),
+                ):
+                    if count:
+                        issues.append(
+                            f"{s['key']}: {count} followed page(s) {label}; their opportunities are "
+                            "kept and age into stale"
+                        )
+                if s["stale_opportunities"]:
+                    issues.append(
+                        f"{s['key']}: {s['stale_opportunities']} opportunit"
+                        f"{'y' if s['stale_opportunities'] == 1 else 'ies'} with stale evidence"
+                    )
                 if s["stale"]:
                     issues.append(f"{s['key']}: not successfully checked within twice its interval")
                 if s["portfolio"] is None:
                     issues.append(f"{s['key']}: no portfolio assigned")
             data["issues"] = issues
+            health_keys = (
+                "key", "health", "state", "last_attempt_at", "last_success_at",
+                "last_successful_ingestion_at", "last_content_change_at", "last_http_status",
+                "failure_streak", "last_error_category", "cooldown_until", "blocked_reason",
+                "checks_30d", "retrieval_success_rate", "extraction_success_rate",
+                "http_status_counts", "avg_latency_ms", "content_changes_30d",
+                "stale_opportunities", "pages_tracked", "pages_due", "pages_missing",
+                "pages_held", "pages_invalid",
+            )  # fmt: skip
             if json_out:
-                sys.stdout.write(
-                    json.dumps({k: v for k, v in data.items() if k != "sources"}, indent=2) + "\n"
-                )
+                body = {k: v for k, v in data.items() if k != "sources"}
+                body["source_health"] = [{k: s[k] for k in health_keys} for s in data["sources"]]
+                sys.stdout.write(json.dumps(body, indent=2) + "\n")
                 return
             table = Table("portfolio", "target", "configured", "enabled", "healthy")
             for p in data["portfolio"]:
@@ -305,10 +339,33 @@ def register(cli: ModuleType) -> None:
                     str(p["healthy"]),
                 )
             out.print(table)
+            if data["sources"]:
+                health = Table(
+                    "source", "health", "last ok", "streak", "last error", "ok rate 30d",
+                    "avg ms", "http", "changes 30d", "stale opps",
+                )  # fmt: skip
+                for s in data["sources"]:
+                    rate = s["retrieval_success_rate"]
+                    health.add_row(
+                        str(s["key"]),
+                        s["health"],
+                        str(s["last_success_at"] or "never"),
+                        str(s["failure_streak"]),
+                        str(s["last_error_category"] or ""),
+                        "–" if rate is None else f"{rate:.0%}",
+                        str(s["avg_latency_ms"] if s["avg_latency_ms"] is not None else "–"),
+                        " ".join(f"{k}×{v}" for k, v in s["http_status_counts"].items()),
+                        str(s["content_changes_30d"]),
+                        str(s["stale_opportunities"]),
+                    )
+                out.print(health)
+            states = " · ".join(f"{k} {v}" for k, v in data["health_states"].items() if v)
             out.print(
                 f"Target ~{data['target']} sources · configured {data['configured']} · enabled {data['enabled']} "
                 f"· healthy {data['healthy_30d']}. Quality matters more than reaching the target."
             )
+            if states:
+                out.print(f"Health: {states}.")
             for line in issues:
                 out.print(f"  - {line}", highlight=False, markup=False)
             if issues:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import re
 import stat
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -14,10 +15,14 @@ import yaml
 from pydantic import BaseModel, ConfigDict, ValidationError, model_validator
 
 from open_hypergamy.clock import set_local_timezone
+from open_hypergamy.egress.settings import ProxySettings
 from open_hypergamy.errors import ConfigurationError
 
 DEFAULT_HOME = "~/Library/Application Support/OpenHypergamy"
 LOOPBACK_HOSTS = {"127.0.0.1", "localhost", "::1"}
+
+
+_BROWSER_UA = re.compile(r"\b(Mozilla|Chrome|Safari|AppleWebKit|Gecko|Edg|OPR)/", re.I)
 
 
 class _Section(BaseModel):
@@ -30,16 +35,44 @@ class AppSettings(_Section):
     horizon_months: int = 24
     actionable_horizon_months: int = 12
     log_level: str = "INFO"
-    user_agent: str = "OpenHypergamy/0.1 (+local research opportunity monitor)"
+    # Crawler identity (ADR-009): a product token plus an info URL / contact, never a browser UA.
+    user_agent: str = "OpenHypergamy/0.1"
+    crawler_info_url: str | None = "https://github.com/r00tnomade/open-hypergamy"
+    crawler_contact: str | None = None
     max_response_bytes: int = 8_000_000
     request_timeout_seconds: float = 25
     max_redirects: int = 5
     max_retries: int = 2
     per_host_min_interval_seconds: float = 3.0
+    per_host_max_concurrency: int = 1
+    adaptive_throttle: bool = True
+    max_host_delay_seconds: float = 60.0
+    host_cooldown_seconds: float = 300.0  # in-run pause after a host signals overload
     max_concurrent_hosts: int = 4
     max_pages_per_source_run: int = 40
     max_crawl_depth: int = 2
+    max_tracked_pages_per_source: int = 200
     default_source_poll_interval_hours: int = 168
+
+    @model_validator(mode="after")
+    def _honest_identity(self) -> AppSettings:
+        if not self.user_agent.strip() or _BROWSER_UA.search(self.user_agent):
+            raise ValueError(
+                "app.user_agent must identify OpenHypergamy, not impersonate a browser"
+            )
+        if self.per_host_max_concurrency < 1 or self.per_host_min_interval_seconds < 0:
+            raise ValueError("per-host concurrency must be >= 1 and the interval >= 0")
+        return self
+
+    def effective_user_agent(self) -> str:
+        """`OpenHypergamy/0.1 (+https://…; contact)`; a UA that already has a comment is kept."""
+        if "(" in self.user_agent:
+            return self.user_agent
+        parts = [f"+{self.crawler_info_url}" if self.crawler_info_url else ""]
+        if self.crawler_contact:
+            parts.append(self.crawler_contact)
+        comment = "; ".join(p for p in parts if p)
+        return f"{self.user_agent} ({comment})" if comment else self.user_agent
 
 
 class DatabaseSettings(_Section):
@@ -146,6 +179,10 @@ class CrawlingSettings(_Section):
     allow_captcha_bypass: bool = False
     allow_paywall_bypass: bool = False
     permitted_schemes: list[str] = ["https", "http"]
+    # Source health / circuit breaker (ADR-009).
+    cooldown_after_failures: int = 3  # transient failures in a row before a cooldown
+    not_found_review_after: int = 2  # consecutive 404s before the source is held for review
+    max_cooldown_hours: int = 168
 
     @model_validator(mode="after")
     def _no_circumvention(self) -> CrawlingSettings:
@@ -176,6 +213,7 @@ class Settings(_Section):
     crawling: CrawlingSettings = CrawlingSettings()
     schedule: ScheduleSettings = ScheduleSettings()
     scoring: ScoringSettings = ScoringSettings()
+    proxy: ProxySettings = ProxySettings()
 
 
 @dataclass(frozen=True)
@@ -261,6 +299,7 @@ def _env_overrides(env: dict[str, str]) -> dict[str, Any]:
 
     simple = {
         "OHG_LOG_LEVEL": "app.log_level",
+        "OHG_CRAWLER_CONTACT": "app.crawler_contact",
         "OHG_LLM_ENABLED": "llm.enabled",
         "OHG_LLM_PROVIDER": "llm.provider",
         "OHG_LLM_ALLOW_REMOTE_PUBLIC_CONTENT": "llm.allow_remote_public_content",
@@ -312,6 +351,9 @@ def load_config(
             raise ConfigurationError(f"config file not found: {config_file}")
     elif Path("config/settings.yaml").is_file():
         config_file = Path("config/settings.yaml").resolve()
+    elif (resolve_home(home, env) / "settings.yaml").is_file():
+        # The GUI-managed file (ADR-014); a hand-written one above always wins.
+        config_file = resolve_home(home, env) / "settings.yaml"
     if config_file is not None:
         try:
             loaded = yaml.safe_load(config_file.read_text()) or {}
@@ -325,7 +367,12 @@ def load_config(
     try:
         settings = Settings.model_validate(data)
     except ValidationError as e:
-        raise ConfigurationError(f"invalid configuration:\n{e}") from e
+        # Never echo the offending input: a mistyped key could be a pasted credential (ADR-012).
+        problems = "\n".join(
+            f"  {'.'.join(str(x) for x in err['loc'])}: {err['msg']}"
+            for err in e.errors(include_input=False, include_url=False, include_context=False)
+        )
+        raise ConfigurationError(f"invalid configuration:\n{problems}") from None
     try:
         set_local_timezone(settings.app.timezone)
     except ValueError as e:

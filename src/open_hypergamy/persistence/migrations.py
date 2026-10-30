@@ -14,8 +14,14 @@ from open_hypergamy.clock import Clock, iso_compact, iso_z
 from open_hypergamy.errors import DatabaseInitializationError, MigrationIntegrityError
 from open_hypergamy.persistence.db import backup_to
 
-# Repo-level `migrations/` (LLD §1.3); resolved relative to an editable install.
-DEFAULT_MIGRATIONS_DIR = Path(__file__).resolve().parents[3] / "migrations"
+# Repo-level `migrations/` (LLD §1.3) in an editable install; a built wheel carries the same
+# files as `open_hypergamy/_migrations` (pyproject force-include, ADR-014).
+_SOURCE_TREE_MIGRATIONS = Path(__file__).resolve().parents[3] / "migrations"
+DEFAULT_MIGRATIONS_DIR = (
+    _SOURCE_TREE_MIGRATIONS
+    if _SOURCE_TREE_MIGRATIONS.is_dir()
+    else Path(__file__).resolve().parents[1] / "_migrations"
+)
 _FILENAME = re.compile(r"^(\d{4})_([a-z0-9_]+)\.sql$")
 
 

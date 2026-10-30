@@ -7,15 +7,18 @@ import sqlite3
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
+from pathlib import Path
 from typing import TYPE_CHECKING, Protocol
 
 from pydantic import BaseModel, Field
 
+from open_hypergamy.clock import Clock
 from open_hypergamy.config import AppSettings
 from open_hypergamy.sources.policy import Scope
 
 if TYPE_CHECKING:
     from open_hypergamy.sources.fetch import BodyCache, Fetcher
+    from open_hypergamy.sources.pages import PageUpdate, TrackedPage
 
 
 class FeedEntry(BaseModel):
@@ -48,6 +51,10 @@ class PageObservation(BaseModel):
     body_cache_relpath: str | None = None
     text_cache_relpath: str | None = None
     depth: int = 0
+    # Transport metrics of the fetch behind this observation (network time, excludes throttling).
+    elapsed_ms: int | None = None
+    retry_count: int = 0
+    bytes_received: int | None = None
 
 
 @dataclass(frozen=True)
@@ -89,6 +96,12 @@ class SourceRecord:
     robots_policy_checked_at: str | None
     terms_review_note: str
     organization_id: str | None = None
+    cooldown_until: str | None = None
+    last_error_category: str | None = None
+    blocked_reason: str | None = None
+    blocked_at: str | None = None
+    last_http_status: int | None = None
+    extraction_hints: dict[str, object] = field(default_factory=dict)
 
     @property
     def scope(self) -> Scope:
@@ -129,6 +142,12 @@ class SourceRecord:
             robots_policy_checked_at=r["robots_policy_checked_at"],
             terms_review_note=r["terms_review_note"],
             organization_id=r["organization_id"],
+            cooldown_until=r["cooldown_until"],
+            last_error_category=r["last_error_category"],
+            blocked_reason=r["blocked_reason"],
+            blocked_at=r["blocked_at"],
+            last_http_status=r["last_http_status"],
+            extraction_hints=json.loads(r["extraction_hints_json"]),
         )
 
 
@@ -143,7 +162,15 @@ class FetchContext:
     settings: AppSettings
     cache: BodyCache | None = None
     validators: Validators = lambda url: (None, None)  # (etag, last_modified) from prior runs
+    tracked_pages: Callable[[], list[TrackedPage]] = lambda: []  # known children (ADR-011)
     failures: list[FetchFailure] = field(default_factory=list)  # non-fatal child-page failures
+    page_updates: list[PageUpdate] = field(default_factory=list)  # child state to persist
+    clock: Clock | None = None  # the run's injected clock; defaults to the fetcher's
+
+    def now(self) -> datetime:
+        return (self.clock or self.fetcher.clock).now_utc()
+
+    selector_storage: Path | None = None  # sqlite file for adaptive selectors (ADR-010)
 
 
 class SourceAdapter(Protocol):

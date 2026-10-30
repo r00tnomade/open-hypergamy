@@ -6,7 +6,7 @@ sources:
     name: "ELLIS event calendar"
     canonical_url: https://ellis.eu/event-calendar
     domain: ellis.eu
-    source_type: listing_page
+    source_type: official_programme_index
     portfolio: europe_research
     adapter_type: html
     trust_tier: t2_official_org
@@ -18,7 +18,7 @@ sources:
     name: "Helmholtz AI"
     canonical_url: https://www.helmholtz.ai/
     domain: www.helmholtz.ai
-    source_type: listing_page
+    source_type: official_programme_index
     portfolio: europe_research
     adapter_type: html
     trust_tier: t2_official_org
@@ -30,7 +30,7 @@ sources:
     name: "Deutschlandstipendium (BMFTR)"
     canonical_url: https://www.deutschlandstipendium.de/deutschlandstipendium/de/home/home_node.html
     domain: www.deutschlandstipendium.de
-    source_type: listing_page
+    source_type: official_programme_index
     portfolio: funding_fellowships
     adapter_type: html
     trust_tier: t2_official_org
@@ -42,7 +42,7 @@ sources:
     name: "CoRL 2026"
     canonical_url: https://www.corl.org/
     domain: www.corl.org
-    source_type: listing_page
+    source_type: official_programme_index
     portfolio: conferences_societies
     adapter_type: html
     trust_tier: t2_official_org
@@ -54,7 +54,7 @@ sources:
     name: "Cyber Security Challenge Germany (CSCG)"
     canonical_url: https://cscg.de/
     domain: cscg.de
-    source_type: listing_page
+    source_type: official_programme_index
     portfolio: hackathons_challenges
     adapter_type: html
     trust_tier: t1_official_program
@@ -66,7 +66,7 @@ sources:
     name: "European Cybersecurity Challenge (ECSC)"
     canonical_url: https://ecsc.eu/
     domain: ecsc.eu
-    source_type: listing_page
+    source_type: official_programme_index
     portfolio: hackathons_challenges
     adapter_type: html
     trust_tier: t1_official_program

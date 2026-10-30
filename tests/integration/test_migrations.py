@@ -21,9 +21,9 @@ def conn(tmp_path):
 
 def test_apply_is_repeatable(conn):
     ms = mig.discover()
-    assert len(mig.migrate(conn, ms, CLOCK)) == 5
+    assert len(mig.migrate(conn, ms, CLOCK)) == 8
     assert mig.migrate(conn, ms, CLOCK) == []
-    assert mig.schema_version(conn) == 5
+    assert mig.schema_version(conn) == 8
     row = conn.execute(
         "SELECT checksum, applied_at FROM schema_migrations WHERE version=1"
     ).fetchone()
@@ -114,3 +114,32 @@ def test_transaction_rolls_back_on_error(conn):
         )
         raise RuntimeError
     assert conn.execute("SELECT COUNT(*) FROM organizations").fetchone()[0] == 0
+
+
+def test_0007_adopts_children_observed_before_it_and_leaves_the_seed_out(conn):
+    ms = mig.discover()
+    mig.migrate(conn, ms[:6], CLOCK)
+    seed, child = "https://example.edu/idx", "https://example.edu/idx/a"
+    conn.execute(
+        "INSERT INTO sources(id, source_key, name, canonical_url, domain, source_type, adapter_type,"
+        " trust_tier, created_at, updated_at) VALUES ('s1','k','n',?,'example.edu','t','html',"
+        "'t2_official_org','2026-01-01T00:00:00Z','2026-01-01T00:00:00Z')",
+        (seed,),
+    )
+    for i, (url, at, etag) in enumerate(
+        [
+            (seed, "2026-02-01T00:00:00Z", "s"),
+            (child, "2026-02-01T00:00:00Z", "old"),
+            (child, "2026-03-01T00:00:00Z", "new"),
+        ]  # fmt: skip
+    ):
+        conn.execute(
+            "INSERT INTO source_observations(id, source_id, canonical_url, retrieved_at, http_status,"
+            " etag, content_hash, created_at) VALUES (?, 's1', ?, ?, 200, ?, ?, ?)",
+            (f"o{i}", url, at, etag, f"h{i}", at),
+        )
+    assert [m.version for m in mig.migrate(conn, ms, CLOCK)] == [7, 8]
+    [row] = conn.execute("SELECT * FROM source_pages").fetchall()
+    assert (row["canonical_url"], row["etag"], row["content_hash"]) == (child, "new", "h2")
+    assert row["first_seen_at"] == "2026-02-01T00:00:00Z" and row["status"] == "active"
+    assert row["next_check_at"] <= "2026-03-01T00:00:00Z"  # due on the first run after upgrade

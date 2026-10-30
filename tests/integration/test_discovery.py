@@ -175,7 +175,7 @@ def test_unexpected_adapter_bug_does_not_abort_run(env, monkeypatch):
 
 def test_unimplemented_adapter_is_skipped_not_failed(env):
     cfg, conn, repo, clock = env
-    conn.execute("UPDATE sources SET adapter_type='ical'")
+    conn.execute("UPDATE sources SET adapter_type='playwright'")
     s = run(env, FakeWeb({}))
     assert s.results[0]["status"] == "skipped" and s.status == "success"
     assert repo.get("example-student-programmes").failure_streak == 0

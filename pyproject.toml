@@ -23,11 +23,12 @@ dependencies = [
     "rich>=13.7",
     "pydantic>=2.7",
     "pyyaml>=6.0",
-    "httpx>=0.27",
+    "httpx[socks]>=0.27",
     "feedparser>=6.0",
     "beautifulsoup4>=4.12",
     "trafilatura>=1.12",
     "defusedxml>=0.7",
+    "scrapling>=0.5",
 ]
 
 [dependency-groups]
@@ -52,6 +53,11 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/open_hypergamy"]
+
+# Installed (non-editable) copies need the SQL migrations; the GUI's built assets already live
+# inside the package (src/open_hypergamy/gui/static, produced by `npm run build` in frontend/).
+[tool.hatch.build.targets.wheel.force-include]
+"migrations" = "open_hypergamy/_migrations"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -93,3 +99,5 @@ ignore_missing_imports = true
 "src/open_hypergamy/llm/*.py" = ["E501"]
 "src/open_hypergamy/extraction/llm_extractor.py" = ["E501"]
 "src/open_hypergamy/discovery/promotion.py" = ["E501"]
+"src/open_hypergamy/gui/*.py" = ["E501"]  # user-facing messages
+"src/open_hypergamy/cli_gui.py" = ["E501"]

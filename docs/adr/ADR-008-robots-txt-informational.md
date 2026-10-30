@@ -13,7 +13,7 @@ Crawl policy is owned by OpenHypergamy's source configuration and policy engine,
 ## Unchanged
 
 SSRF checks, domain allowlists and `deny_paths`, size/redirect caps, the per-host minimum interval (`app.per_host_min_interval_seconds`) and concurrency, retries with `Retry-After` for 408/429/5xx (long waits are refused), and the ban on login, CAPTCHA and paywall circumvention.
-HTTP 403 is not retried and not worked around; it is recorded as a source failure, which lengthens the backoff and surfaces in `sources audit`/`failures` for review.
+HTTP 403 is not retried and not worked around; it is recorded as a source failure and surfaces in `sources audit`/`failures` for review (since ADR-009 it also puts the source on hold until `ohg sources unblock`).
 
 ## Consequences
 

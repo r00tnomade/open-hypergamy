@@ -1,0 +1,78 @@
+# RESTRICTED-PILOT CONFIGURATION - NOT ACTIVATED, NOT PART OF config/sources/.
+# Operator decision (2026-10-30): S22 and S07 may enter a restricted pilot. This is an operational
+# decision, not legal clearance and not a licence to reuse content. Both entries stay enabled:false.
+# Held / unchanged and deliberately absent here: S01 euRobotics (HOLD), S02 RIG (conditional,
+# deterministic extraction only, external LLM disabled), S05 CERN openlab (HOLD).
+version: 1
+sources:
+  - source_key: s22-cyber-valley-careers
+    name: "Cyber Valley careers"
+    canonical_url: https://cyber-valley.de/career/
+    domain: cyber-valley.de
+    source_type: official_programme_index
+    portfolio: europe_research
+    adapter_type: html
+    trust_tier: t2_official_org
+    authority_scope: "Cyber Valley GmbH job listings (AI and robotics network, Tuebingen/Stuttgart)"
+    topic_tags: [ai, robotics, germany, student-jobs]
+    geographic_scope: [DE]
+    language_codes: [en, de]
+    allowed_domains: [cyber-valley.de]
+    allow_paths: [/job/]
+    deny_paths: []
+    fetch_interval_hours: 24
+    priority: 50
+    enabled: false
+    robots_policy_checked_at: "2026-10-30T15:05:58+01:00"
+    terms_review_note: >-
+      Restricted pilot, operator decision 2026-10-30; not legal clearance. Publisher: Cyber Valley
+      GmbH. Endpoint: https://cyber-valley.de/career/ (listing) plus linked /job/<slug>/ pages at
+      depth 1. Research (2026-10-30, docs/research/sources-2026-10): only an imprint and a privacy
+      policy were found; NO explicit content-reuse or automated-access terms were located, which is
+      not a reuse licence. robots.txt (informational only, ADR-008) names only ClaudeBot with an
+      empty Disallow and sets no restriction for other agents; no Crawl-delay. Limits: fetch the
+      listing and job pages only (allow_paths /job/), at most 24 h polling, page cap per run, no
+      query-string URLs, minimal factual metadata (title, URL, dates, location, role type), no
+      redistribution of substantial page text or copied job descriptions. Residual uncertainty: reuse
+      terms unknown; eligibility for a given student must be read on the job page.
+    discovery_policy:
+      follow_internal_links: true
+      max_depth: 1
+      max_pages_per_run: 20
+      promote_outbound_links_automatically: false
+
+  - source_key: s07-nlnet-propose
+    name: "NLnet grants - propose page"
+    canonical_url: https://nlnet.nl/propose/
+    domain: nlnet.nl
+    source_type: official_call_page
+    portfolio: funding_fellowships
+    adapter_type: html
+    trust_tier: t2_official_org
+    authority_scope: "NLnet Foundation funding deadlines for open-source and open-internet projects"
+    topic_tags: [open-source, grants, europe]
+    geographic_scope: [EU]
+    language_codes: [en]
+    allowed_domains: [nlnet.nl]
+    allow_paths: [/propose/]
+    deny_paths: [/cgi-bin/, /help]
+    fetch_interval_hours: 24
+    priority: 50
+    enabled: false
+    robots_policy_checked_at: "2026-10-30T15:05:58+01:00"
+    terms_review_note: >-
+      Restricted pilot, operator decision 2026-10-30; not legal clearance. Publisher: NLnet
+      Foundation. Endpoint: https://nlnet.nl/propose/ only, no link following, no query parameters.
+      Research (2026-10-30): only a privacy statement was found (its own text is CC0, which does not
+      cover the site content); NO explicit content-reuse or automated-access terms were located,
+      which is not a reuse licence. robots.txt (informational only, ADR-008) lists Disallow for
+      /cgi-bin/, /help* and /*?*; this config avoids those paths and query strings voluntarily. No
+      Crawl-delay. Limits: one page, at most 24 h polling, minimal factual metadata (next deadline,
+      fund names, URLs), no redistribution of substantial page text. The 2.8 MB Atom feed is NOT
+      used in this pilot. Residual uncertainty: reuse terms unknown; per-fund eligibility must be
+      read on NLnet's own pages.
+    discovery_policy:
+      follow_internal_links: false
+      max_depth: 0
+      max_pages_per_run: 1
+      promote_outbound_links_automatically: false

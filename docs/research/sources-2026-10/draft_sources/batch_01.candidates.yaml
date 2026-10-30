@@ -6,7 +6,7 @@ sources:
     name: "euRobotics news & calls feed"
     canonical_url: https://eu-robotics.net/feed/
     domain: eu-robotics.net
-    source_type: feed
+    source_type: official_programme_index
     portfolio: europe_research
     adapter_type: rss_atom
     trust_tier: t2_official_org
@@ -18,7 +18,7 @@ sources:
     name: "Robotics Institute Germany news feed"
     canonical_url: https://robotics-institute-germany.de/feed/
     domain: robotics-institute-germany.de
-    source_type: feed
+    source_type: official_programme_index
     portfolio: europe_research
     adapter_type: rss_atom
     trust_tier: t2_official_org
@@ -30,7 +30,7 @@ sources:
     name: "lablab.ai AI hackathons"
     canonical_url: https://lablab.ai/ai-hackathons
     domain: lablab.ai
-    source_type: listing_page
+    source_type: official_programme_index
     portfolio: hackathons_challenges
     adapter_type: html
     trust_tier: t1_official_program
@@ -42,7 +42,7 @@ sources:
     name: "MLH season events"
     canonical_url: https://www.mlh.com/seasons/2027/events
     domain: www.mlh.com
-    source_type: listing_page
+    source_type: official_programme_index
     portfolio: hackathons_challenges
     adapter_type: html
     trust_tier: t1_official_program
@@ -54,7 +54,7 @@ sources:
     name: "CERN openlab summer student programme"
     canonical_url: https://openlab.cern/cern-openlab-summer-student-programme/
     domain: openlab.cern
-    source_type: listing_page
+    source_type: official_programme_index
     portfolio: de_research
     adapter_type: html
     trust_tier: t2_official_org
@@ -66,7 +66,7 @@ sources:
     name: "DESY Summer Student Programme"
     canonical_url: https://summerstudents.desy.de/
     domain: summerstudents.desy.de
-    source_type: listing_page
+    source_type: official_programme_index
     portfolio: de_research
     adapter_type: html
     trust_tier: t2_official_org
@@ -78,7 +78,7 @@ sources:
     name: "NLnet grants (calls + news Atom)"
     canonical_url: https://nlnet.nl/propose/
     domain: nlnet.nl
-    source_type: listing_page
+    source_type: official_programme_index
     portfolio: funding_fellowships
     adapter_type: html
     trust_tier: t2_official_org
@@ -90,7 +90,7 @@ sources:
     name: "WikiCFP RSS (machine learning, robotics)"
     canonical_url: http://www.wikicfp.com/cfp/rss?cat=machine%20learning
     domain: www.wikicfp.com
-    source_type: feed
+    source_type: official_programme_index
     portfolio: conferences_societies
     adapter_type: rss_atom
     trust_tier: t5_community
@@ -102,7 +102,7 @@ sources:
     name: "CTFtime upcoming events (RSS + API)"
     canonical_url: https://ctftime.org/event/list/upcoming/rss/
     domain: ctftime.org
-    source_type: feed
+    source_type: official_programme_index
     portfolio: hackathons_challenges
     adapter_type: rss_atom
     trust_tier: t5_community

@@ -1,0 +1,6 @@
+Third-party software bundled in the OpenHypergamy onboarding GUI.
+Each licence text is in this directory, copied from the exact package version that was built.
+
+- Space Grotesk (font): @fontsource-variable/space-grotesk@5.3.0, OFL-1.1. See fontsource-variable__space-grotesk.LICENSE.txt.
+- IBM Plex Mono (font): @fontsource/ibm-plex-mono@5.3.0, OFL-1.1. See fontsource__ibm-plex-mono.LICENSE.txt.
+- Preact (JavaScript runtime): preact@10.29.8, MIT. See preact.LICENSE.txt.

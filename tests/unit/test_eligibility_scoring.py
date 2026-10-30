@@ -301,3 +301,13 @@ def test_action_plan_and_keys():
                          urg=urg(problem="stale"), reasons=[], today=date(2027, 3, 1),
                          recommendation_deadline=None, close_status="stale")  # fmt: skip
     assert [s.action_type for s in stale] == ["recheck_source"]
+
+
+def test_research_programme_titles_get_their_own_category():
+    from open_hypergamy.discovery.normalize import guess_category as g
+
+    assert g("Undergraduate Research Programme 2027") == "research_programme"
+    assert g("Summer Research Program") == "research_programme"
+    assert g("Research Internship at CERN") == "internship"  # earlier rules still win
+    assert g("Research Fellowship") == "fellowship"
+    assert g("Program committee") == "other"

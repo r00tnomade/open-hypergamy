@@ -77,6 +77,7 @@ class OpenAICompatClient:
             base_url=base_url.rstrip("/"),
             transport=transport,
             follow_redirects=False,
+            trust_env=False,  # the loopback gateway must never be routed through a proxy
             timeout=httpx.Timeout(10.0, read=timeout),
         )
 

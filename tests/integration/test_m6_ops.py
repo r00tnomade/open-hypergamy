@@ -188,7 +188,7 @@ def test_backup_is_standalone_and_restore_goes_to_a_new_path_only(env, tmp_path)
     ro.close()
     assert bk.check_backup(dest) == mig.schema_version(env.conn)
     target = tmp_path / "restored" / "test.sqlite3"
-    assert bk.restore_to(dest, target) == 5 and target.exists()
+    assert bk.restore_to(dest, target) == 8 and target.exists()
     restored = dbm.connect(target)
     assert restored.execute("SELECT COUNT(*) FROM sources").fetchone()[0] == 1
     restored.close()

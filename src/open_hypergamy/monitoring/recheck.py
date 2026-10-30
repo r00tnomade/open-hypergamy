@@ -17,6 +17,7 @@ from open_hypergamy.clock import Clock, iso_z, local_today
 from open_hypergamy.config import LoadedConfig
 from open_hypergamy.discovery.pipeline import PipelineStats, process_observations
 from open_hypergamy.discovery.promotion import refresh_edition
+from open_hypergamy.egress.pool import egress_scope
 from open_hypergamy.errors import OhgError
 from open_hypergamy.extraction.llm_extractor import LLMExtractionService
 from open_hypergamy.persistence.db import transaction
@@ -26,6 +27,7 @@ from open_hypergamy.persistence.repositories.sources import SourceRepository
 from open_hypergamy.sources.base import FetchContext
 from open_hypergamy.sources.common import build_observation, decode_body
 from open_hypergamy.sources.fetch import BodyCache, Fetcher
+from open_hypergamy.sources.health import in_cooldown
 from open_hypergamy.sources.html import parse_html
 from open_hypergamy.verification.chronology import freshness_window
 
@@ -95,6 +97,8 @@ def recheck_editions(
         source = repo.get(cand["discovered_by_source_id"]) if cand else None
         if cand is None or source is None or not source.enabled:
             continue
+        if source.blocked_reason or in_cooldown(source, clock.now_utc()):
+            continue  # held/cooling hosts are not re-polled; facts simply age into `stale`
         url = cand["canonical_url"]
         if url in seen:
             renew_freshness(conn, clock, eid)
@@ -102,7 +106,8 @@ def recheck_editions(
         seen.add(url)
         etag, lm = repo.latest_validators(url)
         try:
-            resp = fetcher.fetch(url, source.scope, etag=etag, last_modified=lm)
+            with egress_scope(source.source_key):
+                resp = fetcher.fetch(url, source.scope, etag=etag, last_modified=lm)
         except OhgError as e:
             rep.failed += 1
             rep.failures.append(f"{url}: {e.code}")

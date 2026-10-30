@@ -8,7 +8,7 @@
 4. **Discovery-only** = T4/T5 with no documented `authority_scope`; stored in `discovery_only`.
 5. **Robots (superseded by ADR-008):** 4xx robots.txt = allow; 5xx/network error = do not crawl that origin this run (recorded as `blocked_policy`, not a source failure). Cached per origin per process.
 6. **Failures vs. policy:** `blocked_policy` and `skipped` never increment `failure_streak`. Real failures back off 1h, 2h, 4h… capped at the source's fetch interval. A failed check never alters etag, content hash, `last_success_at` or stored observations.
-7. **304 handling:** the seed page returns `not_modified`; children behind an unchanged index are not re-crawled (known limitation). Child pages use stored validators from their latest observation.
+7. **304 handling:** the seed page returns `not_modified`; children behind an unchanged index are not re-crawled (known limitation; **superseded by ADR-011**, which tracks and revalidates children on their own schedule). Child pages use stored validators from their latest observation.
 8. **Redirects** are followed manually; every hop is re-validated (scheme, DNS→public IP, domain allowlist, deny paths). Limitation: DNS is checked before connect, not pinned, so a rebinding resolver is not fully excluded.
 9. **Not implemented yet:** iCalendar and Playwright adapters (such sources are recorded as `skipped`), per-host concurrency (runs are sequential), body-cache retention pruning.
 10. **Sequential execution** keeps per-host throttling trivially correct; `max_concurrent_hosts` is reserved for later.

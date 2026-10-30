@@ -63,4 +63,7 @@ def build_observation(
         body_cache_relpath=body_rel,
         text_cache_relpath=text_rel,
         depth=depth,
+        elapsed_ms=resp.elapsed_ms,
+        retry_count=resp.retry_count,
+        bytes_received=len(resp.body),
     )

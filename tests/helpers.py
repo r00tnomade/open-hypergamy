@@ -70,5 +70,6 @@ def make_fetcher(
     f = Fetcher(
         app or AppSettings(), crawling or CrawlingSettings(), transport=web.transport,
         resolver=resolver, monotonic=lambda: now[0], sleep=sleep,
+        jitter=lambda: 0.5,  # backoff factor exactly 1.0: 2 s, 4 s, ...
     )  # fmt: skip
     return f, sleeps

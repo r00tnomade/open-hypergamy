@@ -6,7 +6,7 @@ sources:
     name: "Open Robotics Discourse \u2013 Jobs category"
     canonical_url: https://discourse.openrobotics.org/c/jobs/15
     domain: discourse.openrobotics.org
-    source_type: listing_page
+    source_type: official_programme_index
     portfolio: europe_research
     adapter_type: html
     trust_tier: t5_community
@@ -18,7 +18,7 @@ sources:
     name: "Fulbright Germany"
     canonical_url: https://www.fulbright.de/
     domain: www.fulbright.de
-    source_type: listing_page
+    source_type: official_programme_index
     portfolio: funding_fellowships
     adapter_type: html
     trust_tier: t2_official_org
@@ -30,7 +30,7 @@ sources:
     name: "RSS: Robotics Science and Systems 2027"
     canonical_url: https://roboticsconference.org/
     domain: roboticsconference.org
-    source_type: listing_page
+    source_type: official_programme_index
     portfolio: conferences_societies
     adapter_type: html
     trust_tier: t2_official_org
@@ -42,7 +42,7 @@ sources:
     name: "Eastern European Machine Learning (EEML) Summer School"
     canonical_url: https://www.eeml.eu/
     domain: www.eeml.eu
-    source_type: listing_page
+    source_type: official_programme_index
     portfolio: conferences_societies
     adapter_type: html
     trust_tier: t2_official_org
