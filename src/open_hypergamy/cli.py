@@ -52,7 +52,7 @@ from open_hypergamy.notifications.telegram import TelegramSink
 from open_hypergamy.observability.health import collect_status, run_doctor
 from open_hypergamy.observability.jobs import JobHandle, tracked_job
 from open_hypergamy.observability.logging import redact, setup_logging
-from open_hypergamy.persistence import backups
+from open_hypergamy.persistence import backups, bootstrap
 from open_hypergamy.persistence import db as dbm
 from open_hypergamy.persistence import migrations as mig
 from open_hypergamy.persistence.repositories.observations import insert_observation
@@ -143,21 +143,11 @@ def init(home: HomeOpt = None, config: ConfigOpt = None) -> None:
     """Create the data directory and database, and apply migrations (idempotent)."""
     with guard():
         cfg = _load(home, config)
-        cfg.paths.ensure()
-        existed = cfg.paths.db.exists()
-        conn = dbm.connect(cfg.paths.db, cfg.settings.database.busy_timeout_ms, create=True)
-        try:
-            dbm.enable_journal_mode(conn, cfg.settings.database.journal_mode)
-            applied = mig.migrate(conn, mig.discover(), SystemClock(), backup_dir=cfg.paths.backups)
-            problems = dbm.integrity_problems(conn)
-            if problems:
-                raise DatabaseInitializationError("integrity check failed: " + "; ".join(problems))
-            version = mig.schema_version(conn)
-        finally:
-            conn.close()
-        cfg.paths.db.chmod(0o600)
-        out.print(f"{'Opened' if existed else 'Created'} database {cfg.paths.db}", soft_wrap=True)
-        out.print(f"Schema v{version}; applied {len(applied)} migration(s).")
+        res = bootstrap.initialize(cfg, SystemClock())
+        out.print(
+            f"{'Created' if res.created else 'Opened'} database {cfg.paths.db}", soft_wrap=True
+        )
+        out.print(f"Schema v{res.schema_version}; applied {res.applied} migration(s).")
         if cfg.settings.llm.enabled and cfg.settings.llm.provider == "freellmapi":
             out.print()
             out.print(EXTERNAL_PROCESSING_CHECKLIST, markup=False, highlight=False)

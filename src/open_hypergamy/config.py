@@ -312,6 +312,9 @@ def load_config(
             raise ConfigurationError(f"config file not found: {config_file}")
     elif Path("config/settings.yaml").is_file():
         config_file = Path("config/settings.yaml").resolve()
+    elif (resolve_home(home, env) / "settings.yaml").is_file():
+        # The GUI-managed file (ADR-014); a hand-written one above always wins.
+        config_file = resolve_home(home, env) / "settings.yaml"
     if config_file is not None:
         try:
             loaded = yaml.safe_load(config_file.read_text()) or {}
